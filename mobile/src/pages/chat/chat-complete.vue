@@ -1032,8 +1032,8 @@ const loadTodayCheckinCount = async () => {
 .message-list {
   flex: 1;
   padding: 24rpx 24rpx 160rpx; /* 额外底部内边距，避免被底部输入栏遮挡 */
-  /* scroll-view 在部分端不会透出父级背景，需直接给滚动区域设置背景 */
-  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 50%, #faf5ff 100%);
+  /* 让滚动区域透明，只显示外层单屏渐变背景，避免滚动时背景跟着动 */
+  background-color: transparent;
 }
 
 .message-item {
