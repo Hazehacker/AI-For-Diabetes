@@ -205,7 +205,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user'
 import { useChatStore } from '@/store/chat'
 import { chatApi, checkinApi, ttsApi } from '@/api'
@@ -246,15 +247,15 @@ const robots = ref([
     id: 'xiaojing',
     name: '小助手1',
     voiceId: '601012',
-    avatar: '/static/nansheng.png',
-    description: '阳光开朗的男生助手'
+    avatar: '/static/nvsheng.png',
+    description: '温柔可爱的女生好朋友'
   },
   {
     id: 'zhimeng',
     name: '小助手2',
     voiceId: '101015',
-    avatar: '/static/nvsheng.png',
-    description: '温柔细心的女生助手'
+    avatar: '/static/nansheng.png',
+    description: '聪明理性的男生好朋友'
   }
 ])
 const currentRobot = ref(robots.value[0])
@@ -335,8 +336,11 @@ const loadChatHistory = async (page = 1, append = false) => {
       historyPage.value = page
 
       if (!append) {
-        // 首次加载后滚动到底部
+        // 首次加载后滚动到底部（多触发一次，避免在 H5 上因为渲染时机导致没有滚到底）
         scrollToBottom()
+        setTimeout(() => {
+          scrollToBottom()
+        }, 300)
       }
     }
   } catch (e) {
@@ -371,11 +375,20 @@ onMounted(async () => {
   await loadTodayCheckinCount()
 
   // 恢复选择的机器人
-  const savedRobotId = uni.getStorageSync('selectedRobot')
-  if (savedRobotId) {
-    const robot = robots.value.find(r => r.id === savedRobotId)
-    if (robot) currentRobot.value = robot
-  }
+  // 默认使用“小助手1”；如果你希望记住上次选择，把下面这一段取消注释即可
+  // const savedRobotId = uni.getStorageSync('selectedRobot')
+  // if (savedRobotId) {
+  //   const robot = robots.value.find(r => r.id === savedRobotId)
+  //   if (robot) currentRobot.value = robot
+  // }
+})
+
+// 页面每次显示（包括从其他页面返回、微信小程序前后台切换等）时，自动滚动到最新消息
+onShow(() => {
+  scrollToBottom()
+  setTimeout(() => {
+    scrollToBottom()
+  }, 300)
 })
 
 onUnmounted(() => {
@@ -468,11 +481,28 @@ const sendMessage = async () => {
 const scrollToBottom = () => {
   nextTick(() => {
     const last = messages.value[messages.value.length - 1]
-    if (last) {
+    if (!last) return
+
+    // 先重置，再设置真正的目标 id，强制触发 scroll-into-view
+    scrollTarget.value = ''
+    nextTick(() => {
       scrollTarget.value = 'msg-' + last.id
-    }
+    })
   })
 }
+
+// 无论是刷新页面加载历史消息，还是重新进入页面（Pinia 中已有消息），
+// 只要消息数量变化，就自动滚动到底部，确保始终看到最新一条
+watch(
+  () => messages.value.length,
+  (newLen, oldLen) => {
+    if (!newLen) return
+    scrollToBottom()
+    setTimeout(() => {
+      scrollToBottom()
+    }, 300)
+  }
+)
 
 const escapeHtml = (unsafe) => {
   return String(unsafe)
@@ -958,7 +988,7 @@ const loadTodayCheckinCount = async () => {
 
 .header-center {
   flex: 1;
-  margin: 0 24rpx;
+  margin: 0 10rpx 0 137rpx;
 }
 
 .title-row {
@@ -1116,6 +1146,7 @@ const loadTodayCheckinCount = async () => {
   display: flex;
   align-items: flex-start;
   flex-direction: row-reverse; /* 用户头像在右侧 */
+  margin-right: 30rpx;
   gap: 16rpx;
 }
 
