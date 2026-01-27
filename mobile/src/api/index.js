@@ -2,6 +2,7 @@
  * API接口统一管理
  */
 import request from '@/utils/request'
+import { streamSSE } from '@/utils/sse'
 
 // 用户相关接口
 export const userApi = {
@@ -50,6 +51,15 @@ export const chatApi = {
       url: '/chat/stream_with_tts',
       method: 'POST',
       data
+    })
+  },
+
+  // 发送消息（流式SSE，移动端/H5对齐）
+  streamMessage(data, handlers) {
+    return streamSSE({
+      path: '/chat/stream_with_tts',
+      body: data,
+      handlers
     })
   },
   

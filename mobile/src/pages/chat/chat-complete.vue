@@ -390,25 +390,73 @@ const sendMessage = async () => {
   scrollToBottom()
 
   isTyping.value = true
+  let assistantMsgId = null
   try {
-    const res = await chatApi.sendMessage({
+    const payload = {
       user_id: userStore.userId,
       message_content: content,
       enable_tts: ttsEnabled.value,
-      conversation_id: chatStore.conversationId
+      ...(chatStore.conversationId ? { conversation_id: chatStore.conversationId } : {})
+    }
+
+    let lastScrollAt = 0
+    let hasFirstDelta = false
+
+    await chatApi.streamMessage(payload, {
+      onConversationId: (cid) => {
+        if (cid && cid !== chatStore.conversationId) chatStore.setConversationId(cid)
+      },
+      onDelta: (delta) => {
+        if (!delta) return
+
+        // 首次收到增量时再创建AI气泡，避免提前插入“空内容”气泡
+        if (!assistantMsgId) {
+          assistantMsgId = chatStore.addMessage({ role: 'assistant', content: '' })
+        }
+
+        // 收到首个增量后，就可以关闭“正在思考”指示，避免出现两个气泡
+        if (!hasFirstDelta) {
+          hasFirstDelta = true
+          isTyping.value = false
+        }
+
+        chatStore.appendMessageContent(assistantMsgId, delta)
+
+        // 轻量节流，避免每个chunk都触发滚动导致卡顿
+        const now = Date.now()
+        if (now - lastScrollAt > 200) {
+          lastScrollAt = now
+          scrollToBottom()
+        }
+      },
+      onDone: () => {
+        // done 在 SSE 中可能早于网络 close，先标记UI状态
+        isTyping.value = false
+      }
     })
 
+    // 流结束后，确保至少滚动一次，并结束输入状态
     isTyping.value = false
 
-    if (res.data && res.data.response) {
-      chatStore.addMessage({
+    // 如果最终还是空内容，给一个兜底提示，避免出现“只剩时间气泡”
+    if (assistantMsgId) {
+      const finalMsg = chatStore.messages.find((m) => m.id === assistantMsgId)
+      if (!finalMsg?.content) {
+        chatStore.setMessageContent(assistantMsgId, '抱歉，我暂时没有收到回复，请稍后重试。')
+      }
+    } else {
+      // 完全没有任何增量且未创建气泡，补一条错误提示
+      assistantMsgId = chatStore.addMessage({
         role: 'assistant',
-        content: res.data.response
+        content: '抱歉，我暂时没有收到回复，请稍后重试。'
       })
-      scrollToBottom()
     }
+    scrollToBottom()
   } catch (error) {
     isTyping.value = false
+    if (assistantMsgId) {
+      chatStore.setMessageContent(assistantMsgId, '发送失败，请重试。')
+    }
     uni.showToast({ title: '发送失败，请重试', icon: 'none' })
   }
 }

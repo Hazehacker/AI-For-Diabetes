@@ -2,7 +2,7 @@
  * HTTP请求封装
  */
 
-const BASE_URL = 'https://chat.cmkjai.com/api'
+export const BASE_URL = 'https://chat.cmkjai.com/api'
 
 /**
  * 封装的请求方法
@@ -27,7 +27,10 @@ export const request = (options) => {
         'Content-Type': 'application/json',
         ...options.header
       },
-      timeout: 30000
+      timeout: options.timeout ?? 30000,
+      // uni.request 兼容：允许传入 dataType/responseType，便于处理 text/event-stream 等非JSON响应
+      dataType: options.dataType,
+      responseType: options.responseType
     }
     
     // 添加token到请求头
