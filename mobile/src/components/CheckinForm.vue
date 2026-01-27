@@ -116,7 +116,7 @@ const handleSubmit = async () => {
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  justify-center: center;
+  justify-content: center;
   z-index: 2000;
   padding: 40rpx;
 }

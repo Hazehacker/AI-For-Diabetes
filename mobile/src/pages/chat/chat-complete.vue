@@ -846,6 +846,9 @@ const hideCheckinForm = () => {
 
 const submitCheckin = async ({ glucose_status, feeling_text }) => {
   try {
+    // 点击“确认打卡”后立即关闭弹窗，不等待请求返回，提升交互流畅度
+    showCheckinForm.value = false
+
     const now = new Date()
     const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
 
@@ -857,11 +860,26 @@ const submitCheckin = async ({ glucose_status, feeling_text }) => {
     })
 
     uni.showToast({ title: '打卡成功', icon: 'success' })
-    showCheckinForm.value = false
     await loadCheckinRecords()
     await loadTodayCheckinCount()
   } catch (e) {
-    uni.showToast({ title: '打卡失败，请重试', icon: 'none' })
+    // 如果是 400，提示“今天已经打卡过了”这类业务文案，并让小助手在对话中回复你给的那句话
+    if (e && e.statusCode === 400) {
+      const msg =
+        '您今天已经打卡过了！继续保持哦 💪 每种类型每天只能打卡一次~'
+      // 在聊天窗口中追加一条小助手消息
+      chatStore.addMessage({
+        role: 'assistant',
+        content: msg
+      })
+      scrollToBottom()
+
+      // 视为“打卡已完成”，关闭打卡面板
+      showCheckinForm.value = false
+      uni.showToast({ title: '今天已打卡', icon: 'none' })
+    } else {
+      uni.showToast({ title: '打卡失败，请重试', icon: 'none' })
+    }
   }
 }
 

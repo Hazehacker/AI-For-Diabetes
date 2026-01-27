@@ -439,7 +439,8 @@ watch(() => props.visible, (val) => {
 .day-cell {
   aspect-ratio: 1;
   display: flex;
-  flex-direction: column;
+  /* 数字与表情横向排列（数字在左，表情在右），居中显示 */
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   border-radius: 12rpx;
@@ -482,7 +483,7 @@ watch(() => props.visible, (val) => {
 
 .checkin-mark {
   font-size: 20rpx;
-  position: absolute;
-  bottom: 4rpx;
+  /* 放在日期数字右侧，略微留一点间距 */
+  margin-left: 6rpx;
 }
 </style>

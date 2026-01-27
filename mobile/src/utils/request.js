@@ -86,9 +86,12 @@ export const request = (options) => {
           }, 1500)
           reject(new Error('未授权，请重新登录'))
         } else {
-          // 其他错误
+          // 其他错误：保留状态码和响应体，便于上层根据不同错误码做细粒度处理（例如打卡 400 特殊文案）
           console.error('❌ 请求错误:', statusCode, data)
-          reject(new Error(data.message || `请求失败 (${statusCode})`))
+          const error = new Error(data?.message || `请求失败 (${statusCode})`)
+          error.statusCode = statusCode
+          error.response = data
+          reject(error)
         }
       },
       fail: (err) => {

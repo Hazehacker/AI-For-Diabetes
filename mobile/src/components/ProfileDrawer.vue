@@ -164,7 +164,8 @@ const handleLogout = () => {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  /* 调低层级，避免遮挡内置 date picker 弹出的选择面板（uni H5 picker 默认 z-index 约为 999） */
+  z-index: 900;
 }
 
 .drawer-content {
