@@ -98,36 +98,40 @@
       </view>
     </scroll-view>
 
-    <!-- 输入区域 -->
+    <!-- 输入区域（对齐 H5 P-CHAT 布局与样式） -->
     <view class="input-area">
       <!-- 快捷打卡 -->
       <view class="quick-actions">
-        <button class="quick-checkin-btn" @tap="quickCheckin">
-          <text class="btn-icon">✅</text>
+        <button class="quick-checkin-btn" @tap="quickCheckin" style="margin-left: 15px;">
+          <text class="fa-solid fa-check-circle btn-icon"></text>
           <text class="btn-text">今日打卡</text>
         </button>
       </view>
 
+      <!-- 底部输入卡片：整体是一个大圆角白色条，内部左侧是图标，右侧是输入框 -->
       <view class="input-container">
-        <!-- 语音按钮 -->
-        <view 
-          class="voice-btn" 
-          @tap="toggleVoiceRecording"
-          :class="{ 'recording': isRecording }"
-        >
-          <text class="icon">{{ isRecording ? '🔴' : '🎤' }}</text>
+        <!-- 左侧图标区 -->
+        <view class="input-icons">
+          <!-- 语音输入按钮 -->
+          <view
+            class="voice-btn"
+            @tap="toggleVoiceRecording"
+            :class="{ recording: isRecording }"
+          >
+            <text class="fa-solid fa-microphone voice-icon"></text>
+          </view>
+
+          <!-- TTS 语音播报开关 -->
+          <view 
+            class="tts-btn" 
+            @tap="toggleTTS"
+            :class="{ active: ttsEnabled }"
+          >
+            <text :class="['fa-solid', ttsEnabled ? 'fa-volume-high' : 'fa-volume-xmark', 'icon']"></text>
+          </view>
         </view>
 
-        <!-- TTS开关 -->
-        <view 
-          class="tts-btn" 
-          @tap="toggleTTS"
-          :class="{ 'active': ttsEnabled }"
-        >
-          <text class="icon">{{ ttsEnabled ? '🔊' : '🔇' }}</text>
-        </view>
-
-        <!-- 输入框 -->
+        <!-- 右侧输入框区域 -->
         <view class="input-wrapper">
           <textarea 
             class="text-input"
@@ -140,9 +144,9 @@
           <view 
             class="send-btn" 
             @tap="sendMessage"
-            :class="{ 'disabled': !canSend }"
+            :class="{ disabled: !canSend }"
           >
-            <text class="icon">📤</text>
+            <text class="fa-solid fa-paper-plane icon"></text>
           </view>
         </view>
       </view>
@@ -902,6 +906,8 @@ const loadTodayCheckinCount = async () => {
 </script>
 
 <style scoped>
+/* 引入 Font Awesome，使移动端底部按钮图标与 H5 一致 */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
 .chat-page {
   display: flex;
   flex-direction: column;
@@ -1196,26 +1202,29 @@ const loadTodayCheckinCount = async () => {
 }
 
 .input-area {
-  position: sticky;
+  /* 固定在底部，模拟 H5 的 safe-bottom 效果 */
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 16rpx 24rpx 32rpx;
-  background: #ffffff;
-  box-shadow: 0 -4rpx 20rpx rgba(15, 23, 42, 0.05);
-  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  margin-top: 10px;
+  background-color: transparent;
   z-index: 50;
 }
 
 .quick-actions {
-  margin-bottom: 16rpx;
+  padding: 0 0 12rpx;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .quick-checkin-btn {
-  width: 260rpx;
-  height: 88rpx;
-  border-radius: 44rpx;
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  min-width: 220rpx;
+  max-width: 340rpx;
+  height: 66rpx;
+  border-radius: 999rpx;
+  /* 与 H5: bg-gradient-primary 一致 */
+  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1223,26 +1232,38 @@ const loadTodayCheckinCount = async () => {
   color: #ffffff;
   font-size: 28rpx;
   font-weight: 500;
-  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.35);
+  /* 参考 H5 shadow-button：0 4px 15px rgba(150, 159, 255, 0.3) */
+  box-shadow: 0 8rpx 30rpx rgba(150, 159, 255, 0.3);
 }
 
 .btn-icon {
   font-size: 32rpx;
+  margin-right: 4rpx;
 }
 
 .input-container {
   display: flex;
-  align-items: flex-end;
-  gap: 12rpx;
-  margin-top: 8rpx;
+  align-items: center;
+  gap: 15rpx;
+  margin-top: 4rpx;
+  padding: 15rpx 35rpx 15rpx 15rpx;
+  background-color: #ffffff;
+
+}
+
+.input-icons {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .voice-btn,
 .tts-btn {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 44rpx;
-  background: #f3f4f6;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 999rpx;
+  /* H5：语音按钮 bg-gray-100，TTS 默认 bg-gray-300，这里先用较浅底色，下面再单独覆盖 TTS */
+  background: #f3f4f6; /* 等效 bg-gray-100 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1254,39 +1275,53 @@ const loadTodayCheckinCount = async () => {
 }
 
 .tts-btn.active {
-  background: #e0f2fe;
+  /* 打开时使用主色渐变，与 H5 bg-gradient-primary 一致 */
+  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+}
+
+/* TTS 默认关闭态：略深的灰色，接近 H5 的 bg-gray-300 效果 */
+.tts-btn {
+  background: #e5e7eb;
 }
 
 .icon {
   font-size: 34rpx;
 }
 
+.voice-icon {
+  font-size: 32rpx; /* 等效 text-lg */
+  color: #4b5563;  /* text-gray-600 */
+}
+
 .input-wrapper {
   flex: 1;
-  background: #f9fafb;
-  border-radius: 999rpx;
-  padding: 8rpx 12rpx 8rpx 24rpx;
-  display: flex;
-  align-items: center;
-  box-shadow: inset 0 0 0 1rpx #e5e7eb;
+  position: relative;
 }
 
 .text-input {
   flex: 1;
-  min-height: 68rpx;
-  max-height: 160rpx;
+  min-height: 50rpx;
+  max-height: 140rpx;
   font-size: 28rpx;
+  padding: 15rpx 0rpx 15rpx 15rpx;
+  background-color: #f9fafb;
+  border-radius:24rpx;
+  border: 1rpx solid #e5e7eb;
 }
 
 .send-btn {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 36rpx;
-  background: linear-gradient(135deg, #969fff 0%, #5147ff 100%);
+  position: absolute;
+  right: 12rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  /* 发送按钮使用与 H5 一致的主色渐变 */
+  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8rpx;
 }
 
 .send-btn.disabled {
