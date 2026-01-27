@@ -33,9 +33,9 @@
     <!-- 消息列表 -->
     <scroll-view 
       class="message-list" 
-      scroll-y 
+      :scroll-y="true"
       :scroll-into-view="scrollTarget"
-      scroll-with-animation
+      :scroll-with-animation="true"
       :show-scrollbar="false"
       @scrolltoupper="loadMoreHistory"
     >
@@ -96,6 +96,9 @@
           <text class="typing-text">{{ currentRobot.name }}正在思考...</text>
         </view>
       </view>
+
+      <!-- 底部锚点：用于 scroll-into-view 精确滚动到最底部 -->
+      <view id="chat-bottom-anchor" style="height: 1rpx;"></view>
     </scroll-view>
 
     <!-- 输入区域（对齐 H5 P-CHAT 布局与样式） -->
@@ -479,24 +482,53 @@ const sendMessage = async () => {
 }
 
 const scrollToBottom = () => {
-  nextTick(() => {
-    const last = messages.value[messages.value.length - 1]
-    if (!last) return
+  // H5 端：直接参考 smart-sugar-assistant-main 的实现，用原生 DOM 滚动到底部
+  // 避免某些情况下 scroll-into-view 不触发的问题
+  // #ifdef H5
+  try {
+    nextTick(() => {
+      const anchor = document.getElementById('chat-bottom-anchor')
+      if (anchor && typeof anchor.scrollIntoView === 'function') {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        return
+      }
 
+      const container = document.querySelector('.message-list')
+      if (container) {
+        container.scrollTop = container.scrollHeight
+        return
+      }
+    })
+  } catch (e) {
+    console.warn('H5 scrollToBottom fallback error:', e)
+  }
+  // #endif
+
+  // 非 H5 端：使用固定锚点 + scroll-into-view
+  nextTick(() => {
     // 先重置，再设置真正的目标 id，强制触发 scroll-into-view
     scrollTarget.value = ''
     nextTick(() => {
-      scrollTarget.value = 'msg-' + last.id
+      scrollTarget.value = 'chat-bottom-anchor'
     })
   })
 }
 
 // 无论是刷新页面加载历史消息，还是重新进入页面（Pinia 中已有消息），
-// 只要消息数量变化，就自动滚动到底部，确保始终看到最新一条
+// 只要“非历史追加场景”下消息数量增加，就自动滚动到底部，确保始终看到最新一条。
+// 注意：在上滑加载历史记录时（append=true），不应强制滚到底部，以免打断用户查看旧消息。
 watch(
   () => messages.value.length,
   (newLen, oldLen) => {
+    // 没有消息，无需滚动
     if (!newLen) return
+
+    // 正在加载历史记录（上滑加载更多）时，不自动滚动到底部
+    if (loadingHistory.value) return
+
+    // 只有在消息条数“增加”时才自动滚动；减少或相等都忽略
+    if (newLen <= oldLen) return
+
     scrollToBottom()
     setTimeout(() => {
       scrollToBottom()
