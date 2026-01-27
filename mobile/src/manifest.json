@@ -1,7 +1,7 @@
 {
-    "name" : "",
-    "appid" : "",
-    "description" : "",
+    "name" : "智糖小助手",
+    "appid" : "__UNI__diabetes",
+    "description" : "智能糖尿病管理助手",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,
