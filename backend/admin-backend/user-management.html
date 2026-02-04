@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 智糖小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        let currentPage = 1;
+        let pageSize = 20;
+        let totalPages = 1;
+        let searchKeyword = '';
+        let filterActive = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('users');
+            loadUsers();
+            
+            // 绑定事件
+            document.getElementById('search-input')?.addEventListener('input', debounce(handleSearch, 500));
+            document.getElementById('filter-active')?.addEventListener('change', handleFilter);
+            document.getElementById('refresh-btn')?.addEventListener('click', () => loadUsers());
+            document.getElementById('create-user-btn')?.addEventListener('click', showCreateModal);
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function handleSearch(e) {
+            searchKeyword = e.target.value;
+            currentPage = 1;
+            loadUsers();
+        }
+
+        function handleFilter(e) {
+            filterActive = e.target.value;
+            currentPage = 1;
+            loadUsers();
+        }
+
+        async function loadUsers() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i></div>';
+            
+            try {
+                const params = {
+                    page: currentPage,
+                    page_size: pageSize
+                };
+                if (searchKeyword) params.keyword = searchKeyword;
+                if (filterActive) params.is_active = filterActive === 'active';
+
+                const result = await apiGet(API_CONFIG.ENDPOINTS.USERS, params);
+                
+                const users = result.data || result.users || [];
+                totalPages = result.total_pages || Math.ceil((result.total || 0) / pageSize);
+                
+                renderUsers(users, result.total || 0);
+            } catch (error) {
+                mainContent.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        function renderUsers(users, total) {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">用户管理</h2>
+                            <p class="text-gray-600">共 ${total} 个用户</p>
+                        </div>
+                        <button id="create-user-btn" class="btn btn-success">
+                            <i class="fas fa-user-plus mr-2"></i>创建用户
+                        </button>
+                            </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <input type="text" id="search-input" placeholder="搜索用户名或昵称..." 
+                                   class="input flex-1">
+                            <select id="filter-active" class="input w-48">
+                                <option value="">全部状态</option>
+                                <option value="active">已激活</option>
+                                <option value="inactive">未激活</option>
+                            </select>
+                            <button id="refresh-btn" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt mr-2"></i>刷新
+                            </button>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>用户名</th>
+                                        <th>昵称</th>
+                                        <th>手机号</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    ${users.map(user => `
+                                        <tr>
+                                            <td>${user.user_id}</td>
+                                            <td>${user.username || '-'}</td>
+                                            <td>${user.nickname || '-'}</td>
+                                            <td>${user.phone_number || '-'}</td>
+                                            <td>
+                                                <span class="badge ${user.is_active ? 'badge-success' : 'badge-danger'}">
+                                                    ${user.is_active ? '已激活' : '未激活'}
+                                                </span>
+                                            </td>
+                                            <td>${formatDate(user.created_at)}</td>
+                                            <td>
+                                                <button onclick="showEditModal(${user.user_id})" class="btn btn-primary text-sm mr-2">
+                            <i class="fas fa-edit mr-1"></i>编辑
+                        </button>
+                                                <button onclick="toggleUserStatus(${user.user_id}, ${!user.is_active})" 
+                                                        class="btn ${user.is_active ? 'btn-secondary' : 'btn-success'} text-sm mr-2">
+                                                    <i class="fas fa-${user.is_active ? 'ban' : 'check'} mr-1"></i>${user.is_active ? '禁用' : '启用'}
+                        </button>
+                                                <button onclick="deleteUser(${user.user_id})" class="btn btn-danger text-sm">
+                            <i class="fas fa-trash mr-1"></i>删除
+                        </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="pagination-container" class="mt-6"></div>
+                    </div>
+                    </div>
+                `;
+                
+            // 重新绑定事件
+            document.getElementById('search-input')?.addEventListener('input', debounce(handleSearch, 500));
+            document.getElementById('filter-active')?.addEventListener('change', handleFilter);
+            document.getElementById('refresh-btn')?.addEventListener('click', () => loadUsers());
+            document.getElementById('create-user-btn')?.addEventListener('click', showCreateModal);
+            
+            // 渲染分页
+            const paginationContainer = document.getElementById('pagination-container');
+            if (paginationContainer && totalPages > 1) {
+                paginationContainer.appendChild(createPagination(currentPage, totalPages, (page) => {
+                    currentPage = page;
+                loadUsers();
+                }));
+            }
+        }
+
+        function showCreateModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="modal-content rounded-xl p-6 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">创建用户</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="create-user-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">用户名 *</label>
+                            <input type="text" name="username" required class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">密码 *</label>
+                            <input type="password" name="password" required class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">昵称</label>
+                            <input type="text" name="nickname" class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">手机号</label>
+                            <input type="tel" name="phone_number" class="input">
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">创建</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                
+                try {
+                    await apiPost(API_CONFIG.ENDPOINTS.USERS, data);
+                    showMessage('用户创建成功', 'success');
+                    modal.remove();
+                    loadUsers();
+            } catch (error) {
+                    showMessage('创建失败: ' + error.message, 'error');
+            }
+            });
+        }
+
+        async function showEditModal(userId) {
+            try {
+                const user = await apiGet(API_CONFIG.ENDPOINTS.USER_DETAIL(userId));
+                const userData = user.data || user;
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="modal-content rounded-xl p-6 max-w-md w-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">编辑用户</h3>
+                            <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="edit-user-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">用户名</label>
+                                <input type="text" name="username" value="${userData.username || ''}" readonly class="input bg-gray-100">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">昵称</label>
+                                <input type="text" name="nickname" value="${userData.nickname || ''}" class="input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">手机号</label>
+                                <input type="tel" name="phone_number" value="${userData.phone_number || ''}" class="input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">生日</label>
+                                <input type="date" name="date_of_birth" value="${userData.date_of_birth || ''}" class="input">
+                            </div>
+                            <div class="flex space-x-3 mt-6">
+                                <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                        class="flex-1 btn btn-secondary">取消</button>
+                                <button type="submit" class="flex-1 btn btn-primary">保存</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const data = Object.fromEntries(formData);
+                    
+                    try {
+                        await apiPut(API_CONFIG.ENDPOINTS.USER_DETAIL(userId), data);
+                        showMessage('用户更新成功', 'success');
+                        modal.remove();
+                    loadUsers();
+                    } catch (error) {
+                        showMessage('更新失败: ' + error.message, 'error');
+                }
+                });
+            } catch (error) {
+                showMessage('加载用户信息失败: ' + error.message, 'error');
+            }
+        }
+
+        async function toggleUserStatus(userId, isActive) {
+            if (!confirm(`确定要${isActive ? '启用' : '禁用'}该用户吗？`)) return;
+
+            try {
+                await apiPut(API_CONFIG.ENDPOINTS.USER_STATUS(userId), { is_active: isActive });
+                showMessage(`用户已${isActive ? '启用' : '禁用'}`, 'success');
+                loadUsers();
+            } catch (error) {
+                showMessage('操作失败: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('确定要删除该用户吗？此操作不可恢复！')) return;
+
+            try {
+                await apiDelete(API_CONFIG.ENDPOINTS.USER_DETAIL(userId));
+                showMessage('用户已删除', 'success');
+                    loadUsers();
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

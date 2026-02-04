@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智糖小助手 - 管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        // 初始化布局
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('dashboard');
+            
+            // 加载仪表板内容
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i><p class="mt-4 text-gray-600">加载中...</p></div>';
+            
+            try {
+                // 获取统计数据
+                const [usersData, faqData, chatData] = await Promise.all([
+                    apiGet(API_CONFIG.ENDPOINTS.USERS, { page: 1, page_size: 1 }).catch(() => ({ total: 0 })),
+                    apiGet(API_CONFIG.ENDPOINTS.FAQ_STATS).catch(() => ({ total: 0, active: 0 })),
+                    apiGet(API_CONFIG.ENDPOINTS.CHAT_HISTORY, { page: 1, page_size: 1 }).catch(() => ({ total: 0 }))
+                ]);
+                
+                const stats = {
+                    users: usersData.total || 0,
+                    faqs: faqData.total || 0,
+                    activeFaqs: faqData.active || 0,
+                    messages: chatData.total || 0
+                };
+                
+                mainContent.innerHTML = `
+                    <div class="space-y-6">
+                                <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">仪表板</h2>
+                            <p class="text-gray-600">欢迎使用智糖小助手管理后台</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                        <p class="text-gray-600 text-sm mb-1">用户总数</p>
+                                        <p class="text-3xl font-bold gradient-text">${stats.users}</p>
+                                    </div>
+                                    <div class="w-12 h-12 gradient-primary rounded-full flex items-center justify-center">
+                                        <i class="fas fa-users text-white text-xl"></i>
+                                </div>
+                                </div>
+                                <a href="user-management.html" class="text-blue-500 text-sm mt-4 inline-block hover:underline">
+                                    查看详情 <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                        </div>
+
+                            <div class="bg-white rounded-xl p-6 shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                        <p class="text-gray-600 text-sm mb-1">FAQ总数</p>
+                                        <p class="text-3xl font-bold gradient-text">${stats.faqs}</p>
+                                        <p class="text-sm text-green-600 mt-1">活跃: ${stats.activeFaqs}</p>
+                                    </div>
+                                    <div class="w-12 h-12 gradient-success rounded-full flex items-center justify-center">
+                                        <i class="fas fa-question-circle text-white text-xl"></i>
+                                </div>
+                                </div>
+                                <a href="faq-management.html" class="text-blue-500 text-sm mt-4 inline-block hover:underline">
+                                    查看详情 <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-6 shadow-lg card-hover">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-sm mb-1">消息记录</p>
+                                        <p class="text-3xl font-bold gradient-text">${stats.messages}</p>
+                                </div>
+                                    <div class="w-12 h-12 gradient-secondary rounded-full flex items-center justify-center">
+                                        <i class="fas fa-comments text-white text-xl"></i>
+                                </div>
+                                </div>
+                                <a href="chat-history.html" class="text-blue-500 text-sm mt-4 inline-block hover:underline">
+                                    查看详情 <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-6 shadow-lg card-hover">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-gray-600 text-sm mb-1">系统状态</p>
+                                        <p class="text-lg font-bold text-green-600">运行正常</p>
+                            </div>
+                                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-white text-xl"></i>
+                        </div>
+                                </div>
+                                <button onclick="checkSystemStatus()" class="text-blue-500 text-sm mt-4 inline-block hover:underline">
+                                    检查状态 <i class="fas fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-lg">
+                                <h3 class="text-lg font-semibold mb-4">快速操作</h3>
+                                <div class="space-y-3">
+                                    <a href="user-management.html" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-user-plus text-blue-500"></i>
+                                            <span>创建新用户</span>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </a>
+                                    <a href="faq-management.html" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-plus-circle text-green-500"></i>
+                                            <span>创建FAQ</span>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </a>
+                                    <a href="prompt-management.html" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-comment-dots text-purple-500"></i>
+                                            <span>管理提示词模板</span>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-gray-400"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-xl p-6 shadow-lg">
+                                <h3 class="text-lg font-semibold mb-4">系统信息</h3>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">API地址</span>
+                                        <span class="font-mono">${API_CONFIG.BASE_URL}</span>
+                        </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">当前用户</span>
+                                        <span>${JSON.parse(localStorage.getItem('admin_user') || '{}').username || '-'}</span>
+                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">登录时间</span>
+                                        <span>${new Date().toLocaleString('zh-CN')}</span>
+                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                mainContent.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
+                            <div>
+                                <h3 class="font-semibold text-red-800">加载失败</h3>
+                                <p class="text-red-600 text-sm mt-1">${error.message}</p>
+                        </div>
+                        </div>
+                    </div>
+                `;
+        }
+        }
+
+        async function checkSystemStatus() {
+            try {
+                const status = await apiGet(API_CONFIG.ENDPOINTS.DB_POOL_STATUS);
+                showMessage('系统运行正常', 'success');
+                console.log('系统状态:', status);
+            } catch (error) {
+                showMessage('系统检查失败: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

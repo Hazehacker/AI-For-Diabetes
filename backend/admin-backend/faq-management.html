@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ管理 - 智糖小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        let currentPage = 1;
+        let pageSize = 20;
+        let totalPages = 1;
+        let searchKeyword = '';
+        let filterCategory = '';
+        let filterStatus = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('faq');
+            loadFAQs();
+        });
+
+        async function loadFAQs() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i></div>';
+            
+            try {
+                const params = {
+                    page: currentPage,
+                    page_size: pageSize
+                };
+                if (searchKeyword) params.search = searchKeyword;
+                if (filterCategory) params.category = filterCategory;
+                if (filterStatus) params.status = filterStatus;
+                
+                const result = await apiGet(API_CONFIG.ENDPOINTS.FAQ_LIST, params);
+                
+                const faqs = result.data || result.faqs || [];
+                totalPages = result.total_pages || Math.ceil((result.total || 0) / pageSize);
+                
+                renderFAQs(faqs, result.total || 0);
+            } catch (error) {
+                mainContent.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        function renderFAQs(faqs, total) {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">FAQ管理</h2>
+                            <p class="text-gray-600">共 ${total} 条FAQ</p>
+                        </div>
+                        <button onclick="showCreateModal()" class="btn btn-success">
+                            <i class="fas fa-plus mr-2"></i>创建FAQ
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <input type="text" id="search-input" placeholder="搜索问题或答案..." 
+                                   class="input flex-1" oninput="handleSearch(this.value)">
+                            <select id="filter-category" class="input w-48" onchange="handleFilter()">
+                                <option value="">全部分类</option>
+                                <option value="health">健康</option>
+                                <option value="diet">饮食</option>
+                                <option value="exercise">运动</option>
+                            </select>
+                            <select id="filter-status" class="input w-48" onchange="handleFilter()">
+                                <option value="">全部状态</option>
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                            <button onclick="loadFAQs()" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt mr-2"></i>刷新
+                            </button>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>问题</th>
+                                        <th>分类</th>
+                                        <th>状态</th>
+                                        <th>查看次数</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${faqs.map(faq => `
+                                        <tr>
+                                            <td>${faq.id || faq.faq_id}</td>
+                                            <td class="max-w-xs truncate">${faq.question || '-'}</td>
+                                            <td>${faq.category || '-'}</td>
+                                            <td>
+                                                <span class="badge ${faq.status == 1 ? 'badge-success' : 'badge-danger'}">
+                                                    ${faq.status == 1 ? '启用' : '禁用'}
+                                                </span>
+                                            </td>
+                                            <td>${faq.view_count || 0}</td>
+                                            <td>${formatDate(faq.created_at)}</td>
+                                            <td>
+                                                <button onclick="showEditModal(${faq.id || faq.faq_id})" class="btn btn-primary text-sm mr-2">
+                                                    <i class="fas fa-edit mr-1"></i>编辑
+                                                </button>
+                                                <button onclick="showDetailModal(${faq.id || faq.faq_id})" class="btn btn-info text-sm mr-2">
+                                                    <i class="fas fa-eye mr-1"></i>详情
+                                                </button>
+                                                <button onclick="deleteFAQ(${faq.id || faq.faq_id})" class="btn btn-danger text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>删除
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="pagination-container" class="mt-6"></div>
+                    </div>
+                </div>
+            `;
+            
+            // 渲染分页
+            const paginationContainer = document.getElementById('pagination-container');
+            if (paginationContainer && totalPages > 1) {
+                paginationContainer.appendChild(createPagination(currentPage, totalPages, (page) => {
+                    currentPage = page;
+                    loadFAQs();
+                }));
+            }
+        }
+
+        function handleSearch(value) {
+            searchKeyword = value;
+            currentPage = 1;
+            setTimeout(() => loadFAQs(), 500);
+        }
+
+        function handleFilter() {
+            filterCategory = document.getElementById('filter-category').value;
+            filterStatus = document.getElementById('filter-status').value;
+            currentPage = 1;
+            loadFAQs();
+        }
+
+        function showCreateModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">创建FAQ</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="create-faq-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">问题 *</label>
+                            <textarea name="question" required class="input" rows="3"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">答案 *</label>
+                            <textarea name="answer" required class="input" rows="5"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">分类</label>
+                                <input type="text" name="category" class="input" placeholder="如：健康、饮食等">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">来源</label>
+                                <input type="text" name="source" class="input" placeholder="如：knowledge_slice_01.md">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">描述</label>
+                            <textarea name="description" class="input" rows="2"></textarea>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="is_manual" id="is-manual" value="1" class="mr-2">
+                            <label for="is-manual" class="text-sm">手动创建</label>
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">创建</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('create-faq-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                data.status = 1;
+                
+                try {
+                    await apiPost(API_CONFIG.ENDPOINTS.FAQ_CREATE, data);
+                    showMessage('FAQ创建成功', 'success');
+                    modal.remove();
+                    loadFAQs();
+                } catch (error) {
+                    showMessage('创建失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function showEditModal(faqId) {
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.FAQ_DETAIL(faqId));
+                const faq = result.data || result;
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">编辑FAQ</h3>
+                            <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="edit-faq-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">问题 *</label>
+                                <textarea name="question" required class="input" rows="3">${faq.question || ''}</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">答案 *</label>
+                                <textarea name="answer" required class="input" rows="5">${faq.answer || ''}</textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">分类</label>
+                                    <input type="text" name="category" value="${faq.category || ''}" class="input">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">来源</label>
+                                    <input type="text" name="source" value="${faq.source || ''}" class="input">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">状态</label>
+                                <select name="status" class="input">
+                                    <option value="1" ${faq.status == 1 ? 'selected' : ''}>启用</option>
+                                    <option value="0" ${faq.status == 0 ? 'selected' : ''}>禁用</option>
+                                </select>
+                            </div>
+                            <div class="flex space-x-3 mt-6">
+                                <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                        class="flex-1 btn btn-secondary">取消</button>
+                                <button type="submit" class="flex-1 btn btn-primary">保存</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('edit-faq-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const data = Object.fromEntries(formData);
+                    data.status = parseInt(data.status);
+                    
+                    try {
+                        await apiPut(API_CONFIG.ENDPOINTS.FAQ_UPDATE(faqId), data);
+                        showMessage('FAQ更新成功', 'success');
+                        modal.remove();
+                        loadFAQs();
+                    } catch (error) {
+                        showMessage('更新失败: ' + error.message, 'error');
+                    }
+                });
+            } catch (error) {
+                showMessage('加载FAQ失败: ' + error.message, 'error');
+            }
+        }
+
+        async function showDetailModal(faqId) {
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.FAQ_DETAIL(faqId));
+                const faq = result.data || result;
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">FAQ详情</h3>
+                            <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">问题</label>
+                                <p class="text-gray-800">${faq.question || '-'}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">答案</label>
+                                <p class="text-gray-800 whitespace-pre-wrap">${faq.answer || '-'}</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">分类</label>
+                                    <p class="text-gray-800">${faq.category || '-'}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">来源</label>
+                                    <p class="text-gray-800">${faq.source || '-'}</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">状态</label>
+                                    <span class="badge ${faq.status == 1 ? 'badge-success' : 'badge-danger'}">
+                                        ${faq.status == 1 ? '启用' : '禁用'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">查看次数</label>
+                                    <p class="text-gray-800">${faq.view_count || 0}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">点赞数</label>
+                                    <p class="text-gray-800">${faq.like_count || 0}</p>
+                                </div>
+                            </div>
+                            ${faq.keywords && faq.keywords.length > 0 ? `
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">关键词</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${faq.keywords.map(k => `
+                                            <span class="badge badge-info">${typeof k === 'string' ? k : k.keyword}</span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="flex space-x-3 mt-6">
+                                <button onclick="this.closest('.modal-backdrop').remove()" 
+                                        class="flex-1 btn btn-secondary">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (error) {
+                showMessage('加载FAQ详情失败: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteFAQ(faqId) {
+            if (!confirm('确定要删除该FAQ吗？此操作不可恢复！')) return;
+            
+            try {
+                await apiDelete(API_CONFIG.ENDPOINTS.FAQ_DELETE(faqId));
+                showMessage('FAQ已删除', 'success');
+                loadFAQs();
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

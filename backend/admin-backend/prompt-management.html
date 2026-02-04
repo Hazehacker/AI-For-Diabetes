@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提示词管理 - 智糖小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        let currentPage = 1;
+        let pageSize = 20;
+        let totalPages = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('prompt');
+            loadTemplates();
+        });
+
+        async function loadTemplates() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i></div>';
+            
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.PROMPT_TEMPLATES, {
+                    page: currentPage,
+                    page_size: pageSize
+                });
+                
+                const templates = result.data || result.templates || [];
+                totalPages = result.total_pages || Math.ceil((result.total || 0) / pageSize);
+                
+                renderTemplates(templates, result.total || 0);
+            } catch (error) {
+                document.getElementById('main-content').innerHTML = 
+                    `<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        function renderTemplates(templates, total) {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">提示词模板管理</h2>
+                            <p class="text-gray-600">共 ${total} 个模板</p>
+                        </div>
+                        <button onclick="showCreateModal()" class="btn btn-success">
+                            <i class="fas fa-plus mr-2"></i>创建模板
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>类型</th>
+                                        <th>名称</th>
+                                        <th>版本</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${templates.map(tpl => `
+                                        <tr>
+                                            <td>${tpl.prompt_id}</td>
+                                            <td><code class="bg-gray-100 px-2 py-1 rounded">${tpl.prompt_type}</code></td>
+                                            <td>${tpl.prompt_name || '-'}</td>
+                                            <td>v${tpl.version || 1}</td>
+                                            <td>
+                                                <span class="badge ${tpl.is_active ? 'badge-success' : 'badge-danger'}">
+                                                    ${tpl.is_active ? '启用' : '禁用'}
+                                                </span>
+                                            </td>
+                                            <td>${formatDate(tpl.created_at)}</td>
+                                            <td>
+                                                <button onclick="showEditModal(${tpl.prompt_id})" class="btn btn-primary text-sm mr-2">
+                                                    <i class="fas fa-edit mr-1"></i>编辑
+                                                </button>
+                                                <button onclick="showDetailModal(${tpl.prompt_id})" class="btn btn-info text-sm mr-2">
+                                                    <i class="fas fa-eye mr-1"></i>详情
+                                                </button>
+                                                <button onclick="deleteTemplate(${tpl.prompt_id})" class="btn btn-danger text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>删除
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="pagination-container" class="mt-6"></div>
+                    </div>
+                </div>
+            `;
+            
+            // 渲染分页
+            const paginationContainer = document.getElementById('pagination-container');
+            if (paginationContainer && totalPages > 1) {
+                paginationContainer.appendChild(createPagination(currentPage, totalPages, (page) => {
+                    currentPage = page;
+                    loadTemplates();
+                }));
+            }
+        }
+
+        function showCreateModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">创建提示词模板</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="create-template-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">提示词类型 *</label>
+                            <select name="prompt_type" required class="input">
+                                <option value="initial">初始提示词</option>
+                                <option value="system">系统提示词</option>
+                                <option value="user">用户提示词</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">模板名称 *</label>
+                            <input type="text" name="prompt_name" required class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">提示词内容 *</label>
+                            <textarea name="prompt_content" required class="input" rows="10"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">版本</label>
+                                <input type="number" name="version" value="1" class="input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">状态</label>
+                                <select name="is_active" class="input">
+                                    <option value="true">启用</option>
+                                    <option value="false">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">创建</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('create-template-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = {
+                    prompt_type: formData.get('prompt_type'),
+                    prompt_name: formData.get('prompt_name'),
+                    prompt_content: formData.get('prompt_content'),
+                    version: parseInt(formData.get('version')) || 1,
+                    is_active: formData.get('is_active') === 'true'
+                };
+                
+                try {
+                    await apiPost(API_CONFIG.ENDPOINTS.PROMPT_TEMPLATES, data);
+                    showMessage('模板创建成功', 'success');
+                    modal.remove();
+                    loadTemplates();
+                } catch (error) {
+                    showMessage('创建失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function showEditModal(promptId) {
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.PROMPT_TEMPLATE_DETAIL(promptId));
+                const tpl = result.data || result;
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">编辑模板</h3>
+                            <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form id="edit-template-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">模板名称 *</label>
+                                <input type="text" name="prompt_name" value="${tpl.prompt_name || ''}" required class="input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">提示词内容 *</label>
+                                <textarea name="prompt_content" required class="input" rows="10">${tpl.prompt_content || ''}</textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">版本</label>
+                                    <input type="number" name="version" value="${tpl.version || 1}" class="input">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">状态</label>
+                                    <select name="is_active" class="input">
+                                        <option value="true" ${tpl.is_active ? 'selected' : ''}>启用</option>
+                                        <option value="false" ${!tpl.is_active ? 'selected' : ''}>禁用</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 mt-6">
+                                <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                        class="flex-1 btn btn-secondary">取消</button>
+                                <button type="submit" class="flex-1 btn btn-primary">保存</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('edit-template-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const data = {
+                        prompt_name: formData.get('prompt_name'),
+                        prompt_content: formData.get('prompt_content'),
+                        version: parseInt(formData.get('version')) || 1,
+                        is_active: formData.get('is_active') === 'true'
+                    };
+                    
+                    try {
+                        await apiPut(API_CONFIG.ENDPOINTS.PROMPT_TEMPLATE_DETAIL(promptId), data);
+                        showMessage('模板更新成功', 'success');
+                        modal.remove();
+                        loadTemplates();
+                    } catch (error) {
+                        showMessage('更新失败: ' + error.message, 'error');
+                    }
+                });
+            } catch (error) {
+                showMessage('加载模板失败: ' + error.message, 'error');
+            }
+        }
+
+        async function showDetailModal(promptId) {
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.PROMPT_TEMPLATE_DETAIL(promptId));
+                const tpl = result.data || result;
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">模板详情</h3>
+                            <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">类型</label>
+                                <code class="bg-gray-100 px-2 py-1 rounded">${tpl.prompt_type}</code>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">名称</label>
+                                <p class="text-gray-800">${tpl.prompt_name || '-'}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">内容</label>
+                                <pre class="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap text-sm">${tpl.prompt_content || '-'}</pre>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">版本</label>
+                                    <p class="text-gray-800">v${tpl.version || 1}</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">状态</label>
+                                    <span class="badge ${tpl.is_active ? 'badge-success' : 'badge-danger'}">
+                                        ${tpl.is_active ? '启用' : '禁用'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">创建时间</label>
+                                    <p class="text-gray-800 text-sm">${formatDate(tpl.created_at)}</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 mt-6">
+                                <button onclick="this.closest('.modal-backdrop').remove()" 
+                                        class="flex-1 btn btn-secondary">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (error) {
+                showMessage('加载模板详情失败: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteTemplate(promptId) {
+            if (!confirm('确定要删除该模板吗？此操作不可恢复！')) return;
+            
+            try {
+                await apiDelete(API_CONFIG.ENDPOINTS.PROMPT_TEMPLATE_DETAIL(promptId));
+                showMessage('模板已删除', 'success');
+                loadTemplates();
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

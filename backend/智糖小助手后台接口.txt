@@ -1,0 +1,151 @@
+# 智糖小助手后台管理接口文档
+
+## 📋 接口概览
+
+智糖小助手后台管理系统提供完整的CRUD操作，支持用户管理、FAQ管理、标签管理、提示词管理和消息记录管理。
+
+## 🔐 认证方式
+所有接口都需要在请求头中携带Bearer Token：
+```
+Authorization: Bearer <your_token>
+```
+
+## 📚 API接口列表
+
+### 认证模块
+- **POST /api/login** - 用户登录获取Token
+- **POST /api/register** - 用户注册
+- **POST /api/register/phone** - 手机号注册
+- **GET /api/health** - 健康检查接口
+
+### 用户管理模块
+- **GET /api/users** - 获取用户列表（分页）
+- **POST /api/users** - 创建新用户
+- **GET /api/users/{user_id}** - 获取用户详情
+- **PUT /api/users/{user_id}** - 更新用户信息
+- **DELETE /api/users/{user_id}** - 删除用户
+- **PUT /api/users/{user_id}/status** - 切换用户状态
+- **GET /api/user/profile** - 获取当前用户资料
+- **PUT /api/user/profile** - 更新当前用户资料
+
+### FAQ管理模块
+- **GET /api/faq/list** - 获取FAQ列表（分页）
+- **GET /api/faq/{faq_id}** - 获取FAQ详情
+- **POST /api/faq** - 创建FAQ（支持AI关键词扩充）
+- **PUT /api/faq** - 更新FAQ（通过请求体传递ID）
+- **PUT /api/faq/{faq_id}** - 更新指定FAQ
+- **DELETE /api/faq/{faq_id}** - 删除FAQ
+- **POST /api/faq/batch** - 批量操作FAQ（启用/禁用/删除）
+- **POST /api/faq/keywords/suggest** - AI关键词建议
+- **GET /api/faq/stats** - FAQ统计信息
+
+### 标签管理模块
+- **GET /api/tag** - 获取用户标签
+- **POST /api/tag** - 设置单个标签
+- **DELETE /api/tag/{tag_key}** - 删除单个标签
+- **POST /api/tag/batch** - 批量设置标签
+- **DELETE /api/tag/batch** - 批量删除标签
+- **POST /api/tag/clear** - 清空用户所有标签
+- **GET /api/tag/definitions** - 获取标签定义列表
+- **GET /api/tag/history** - 获取标签历史记录
+- **POST /api/tag/sync** - 同步标签到Coze
+
+### 提示词管理模块
+- **GET /api/prompt/templates** - 获取提示词模板列表
+- **POST /api/prompt/templates** - 创建提示词模板
+- **GET /api/prompt/templates/{prompt_id}** - 获取指定提示词模板
+- **PUT /api/prompt/templates/{prompt_id}** - 更新提示词模板
+- **DELETE /api/prompt/templates/{prompt_id}** - 删除提示词模板
+- **GET /api/prompt/user-settings** - 获取用户提示词设置
+- **PUT /api/prompt/user-settings** - 更新用户提示词设置
+- **PUT /api/prompt/user-settings/{prompt_type}** - 更新单个提示词设置
+- **DELETE /api/prompt/user-settings/{prompt_type}** - 重置单个提示词设置
+
+### 消息记录管理模块
+- **GET /api/chat/history** - 获取对话历史（分页）
+- **GET /api/chat/sessions** - 获取对话会话列表
+- **GET /api/chat/onboarding/status** - 获取新手引导状态
+- **POST /api/chat/stream** - 普通流式对话
+- **POST /api/chat/stream_with_tts** - 带TTS的流式对话
+- **POST /api/chat/speech_to_text** - 语音转文本（ASR）
+
+### 打卡积分系统
+- **POST /api/checkin** - 用户打卡
+- **GET /api/checkin/records** - 获取打卡记录
+- **GET /api/checkin/types** - 获取打卡类型
+
+### 系统管理
+- **GET /api/db-pool/status** - 获取数据库连接池状态（管理员功能）
+
+## 🔧 技术特性
+
+### 分页支持
+所有列表接口都支持分页参数：
+- `page`: 页码（默认1）
+- `page_size`: 每页数量（默认20）
+
+### 搜索筛选
+- 用户列表：支持 `keyword`（用户名/昵称）、`is_active`（状态）筛选
+- FAQ列表：支持 `category`（分类）、`status`（状态）、`search`（关键词）、`source`（来源）筛选
+
+### 权限控制
+- 普通用户只能操作自己的数据
+- 管理员可以操作所有用户的数据
+- 支持跨用户查询和管理
+
+### AI功能集成
+- FAQ创建时自动生成关键词
+- 支持流式对话和语音合成
+- 实时语音识别（ASR）
+
+### 数据验证
+- 安全的参数处理和类型转换
+- 完整的错误处理和响应格式
+- 支持事务操作确保数据一致性
+
+## 📊 响应格式
+
+### 成功响应
+```json
+{
+  "success": true,
+  "data": {...},
+  "message": "操作成功"
+}
+```
+
+### 分页响应
+```json
+{
+  "success": true,
+  "data": [...],
+  "total": 100,
+  "page": 1,
+  "page_size": 20,
+  "total_pages": 5
+}
+```
+
+### 错误响应
+```json
+{
+  "success": false,
+  "message": "错误描述"
+}
+```
+
+## 🚀 使用说明
+
+1. 所有管理接口都需要管理员权限的Token
+2. 前端聊天接口使用普通用户Token
+3. 支持跨域请求（CORS）
+4. 数据库连接池自动管理性能优化
+5. 支持实时语音识别和TTS合成
+
+## 📝 更新日志
+
+- 修复了Flask路由冲突问题，为所有路由添加了唯一的endpoint参数
+- 完善了用户删除时的外键约束处理
+- 优化了分页参数的类型安全处理
+- 增强了Keycloak认证集成
+- 添加了数据库连接池状态监控接口

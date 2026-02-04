@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+智糖小助手修复验证脚本
+测试关键组件是否能正常导入和运行
+"""
+
+import sys
+import os
+
+def test_imports():
+    """测试关键模块导入"""
+    print("🔍 开始验证智糖小助手修复...")
+
+    # 确保在main目录下运行，并添加路径
+    import os
+    import sys
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    if current_dir not in sys.path:
+        sys.path.insert(0, current_dir)
+
+    tests = [
+        ("PyYAML", "import yaml; yaml.safe_load('test: value')"),
+        ("Flask", "import flask"),
+        ("TTS服务", "from services.tts_service import TTSService"),
+        ("应用导入", "from app import app"),
+        ("路由系统", "from routes import register_blueprints"),
+        ("Coze服务", "from services.coze_service import CozeService"),
+    ]
+
+    passed = 0
+    failed = 0
+
+    for test_name, test_code in tests:
+        try:
+            exec(test_code)
+            print(f"✅ {test_name}: 通过")
+            passed += 1
+        except Exception as e:
+            print(f"❌ {test_name}: 失败 - {str(e)}")
+            failed += 1
+
+    print(f"\n📊 测试结果: {passed} 通过, {failed} 失败")
+
+    if failed == 0:
+        print("🎉 所有测试通过！应用可以正常启动。")
+        return True
+    else:
+        print("⚠️ 部分测试失败，请检查相关配置。")
+        return False
+
+if __name__ == "__main__":
+    success = test_imports()
+    sys.exit(0 if success else 1)

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签管理 - 智糖小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        let selectedUserId = '';
+        let tagDefinitions = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('tags');
+            loadTagDefinitions();
+        });
+
+        async function loadTagDefinitions() {
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.TAG_DEFINITIONS);
+                tagDefinitions = result.data || result.definitions || [];
+                renderTagManagement();
+            } catch (error) {
+                document.getElementById('main-content').innerHTML = 
+                    `<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        function renderTagManagement() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">标签管理</h2>
+                            <p class="text-gray-600">管理用户标签和标签定义</p>
+                        </div>
+                        <button onclick="showSetTagsModal()" class="btn btn-success">
+                            <i class="fas fa-tags mr-2"></i>设置标签
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">选择用户</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="number" id="user-id-input" placeholder="输入用户ID" 
+                                       class="input w-48">
+                                <button onclick="loadUserTags()" class="btn btn-primary">
+                                    <i class="fas fa-search mr-2"></i>查询
+                                </button>
+                                <button onclick="clearAllTags()" class="btn btn-danger">
+                                    <i class="fas fa-trash mr-2"></i>清空所有标签
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="user-tags-container" class="space-y-4">
+                            <div class="text-center text-gray-400 py-12">
+                                <i class="fas fa-info-circle text-4xl mb-4"></i>
+                                <p>请输入用户ID查询标签</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">标签定义</h3>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>标签键</th>
+                                        <th>标签名称</th>
+                                        <th>分类</th>
+                                        <th>数据类型</th>
+                                        <th>描述</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${tagDefinitions.map(def => `
+                                        <tr>
+                                            <td><code class="bg-gray-100 px-2 py-1 rounded">${def.tag_key}</code></td>
+                                            <td>${def.tag_name || '-'}</td>
+                                            <td>${def.category || '-'}</td>
+                                            <td>${def.data_type || '-'}</td>
+                                            <td>${def.description || '-'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadUserTags() {
+            const userId = document.getElementById('user-id-input').value;
+            if (!userId) {
+                showMessage('请输入用户ID', 'warning');
+                return;
+            }
+            
+            selectedUserId = userId;
+            const container = document.getElementById('user-tags-container');
+            container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
+            
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.TAG_LIST, { user_id: userId });
+                const tags = result.data || result.tags || {};
+                
+                container.innerHTML = `
+                    <div class="mb-4">
+                        <h4 class="font-semibold mb-2">用户 ${userId} 的标签</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${Object.entries(tags).map(([category, categoryTags]) => `
+                            <div class="border rounded-lg p-4">
+                                <h5 class="font-semibold mb-2">${category}</h5>
+                                <div class="space-y-2">
+                                    ${Array.isArray(categoryTags) ? categoryTags.map(tag => `
+                                        <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                            <div>
+                                                <span class="font-medium">${tag.tag_key || tag.key}</span>
+                                                <span class="text-gray-600 ml-2">${tag.tag_value || tag.value || '-'}</span>
+                                            </div>
+                                            <button onclick="deleteTag('${tag.tag_key || tag.key}')" 
+                                                    class="text-red-500 hover:text-red-700">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    `).join('') : '无标签'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        function showSetTagsModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="modal-content rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">设置标签</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="set-tags-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">用户ID *</label>
+                            <input type="number" name="user_id" required class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">标签 (JSON格式)</label>
+                            <textarea name="tags" class="input font-mono" rows="10" 
+                                      placeholder='{"basic": {"name": "张三", "age": "30"}}'></textarea>
+                            <p class="text-sm text-gray-500 mt-1">格式: {"分类": {"标签键": "标签值"}}</p>
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()" 
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">设置</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            document.getElementById('set-tags-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const user_id = parseInt(formData.get('user_id'));
+                let tags;
+                
+                try {
+                    tags = JSON.parse(formData.get('tags'));
+                } catch (error) {
+                    showMessage('标签格式错误，请输入有效的JSON', 'error');
+                    return;
+                }
+                
+                try {
+                    await apiPost(API_CONFIG.ENDPOINTS.TAG_BATCH, {
+                        user_id: user_id,
+                        tags: tags,
+                        source: 'manual'
+                    });
+                    showMessage('标签设置成功', 'success');
+                    modal.remove();
+                    if (selectedUserId == user_id) {
+                        loadUserTags();
+                    }
+                } catch (error) {
+                    showMessage('设置失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function deleteTag(tagKey) {
+            if (!selectedUserId) {
+                showMessage('请先选择用户', 'warning');
+                return;
+            }
+            
+            if (!confirm(`确定要删除标签 "${tagKey}" 吗？`)) return;
+            
+            try {
+                // DELETE接口需要user_id作为查询参数
+                await apiDelete(API_CONFIG.ENDPOINTS.TAG_DELETE(tagKey), { user_id: selectedUserId });
+                showMessage('标签已删除', 'success');
+                loadUserTags();
+            } catch (error) {
+                showMessage('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        async function clearAllTags() {
+            const userId = document.getElementById('user-id-input').value;
+            if (!userId) {
+                showMessage('请输入用户ID', 'warning');
+                return;
+            }
+            
+            if (!confirm(`确定要清空用户 ${userId} 的所有标签吗？此操作不可恢复！`)) return;
+            
+            try {
+                await apiPost(API_CONFIG.ENDPOINTS.TAG_CLEAR, { user_id: parseInt(userId) });
+                showMessage('所有标签已清空', 'success');
+                loadUserTags();
+            } catch (error) {
+                showMessage('清空失败: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

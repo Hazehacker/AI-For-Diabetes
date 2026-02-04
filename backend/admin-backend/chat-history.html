@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息记录 - 智糖小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        let currentPage = 1;
+        let pageSize = 20;
+        let totalPages = 1;
+        let filterUserId = '';
+        let filterStartDate = '';
+        let filterEndDate = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('chat');
+            loadChatHistory();
+        });
+
+        async function loadChatHistory() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i></div>';
+            
+            try {
+                const params = {
+                    page: currentPage,
+                    page_size: pageSize
+                };
+                if (filterUserId) params.user_id = filterUserId;
+                if (filterStartDate) params.start_date = filterStartDate;
+                if (filterEndDate) params.end_date = filterEndDate;
+                
+                const result = await apiGet(API_CONFIG.ENDPOINTS.CHAT_HISTORY, params);
+                
+                const messages = result.data || result.messages || [];
+                totalPages = result.total_pages || Math.ceil((result.total || 0) / pageSize);
+                
+                renderChatHistory(messages, result.total || 0);
+            } catch (error) {
+                mainContent.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-6"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        function renderChatHistory(messages, total) {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">消息记录</h2>
+                            <p class="text-gray-600">共 ${total} 条消息</p>
+                        </div>
+                        <button onclick="loadChatHistory()" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt mr-2"></i>刷新
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <input type="number" id="filter-user-id" placeholder="用户ID（留空查询所有）" 
+                                   class="input w-48" onchange="handleFilter()">
+                            <input type="date" id="filter-start-date" class="input w-48" onchange="handleFilter()">
+                            <input type="date" id="filter-end-date" class="input w-48" onchange="handleFilter()">
+                            <span class="text-sm text-gray-600">开始日期</span>
+                            <span class="text-sm text-gray-600">结束日期</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            ${messages.map(msg => `
+                                <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="badge badge-info">用户 ${msg.user_id}</span>
+                                            ${msg.conversation_id ? `<span class="text-sm text-gray-500">会话: ${msg.conversation_id}</span>` : ''}
+                                        </div>
+                                        <span class="text-sm text-gray-500">${formatDate(msg.created_at)}</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-600">用户消息:</span>
+                                            <p class="text-gray-800 mt-1">${msg.user_message || '-'}</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-600">AI回复:</span>
+                                            <p class="text-gray-800 mt-1 whitespace-pre-wrap">${msg.ai_message || '-'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div id="pagination-container" class="mt-6"></div>
+                    </div>
+                </div>
+            `;
+            
+            // 重新绑定事件
+            document.getElementById('filter-user-id')?.addEventListener('change', handleFilter);
+            document.getElementById('filter-start-date')?.addEventListener('change', handleFilter);
+            document.getElementById('filter-end-date')?.addEventListener('change', handleFilter);
+            
+            // 渲染分页
+            const paginationContainer = document.getElementById('pagination-container');
+            if (paginationContainer && totalPages > 1) {
+                paginationContainer.appendChild(createPagination(currentPage, totalPages, (page) => {
+                    currentPage = page;
+                    loadChatHistory();
+                }));
+            }
+        }
+
+        function handleFilter() {
+            filterUserId = document.getElementById('filter-user-id')?.value || '';
+            filterStartDate = document.getElementById('filter-start-date')?.value || '';
+            filterEndDate = document.getElementById('filter-end-date')?.value || '';
+            currentPage = 1;
+            loadChatHistory();
+        }
+    </script>
+</body>
+</html>
+

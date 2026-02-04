@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识文档管理 - 智糖小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+    <script src="js/common-layout.js"></script>
+    <style>
+        ${COMMON_STYLES}
+    </style>
+</head>
+<body class="bg-gray-50">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initCommonLayout('knowledge');
+            renderKnowledgeManagement();
+        });
+
+        function renderKnowledgeManagement() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">知识文档管理</h2>
+                            <p class="text-gray-600">管理知识库文档和FAQ来源</p>
+            </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-4">FAQ来源统计</h3>
+                            <p class="text-gray-600 mb-4">查看FAQ的来源文档分布情况</p>
+                            <button onclick="loadFAQStats()" class="btn btn-primary">
+                                <i class="fas fa-chart-bar mr-2"></i>查看统计
+                    </button>
+                </div>
+                
+                        <div id="stats-container" class="mt-6"></div>
+            </div>
+            
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">说明</h3>
+                        <div class="space-y-2 text-gray-600">
+                            <p>• 知识文档通过FAQ管理页面进行管理</p>
+                            <p>• FAQ创建时可以指定来源文档（source字段）</p>
+                            <p>• 可以通过FAQ统计接口查看各文档的FAQ数量</p>
+                            <p>• 文档上传和解析功能由后端API处理</p>
+                    </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadFAQStats() {
+            const container = document.getElementById('stats-container');
+            container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i></div>';
+            
+            try {
+                const result = await apiGet(API_CONFIG.ENDPOINTS.FAQ_STATS);
+                const stats = result.data || result;
+                
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-1">FAQ总数</div>
+                            <div class="text-2xl font-bold text-blue-600">${stats.total || 0}</div>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-1">启用数量</div>
+                            <div class="text-2xl font-bold text-green-600">${stats.active || 0}</div>
+                            </div>
+                        <div class="bg-yellow-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-1">禁用数量</div>
+                            <div class="text-2xl font-bold text-yellow-600">${stats.inactive || 0}</div>
+                        </div>
+                    </div>
+                    ${stats.sources && Object.keys(stats.sources).length > 0 ? `
+                        <div class="mt-6">
+                            <h4 class="font-semibold mb-3">来源文档分布</h4>
+                            <div class="space-y-2">
+                                ${Object.entries(stats.sources).map(([source, count]) => `
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <span class="font-mono text-sm">${source || '未知来源'}</span>
+                                        <span class="badge badge-info">${count} 条FAQ</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                    </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+    </script>
+</body>
+</html>

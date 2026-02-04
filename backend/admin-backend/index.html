@@ -1,0 +1,3617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智糖小助手 - 管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/api-config.js"></script>
+
+    <style>
+        .gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .gradient-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .gradient-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .gradient-warning {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        .sidebar-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-right: 3px solid #fff;
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            background-color: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .table tr:hover {
+            background-color: #f9fafb;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            color: #2563eb;
+            background-color: #eff6ff;
+            border-bottom-color: #2563eb;
+        }
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+        .slide-panel {
+            position: fixed;
+            top: 16px;
+            right: -400px;
+            width: 400px;
+            height: calc(100vh - 32px);
+            background: white;
+            box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+            z-index: 60;
+            transition: right 0.3s ease-in-out;
+            border-radius: 12px 0 0 12px;
+            overflow: hidden;
+        }
+        .slide-panel.open {
+            right: 16px;
+        }
+        .slide-panel-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 55;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+        .slide-panel-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .tag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+        .tag-item:hover {
+            background-color: #f9fafb;
+        }
+        .tag-key {
+            font-weight: 600;
+            color: #374151;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        .tag-value {
+            color: #059669;
+            font-weight: 500;
+            background: #ecfdf5;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #a7f3d0;
+        }
+        .tag-value.empty {
+            color: #9ca3af;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+        .input {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .badge-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .badge-info {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .bounce-in {
+            animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 加载界面 -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-16 h-16 gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 bounce-in">
+                <i class="fas fa-cog text-white text-2xl animate-spin"></i>
+            </div>
+            <h2 class="text-xl font-semibold gradient-text mb-2">智糖小助手</h2>
+            <p class="text-gray-600">管理后台加载中...</p>
+        </div>
+    </div>
+
+    <!-- 主应用界面 -->
+    <div id="app" class="hidden">
+        <!-- 顶部导航栏 -->
+        <header class="bg-white shadow-lg px-6 py-4 flex items-center justify-between fixed top-0 left-0 right-0 z-40">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                    <i class="fas fa-cog text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold gradient-text">智糖小助手管理后台</h1>
+                    <p class="text-sm text-gray-600">独立管理服务</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-600">
+                    <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                    服务运行中
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-600"></i>
+                    </div>
+                    <span id="admin-username" class="text-sm font-medium text-gray-700">管理员</span>
+                </div>
+                <button id="logout-btn" class="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-1"></i>退出
+                </button>
+            </div>
+        </header>
+
+        <!-- 侧边栏 -->
+        <nav id="sidebar" class="sidebar-gradient w-64 min-h-screen fixed left-0 top-16 pt-6 px-4 z-30">
+            <div class="mb-8">
+                <div class="text-white text-xl font-bold mb-2">菜单</div>
+                <div class="h-1 bg-white/20 rounded"></div>
+            </div>
+
+            <ul class="space-y-2" id="nav-menu">
+                <li>
+                    <a href="#users" data-page="users" class="sidebar-item nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-white active">
+                        <i class="fas fa-users w-5"></i>
+                        <span>用户管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#faq" data-page="faq" class="sidebar-item nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-question-circle w-5"></i>
+                        <span>FAQ管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#tags" data-page="tags" class="sidebar-item nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-tags w-5"></i>
+                        <span>标签管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#prompts" data-page="prompts" class="sidebar-item nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-comments w-5"></i>
+                        <span>提示词管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#messages" data-page="messages" class="sidebar-item nav-item flex items-center space-x-3 px-4 py-3 rounded-lg text-white">
+                        <i class="fas fa-comments w-5"></i>
+                        <span>消息记录</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="ml-64 mt-16 p-6 min-h-screen">
+            <div id="main-content" class="fade-in">
+                <!-- 页面内容将在这里动态加载 -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 全局消息提示 -->
+    <div id="message-toast" class="fixed top-4 right-4 z-50 hidden">
+        <div class="px-6 py-4 rounded-lg shadow-lg max-w-sm">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-info-circle"></i>
+                <span id="message-text"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 全局状态
+        let currentPage = 'dashboard';
+        let currentUser = null;
+
+        // 页面内容
+        const pages = {
+            users: `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">用户管理</h2>
+                            <p class="text-gray-600">管理系统用户和权限</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="showUserModal()" class="btn btn-success">
+                                <i class="fas fa-user-plus"></i>创建用户
+                            </button>
+                            <button onclick="showBulkImportUserModal()" class="btn btn-primary">
+                                <i class="fas fa-upload"></i>批量导入
+                            </button>
+                            <button onclick="downloadUserTemplate()" class="btn btn-secondary">
+                                <i class="fas fa-download"></i>下载模板
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <input type="text" id="user-search" placeholder="搜索用户名或昵称..."
+                                   class="input flex-1" oninput="filterUsers()">
+                            <select id="user-status-filter" class="input w-48" onchange="filterUsers()">
+                                <option value="">全部状态</option>
+                                <option value="active">已激活</option>
+                                <option value="inactive">未激活</option>
+                            </select>
+                            <button onclick="loadUsers()" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt"></i>刷新
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>用户名</th>
+                                        <th>昵称</th>
+                                        <th>手机号</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-12">
+                                            <div class="loading"></div>
+                                            <p class="mt-4 text-gray-600">加载中...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="users-pagination" class="mt-6"></div>
+                    </div>
+                </div>
+            `,
+
+            faq: `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">FAQ管理</h2>
+                            <p class="text-gray-600">管理系统问答内容</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="showFaqModal()" class="btn btn-success">
+                                <i class="fas fa-plus"></i>创建FAQ
+                            </button>
+                            <button onclick="showBulkImportFaqModal()" class="btn btn-primary">
+                                <i class="fas fa-upload"></i>批量导入
+                            </button>
+                            <button onclick="downloadFaqTemplate()" class="btn btn-secondary">
+                                <i class="fas fa-download"></i>下载模板
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <input type="text" id="faq-search" placeholder="搜索问题或答案..."
+                                   class="input flex-1" oninput="filterFaqs()">
+                            <select id="faq-category-filter" class="input w-48" onchange="filterFaqs()">
+                                <option value="">全部分类</option>
+                            </select>
+                            <select id="faq-status-filter" class="input w-48" onchange="filterFaqs()">
+                                <option value="">全部状态</option>
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                            <button onclick="loadFaqs()" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt"></i>刷新
+                            </button>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>问题</th>
+                                        <th>分类</th>
+                                        <th>状态</th>
+                                        <th>查看次数</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="faqs-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-12">
+                                            <div class="loading"></div>
+                                            <p class="mt-4 text-gray-600">加载中...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="faqs-pagination" class="mt-6"></div>
+                    </div>
+                </div>
+            `,
+
+            tags: `
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold gradient-text mb-2">标签系统</h2>
+                        <p class="text-gray-600">管理系统标签和用户标签记录</p>
+                    </div>
+
+                    <!-- Tab 导航 -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="border-b border-gray-200">
+                            <nav class="flex">
+                                <button onclick="switchTagTab('records')"
+                                        id="tab-records"
+                                        class="tab-button active flex-1 py-4 px-6 text-center font-medium text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+                                    <i class="fas fa-tags mr-2"></i>标签记录
+                                </button>
+                                <button onclick="switchTagTab('management')"
+                                        id="tab-management"
+                                        class="tab-button flex-1 py-4 px-6 text-center font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300">
+                                    <i class="fas fa-cog mr-2"></i>标签管理
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab 内容 -->
+                        <div id="tab-content-records" class="tab-content p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-1">用户标签记录</h3>
+                                    <p class="text-sm text-gray-600">查看和管理所有用户的标签数据</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="showBatchTagModal()" class="btn btn-success">
+                                        <i class="fas fa-upload"></i>批量导入
+                                    </button>
+                                    <button onclick="exportUserTags()" class="btn btn-primary">
+                                        <i class="fas fa-download"></i>导出数据
+                                    </button>
+                                    <button onclick="loadAllUserTags()" class="btn btn-secondary">
+                                        <i class="fas fa-sync-alt"></i>刷新
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 筛选区域 -->
+                            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">用户名称</label>
+                                        <input type="text" id="user-filter-name" placeholder="输入用户名筛选"
+                                               class="input" oninput="filterUserTags()">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">标签筛选</label>
+                                        <select id="tag-filter-type" class="input" onchange="filterUserTags()">
+                                            <option value="">全部标签</option>
+                                            <option value="name">姓名</option>
+                                            <option value="age">年龄</option>
+                                            <option value="gender">性别</option>
+                                            <option value="theme">主题偏好</option>
+                                            <option value="level">用户等级</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button onclick="clearFilters()" class="btn btn-secondary">
+                                            <i class="fas fa-eraser mr-1"></i>清除筛选
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 用户标签表格 -->
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>用户ID</th>
+                                            <th>用户名</th>
+                                            <th>姓名</th>
+                                            <th>年龄</th>
+                                            <th>性别</th>
+                                            <th>主题偏好</th>
+                                            <th>用户等级</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="user-tags-table-body">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-12">
+                                                <div class="loading"></div>
+                                                <p class="mt-4 text-gray-600">加载中...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div id="user-tags-pagination" class="mt-6"></div>
+                        </div>
+
+                        <div id="tab-content-management" class="tab-content p-6 hidden">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800 mb-1">标签定义管理</h3>
+                                    <p class="text-sm text-gray-600">管理系统标签定义</p>
+                                </div>
+                                <button onclick="showTagDefinitionModal()" class="btn btn-success">
+                                    <i class="fas fa-plus"></i>添加标签定义
+                                </button>
+                            </div>
+
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>标签键</th>
+                                            <th>标签名称</th>
+                                            <th>分类</th>
+                                            <th>数据类型</th>
+                                            <th>描述</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tag-definitions-body">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-12">
+                                                <div class="loading"></div>
+                                                <p class="mt-4 text-gray-600">加载中...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            prompts: `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">提示词模板管理</h2>
+                            <p class="text-gray-600">管理系统提示词模板</p>
+                        </div>
+                        <button onclick="showPromptModal()" class="btn btn-success">
+                            <i class="fas fa-plus"></i>创建模板
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>类型</th>
+                                        <th>名称</th>
+                                        <th>版本</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prompts-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-12">
+                                            <div class="loading"></div>
+                                            <p class="mt-4 text-gray-600">加载中...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="prompts-pagination" class="mt-6"></div>
+                    </div>
+                </div>
+            `,
+
+            messages: `
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text mb-2">消息记录</h2>
+                            <p class="text-gray-600">查看用户对话历史</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="loadMessages(1)" class="btn btn-secondary">
+                                <i class="fas fa-sync-alt"></i>刷新
+                            </button>
+                            <button onclick="exportMessages()" class="btn btn-success">
+                                <i class="fas fa-download"></i>导出数据
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="flex items-center space-x-4 mb-6">
+                            <input type="number" id="message-user-id" placeholder="用户ID（留空查询所有）"
+                                   class="input w-48" onchange="loadMessages(1)">
+                            <input type="date" id="message-start-date" class="input w-48" onchange="loadMessages(1)">
+                            <input type="date" id="message-end-date" class="input w-48" onchange="loadMessages(1)">
+                            <span class="text-sm text-gray-600">开始日期</span>
+                            <span class="text-sm text-gray-600">结束日期</span>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>用户ID</th>
+                                        <th>会话ID</th>
+                                        <th>用户消息</th>
+                                        <th>AI回复</th>
+                                        <th>时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="messages-table-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-12">
+                                            <div class="loading"></div>
+                                            <p class="mt-4 text-gray-600">加载中...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- 分页容器 -->
+                            <div id="messages-pagination" class="mt-6 flex justify-center"></div>
+                        </div>
+
+                        <div id="messages-pagination" class="mt-6"></div>
+                    </div>
+                </div>
+            `,
+
+            knowledge: `
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold gradient-text mb-2">知识问答管理</h2>
+                        <p class="text-gray-600">查看知识库统计信息</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-4">FAQ来源统计</h3>
+                            <p class="text-gray-600 mb-4">查看FAQ的来源文档分布情况</p>
+                            <button onclick="loadKnowledgeStats()" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i>查看统计
+                            </button>
+                        </div>
+
+                        <div id="knowledge-stats-container" class="mt-6"></div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4">说明</h3>
+                        <div class="space-y-2 text-gray-600">
+                            <p>• 知识文档通过FAQ管理页面进行管理</p>
+                            <p>• FAQ创建时可以指定来源文档（source字段）</p>
+                            <p>• 可以通过FAQ统计接口查看各文档的FAQ数量</p>
+                            <p>• 文档上传和解析功能由后端API处理</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            if (!getToken()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 加载用户信息
+            loadUserInfo();
+
+            // 初始化导航
+            initNavigation();
+
+            // 加载初始页面
+            showPage('users');
+
+            // 隐藏加载界面
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+            }, 1000);
+        });
+
+        // 加载用户信息
+        async function loadUserInfo() {
+            try {
+                const user = JSON.parse(localStorage.getItem('admin_user') || '{}');
+                document.getElementById('admin-username').textContent = user.username || '管理员';
+                document.getElementById('current-user-info').textContent = user.username || '-';
+                currentUser = user;
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
+            }
+        }
+
+        // 初始化导航
+        function initNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    showPage(page);
+
+                    // 更新活跃状态
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // 退出登录
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                if (confirm('确定要退出登录吗？')) {
+                    clearToken();
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
+        // 显示页面
+        function showPage(pageName) {
+            currentPage = pageName;
+            document.getElementById('main-content').innerHTML = pages[pageName];
+
+            // 加载页面数据
+            switch(pageName) {
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'faq':
+                    loadFaqs();
+                    break;
+                case 'tags':
+                    loadAllUserTags(); // 默认加载所有用户标签记录
+                    loadTagDefinitions();
+                    break;
+                case 'prompts':
+                    loadPrompts();
+                    break;
+                case 'messages':
+                    loadMessages();
+                    break;
+            }
+        }
+
+
+        // 全局用户数据存储
+        if (!window.allUserData) {
+            window.allUserData = [
+                { user_id: 1, username: 'admin', nickname: '系统管理员', phone_number: '13800138000', is_active: true, created_at: '2024-01-01 12:00:00' },
+                { user_id: 2, username: 'user1', nickname: '张三', phone_number: '13800138001', is_active: true, created_at: '2024-01-02 10:30:00' },
+                { user_id: 3, username: 'user2', nickname: '李四', phone_number: '13800138002', is_active: false, created_at: '2024-01-03 14:20:00' }
+            ];
+        }
+
+        // 用户管理功能
+        async function loadUsers() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12"><div class="loading"></div><p class="mt-4 text-gray-600">加载中...</p></td></tr>';
+
+            try {
+                // 使用全局用户数据
+                const users = window.allUserData;
+
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.user_id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.nickname || '-'}</td>
+                        <td>${formatPhoneNumber(user.phone_number) || '-'}</td>
+                        <td>
+                            <span class="badge ${user.is_active ? 'badge-success' : 'badge-danger'}">
+                                ${user.is_active ? '已激活' : '未激活'}
+                            </span>
+                        </td>
+                        <td>${formatDate(user.created_at)}</td>
+                        <td>
+                            <div class="flex flex-wrap gap-1">
+                                <button onclick="editUser(${user.user_id})" class="btn btn-primary text-sm">
+                                    <i class="fas fa-edit"></i>编辑
+                                </button>
+                                <button onclick="resetUserPassword(${user.user_id}, '${user.username}')" class="btn btn-warning text-sm">
+                                    <i class="fas fa-key"></i>重置密码
+                                </button>
+                                <button onclick="toggleUserStatus(${user.user_id}, ${!user.is_active})" class="btn ${user.is_active ? 'btn-secondary' : 'btn-success'} text-sm">
+                                    <i class="fas fa-${user.is_active ? 'ban' : 'check'}"></i>${user.is_active ? '禁用' : '启用'}
+                                </button>
+                                <button onclick="deleteUser(${user.user_id})" class="btn btn-danger text-sm">
+                                    <i class="fas fa-trash"></i>删除
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-red-600">${error.message}</td></tr>`;
+            }
+        }
+
+        function showUserModal(userId = null) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="modal-content rounded-xl p-6 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">${userId ? '编辑用户' : '创建用户'}</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="user-form" class="space-y-4">
+                        ${userId ? '<input type="hidden" name="user_id" value="' + userId + '">' : ''}
+                        <div>
+                            <label class="block text-sm font-medium mb-1">用户名 *</label>
+                            <input type="text" name="username" required class="input" ${userId ? 'readonly' : ''}>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">密码 ${userId ? '' : '*'}</label>
+                            <input type="password" name="password" ${userId ? '' : 'required'} class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">昵称</label>
+                            <input type="text" name="nickname" class="input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">手机号</label>
+                            <input type="tel" name="phone_number" class="input">
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">${userId ? '保存' : '创建'}</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('user-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+
+                try {
+                    if (userId) {
+                        // 更新用户
+                        await apiPut(API_CONFIG.ENDPOINTS.USER_DETAIL(userId), data);
+                        showMessage('用户更新成功', 'success');
+                    } else {
+                        // 创建用户
+                        await apiPost(API_CONFIG.ENDPOINTS.USERS, data);
+                        showMessage('用户创建成功', 'success');
+                    }
+                    modal.remove();
+                    loadUsers();
+                } catch (error) {
+                    showMessage('操作失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // FAQ管理功能
+        async function loadFaqs() {
+            const tbody = document.getElementById('faqs-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12"><div class="loading"></div><p class="mt-4 text-gray-600">加载中...</p></td></tr>';
+
+            try {
+                // 模拟FAQ数据
+                const faqs = [
+                    { id: 1, question: '如何注册账号？', category: 'account', status: 1, view_count: 125, created_at: '2024-01-01 12:00:00' },
+                    { id: 2, question: '忘记密码怎么办？', category: 'security', status: 1, view_count: 89, created_at: '2024-01-02 10:30:00' },
+                    { id: 3, question: '如何联系客服？', category: 'support', status: 0, view_count: 45, created_at: '2024-01-03 14:20:00' }
+                ];
+
+                tbody.innerHTML = faqs.map(faq => `
+                    <tr>
+                        <td>${faq.id}</td>
+                        <td class="max-w-xs truncate">${faq.question}</td>
+                        <td>${faq.category || '-'}</td>
+                        <td>
+                            <span class="badge ${faq.status == 1 ? 'badge-success' : 'badge-danger'}">
+                                ${faq.status == 1 ? '启用' : '禁用'}
+                            </span>
+                        </td>
+                        <td>${faq.view_count}</td>
+                        <td>${formatDate(faq.created_at)}</td>
+                        <td>
+                            <button onclick="editFaq(${faq.id})" class="btn btn-primary text-sm mr-2">
+                                <i class="fas fa-edit"></i>编辑
+                            </button>
+                            <button onclick="viewFaq(${faq.id})" class="btn btn-info text-sm mr-2">
+                                <i class="fas fa-eye"></i>详情
+                            </button>
+                            <button onclick="deleteFaq(${faq.id})" class="btn btn-danger text-sm">
+                                <i class="fas fa-trash"></i>删除
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-red-600">${error.message}</td></tr>`;
+            }
+        }
+
+        function showFaqModal(faqId = null) {
+            // 如果是编辑，先获取FAQ数据
+            let faq = null;
+            if (faqId) {
+                // 模拟数据 - 实际项目中应该从API获取
+                const faqs = [
+                    {
+                        id: 1,
+                        question: '如何注册账号？',
+                        answer: '注册账号非常简单：1. 点击注册按钮 2. 填写基本信息（用户名、密码、手机号）3. 验证手机号 4. 提交注册即可完成账号注册。',
+                        category: 'account',
+                        keywords: ['注册', '账号', '手机号'],
+                        status: 1,
+                        source: 'user_manual.pdf'
+                    },
+                    {
+                        id: 2,
+                        question: '忘记密码怎么办？',
+                        answer: '如果您忘记密码，请按照以下步骤重置：1. 在登录页面点击"忘记密码"链接 2. 输入您注册时使用的手机号 3. 接收短信验证码 4. 输入新密码 5. 确认新密码 6. 提交重置即可。',
+                        category: 'security',
+                        keywords: ['忘记密码', '重置密码', '验证码'],
+                        status: 1,
+                        source: 'faq_database.json'
+                    },
+                    {
+                        id: 3,
+                        question: '如何联系客服？',
+                        answer: '您可以通过多种方式联系我们的客服：1. 在线客服：点击页面右下角的客服图标 2. 电话客服：拨打400-123-4567 3. 邮箱客服：发送邮件至support@example.com 4. 工作时间：周一至周五 9:00-18:00。',
+                        category: 'support',
+                        keywords: ['客服', '联系方式', '在线客服'],
+                        status: 0,
+                        source: 'knowledge_base.md'
+                    }
+                ];
+                faq = faqs.find(f => f.id == faqId);
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-${faqId ? 'edit' : 'plus'} text-blue-500 mr-2"></i>
+                            ${faqId ? '编辑FAQ' : '创建FAQ'}
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <form id="faq-form" class="space-y-6">
+                        ${faqId ? '<input type="hidden" name="id" value="' + faqId + '">' : ''}
+
+                        <!-- 问题 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-question text-orange-500 mr-2"></i>
+                                问题 *
+                            </label>
+                            <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                                <textarea name="question" required class="w-full bg-transparent border-none outline-none resize-none" rows="3" placeholder="请输入FAQ问题">${faq ? faq.question : ''}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- 答案 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-comment-dots text-green-500 mr-2"></i>
+                                答案 *
+                            </label>
+                            <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                                <textarea name="answer" required class="w-full bg-transparent border-none outline-none resize-none" rows="6" placeholder="请输入FAQ答案">${faq ? faq.answer : ''}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- 分类和状态 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-folder text-purple-500 mr-2"></i>
+                                    分类
+                                </label>
+                                <div class="bg-purple-50 border border-purple-200 p-3 rounded">
+                                    <input type="text" name="category" class="w-full bg-transparent border-none outline-none" placeholder="如：account、security" value="${faq ? faq.category || '' : ''}">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-toggle-on text-blue-500 mr-2"></i>
+                                    状态
+                                </label>
+                                <div class="bg-blue-50 border border-blue-200 p-3 rounded">
+                                    <select name="status" class="w-full bg-transparent border-none outline-none">
+                                        <option value="1" ${faq && faq.status == 1 ? 'selected' : ''}>启用</option>
+                                        <option value="0" ${faq && faq.status == 0 ? 'selected' : ''}>禁用</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 来源 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-file text-indigo-500 mr-2"></i>
+                                来源
+                            </label>
+                            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded">
+                                <input type="text" name="source" class="w-full bg-transparent border-none outline-none" placeholder="如：user_manual.pdf" value="${faq ? faq.source || '' : ''}">
+                            </div>
+                        </div>
+
+                        <!-- 关键词 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-tags text-red-500 mr-2"></i>
+                                关键词
+                            </label>
+                            <div class="bg-red-50 border border-red-200 p-3 rounded">
+                                <input type="text" name="keywords" class="w-full bg-transparent border-none outline-none" placeholder="多个关键词用逗号分隔" value="${faq && faq.keywords ? faq.keywords.join(', ') : ''}">
+                            </div>
+                        </div>
+
+                        <!-- 提示信息 -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                                <div class="text-sm text-blue-700">
+                                    <p class="font-medium mb-1">填写说明：</p>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>问题和答案为必填项</li>
+                                        <li>关键词建议填写，便于搜索</li>
+                                        <li>分类可按功能模块划分</li>
+                                        <li>来源可填写文档名称</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">
+                                <i class="fas fa-save mr-1"></i>${faqId ? '保存修改' : '创建FAQ'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('faq-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+                data.status = parseInt(data.status);
+
+                try {
+                    if (faqId) {
+                        // 更新FAQ
+                        await apiPut(API_CONFIG.ENDPOINTS.FAQ_UPDATE(faqId), data);
+                        showMessage('FAQ更新成功', 'success');
+                    } else {
+                        // 创建FAQ
+                        await apiPost(API_CONFIG.ENDPOINTS.FAQ_CREATE, data);
+                        showMessage('FAQ创建成功', 'success');
+                    }
+                    modal.remove();
+                    loadFaqs();
+                } catch (error) {
+                    showMessage('操作失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // 标签管理功能
+        async function loadTagDefinitions() {
+            const tbody = document.getElementById('tag-definitions-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12"><div class="loading"></div><p class="mt-4 text-gray-600">加载中...</p></td></tr>';
+
+            try {
+                // 模拟标签定义数据（根据接口和数据库扩展）
+                const definitions = [
+                    // 基础信息
+                    { tag_key: 'name', tag_name: '姓名', category: 'basic', data_type: 'string', description: '用户真实姓名' },
+                    { tag_key: 'nickname', tag_name: '昵称', category: 'basic', data_type: 'string', description: '用户昵称' },
+                    { tag_key: 'age', tag_name: '年龄', category: 'basic', data_type: 'integer', description: '用户年龄' },
+                    { tag_key: 'gender', tag_name: '性别', category: 'basic', data_type: 'string', description: '用户性别' },
+                    { tag_key: 'birthday', tag_name: '生日', category: 'basic', data_type: 'date', description: '用户生日日期' },
+                    { tag_key: 'phone', tag_name: '手机号', category: 'basic', data_type: 'string', description: '联系电话' },
+                    { tag_key: 'email', tag_name: '邮箱', category: 'basic', data_type: 'string', description: '电子邮箱' },
+
+                    // 偏好设置
+                    { tag_key: 'theme', tag_name: '主题偏好', category: 'preference', data_type: 'string', description: '界面主题偏好' },
+                    { tag_key: 'language', tag_name: '语言', category: 'preference', data_type: 'string', description: '界面语言' },
+                    { tag_key: 'timezone', tag_name: '时区', category: 'preference', data_type: 'string', description: '时区设置' },
+                    { tag_key: 'notification', tag_name: '通知设置', category: 'preference', data_type: 'boolean', description: '是否接收通知' },
+
+                    // 行为数据
+                    { tag_key: 'last_login', tag_name: '最后登录', category: 'behavior', data_type: 'datetime', description: '最后登录时间' },
+                    { tag_key: 'login_count', tag_name: '登录次数', category: 'behavior', data_type: 'integer', description: '累计登录次数' },
+                    { tag_key: 'active_days', tag_name: '活跃天数', category: 'behavior', data_type: 'integer', description: '连续活跃天数' },
+                    { tag_key: 'total_messages', tag_name: '消息总数', category: 'behavior', data_type: 'integer', description: '发送消息总数' },
+
+                    // 用户属性
+                    { tag_key: 'level', tag_name: '用户等级', category: 'attribute', data_type: 'string', description: 'VIP等级' },
+                    { tag_key: 'points', tag_name: '积分', category: 'attribute', data_type: 'integer', description: '用户积分' },
+                    { tag_key: 'balance', tag_name: '余额', category: 'attribute', data_type: 'float', description: '账户余额' },
+                    { tag_key: 'membership', tag_name: '会员状态', category: 'attribute', data_type: 'boolean', description: '是否为会员' },
+
+                    // 健康数据（针对医疗场景）
+                    { tag_key: 'blood_type', tag_name: '血型', category: 'health', data_type: 'string', description: '血型' },
+                    { tag_key: 'height', tag_name: '身高', category: 'health', data_type: 'float', description: '身高(cm)' },
+                    { tag_key: 'weight', tag_name: '体重', category: 'health', data_type: 'float', description: '体重(kg)' },
+                    { tag_key: 'medical_history', tag_name: '病史', category: 'health', data_type: 'string', description: '医疗病史' },
+
+                    // 自定义标签
+                    { tag_key: 'custom_tag_1', tag_name: '自定义标签1', category: 'custom', data_type: 'string', description: '自定义标签字段1' },
+                    { tag_key: 'custom_tag_2', tag_name: '自定义标签2', category: 'custom', data_type: 'string', description: '自定义标签字段2' },
+                    { tag_key: 'custom_tag_3', tag_name: '自定义标签3', category: 'custom', data_type: 'string', description: '自定义标签字段3' }
+                ];
+
+                tbody.innerHTML = definitions.map(def => `
+                    <tr>
+                        <td><code class="bg-gray-100 px-2 py-1 rounded">${def.tag_key}</code></td>
+                        <td>${def.tag_name || '-'}</td>
+                        <td>
+                            <span class="badge badge-info">${def.category || '-'}</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-secondary">${def.data_type || '-'}</span>
+                        </td>
+                        <td class="max-w-xs truncate" title="${def.description || ''}">${def.description || '-'}</td>
+                        <td>
+                            <button onclick="showTagDefinitionModal('${def.tag_key}')" class="btn btn-primary text-sm mr-2">
+                                <i class="fas fa-edit"></i>编辑
+                            </button>
+                            <button onclick="deleteTagDefinition('${def.tag_key}')" class="btn btn-danger text-sm">
+                                <i class="fas fa-trash"></i>删除
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-12 text-red-600">${error.message}</td></tr>`;
+            }
+        }
+
+        // 加载所有用户标签（表格形式）
+        async function loadAllUserTags() {
+            const tbody = document.getElementById('user-tags-table-body');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12"><div class="loading"></div><p class="mt-4 text-gray-600">加载中...</p></td></tr>';
+
+            try {
+                // 模拟用户标签数据
+                const users = [
+                    {
+                        user_id: 1,
+                        username: 'admin',
+                        tags: { name: '系统管理员', age: '30', gender: '男', theme: 'light', level: '管理员' }
+                    },
+                    {
+                        user_id: 2,
+                        username: 'zhangsan',
+                        tags: { name: '张三', age: '28', gender: '男', theme: 'dark', level: 'VIP' }
+                    },
+                    {
+                        user_id: 3,
+                        username: 'lisi',
+                        tags: { name: '李四', age: '25', gender: '女', theme: 'light', level: '普通' }
+                    },
+                    {
+                        user_id: 4,
+                        username: 'wangwu',
+                        tags: { name: '王五', age: '35', gender: '男', theme: 'auto', level: 'VIP' }
+                    },
+                    {
+                        user_id: 5,
+                        username: 'zhaoliu',
+                        tags: { name: '赵六', age: '22', gender: '女', theme: 'dark', level: '普通' }
+                    },
+                    {
+                        user_id: 6,
+                        username: 'sunqi',
+                        tags: { name: '孙七', age: '40', gender: '男', theme: 'light', level: '钻石' }
+                    },
+                    {
+                        user_id: 7,
+                        username: 'zhouba',
+                        tags: { name: '周八', age: '27', gender: '女', theme: 'auto', level: 'VIP' }
+                    },
+                    {
+                        user_id: 8,
+                        username: 'wujiu',
+                        tags: { name: '吴九', age: '33', gender: '男', theme: 'dark', level: '普通' }
+                    }
+                ];
+
+                // 存储原始数据用于筛选
+                window.allUserTagsData = users;
+
+                renderUserTagsTable(users);
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-red-600">${error.message}</td></tr>`;
+            }
+        }
+
+        // 渲染用户标签表格
+        function renderUserTagsTable(users) {
+            const tbody = document.getElementById('user-tags-table-body');
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.user_id}</td>
+                    <td>
+                        <div class="flex items-center">
+                            <span class="font-medium">${user.username}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-info">${user.tags.name || '-'}</span>
+                    </td>
+                    <td>${user.tags.age || '-'}</td>
+                    <td>
+                        <span class="badge ${user.tags.gender === '男' ? 'badge-info' : 'badge-success'}">
+                            ${user.tags.gender || '-'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-secondary">${user.tags.theme || '-'}</span>
+                    </td>
+                    <td>
+                        <span class="badge ${user.tags.level === '管理员' ? 'badge-danger' :
+                                           user.tags.level === '钻石' ? 'badge-warning' :
+                                           user.tags.level === 'VIP' ? 'badge-info' : 'badge-secondary'}">
+                            ${user.tags.level || '-'}
+                        </span>
+                    </td>
+                        <td>
+                            <div class="flex space-x-1">
+                                <button onclick="viewUserTagsDetail(${user.user_id})" class="btn btn-info text-sm">
+                                    <i class="fas fa-eye"></i>详情
+                                </button>
+                                <button onclick="editUserTags(${user.user_id})" class="btn btn-primary text-sm">
+                                    <i class="fas fa-edit"></i>编辑
+                                </button>
+                                <button onclick="deleteUserTags(${user.user_id})" class="btn btn-danger text-sm">
+                                    <i class="fas fa-trash"></i>清空
+                                </button>
+                            </div>
+                        </td>
+                </tr>
+            `).join('');
+        }
+
+        // 筛选用户标签
+        function filterUserTags() {
+            const nameFilter = document.getElementById('user-filter-name').value.toLowerCase();
+            const tagFilter = document.getElementById('tag-filter-type').value;
+
+            if (!window.allUserTagsData) return;
+
+            let filteredUsers = window.allUserTagsData.filter(user => {
+                const nameMatch = !nameFilter || user.username.toLowerCase().includes(nameFilter) ||
+                                 (user.tags.name && user.tags.name.toLowerCase().includes(nameFilter));
+
+                const tagMatch = !tagFilter || user.tags[tagFilter];
+
+                return nameMatch && tagMatch;
+            });
+
+            renderUserTagsTable(filteredUsers);
+        }
+
+        // 清除筛选
+        function clearFilters() {
+            document.getElementById('user-filter-name').value = '';
+            document.getElementById('tag-filter-type').value = '';
+            if (window.allUserTagsData) {
+                renderUserTagsTable(window.allUserTagsData);
+            }
+        }
+
+        // 编辑用户标签
+        function editUserTags(userId) {
+            const user = window.allUserTagsData.find(u => u.user_id === userId);
+            if (!user) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-lg w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">编辑用户标签</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-blue-900">${user.username}</p>
+                                <p class="text-sm text-blue-700">用户ID: ${user.user_id}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="edit-user-tags-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">姓名</label>
+                                <input type="text" name="name" value="${user.tags.name || ''}" class="input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">年龄</label>
+                                <input type="number" name="age" value="${user.tags.age || ''}" class="input">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">性别</label>
+                                <select name="gender" class="input">
+                                    <option value="">请选择</option>
+                                    <option value="男" ${user.tags.gender === '男' ? 'selected' : ''}>男</option>
+                                    <option value="女" ${user.tags.gender === '女' ? 'selected' : ''}>女</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">主题偏好</label>
+                                <select name="theme" class="input">
+                                    <option value="">请选择</option>
+                                    <option value="light" ${user.tags.theme === 'light' ? 'selected' : ''}>浅色</option>
+                                    <option value="dark" ${user.tags.theme === 'dark' ? 'selected' : ''}>深色</option>
+                                    <option value="auto" ${user.tags.theme === 'auto' ? 'selected' : ''}>自动</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">用户等级</label>
+                            <select name="level" class="input">
+                                <option value="">请选择</option>
+                                <option value="普通" ${user.tags.level === '普通' ? 'selected' : ''}>普通</option>
+                                <option value="VIP" ${user.tags.level === 'VIP' ? 'selected' : ''}>VIP</option>
+                                <option value="钻石" ${user.tags.level === '钻石' ? 'selected' : ''}>钻石</option>
+                                <option value="管理员" ${user.tags.level === '管理员' ? 'selected' : ''}>管理员</option>
+                            </select>
+                        </div>
+
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">
+                                <i class="fas fa-save mr-1"></i>保存修改
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('edit-user-tags-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newTags = Object.fromEntries(formData);
+
+                // 更新用户数据
+                user.tags = { ...user.tags, ...newTags };
+
+                // 重新渲染表格
+                if (window.allUserTagsData) {
+                    renderUserTagsTable(window.allUserTagsData);
+                }
+
+                showMessage(`用户 ${user.username} 的标签已更新`, 'success');
+                modal.remove();
+            });
+        }
+
+        // 删除用户所有标签
+        function deleteUserTags(userId) {
+            const user = window.allUserTagsData.find(u => u.user_id === userId);
+            if (!user) return;
+
+            if (confirm(`确定要清空用户 ${user.username} 的所有标签吗？`)) {
+                // 清空所有标签
+                user.tags = {};
+
+                // 重新渲染表格
+                if (window.allUserTagsData) {
+                    renderUserTagsTable(window.allUserTagsData);
+                }
+
+                showMessage(`用户 ${user.username} 的所有标签已清空`, 'success');
+            }
+        }
+
+        // 批量导入标签模态框
+        function showBatchTagModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-lg w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-upload text-green-500 mr-2"></i>
+                            批量导入用户标签
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-green-500 mt-0.5 mr-3"></i>
+                            <div class="text-sm text-green-700">
+                                <p class="font-medium mb-2">导入说明：</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>支持.xlsx格式的Excel文件</li>
+                                    <li>第一列为用户名，后面列为标签数据</li>
+                                    <li>请先下载模板文件作为参考</li>
+                                    <li>已存在的标签会被新数据覆盖</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-file-excel text-green-500 mr-1"></i>
+                                选择Excel文件
+                            </label>
+                            <input type="file" id="tag-excel-file" accept=".xlsx,.xls"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">请选择.xlsx或.xls格式的文件</p>
+                        </div>
+
+                        <div class="flex space-x-3">
+                            <button onclick="downloadTagTemplate()" class="flex-1 btn btn-secondary">
+                                <i class="fas fa-download mr-1"></i>下载模板
+                            </button>
+                        </div>
+
+                        <div id="tag-import-progress" class="hidden">
+                            <div class="bg-gray-200 rounded-full h-2 mb-2">
+                                <div class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 text-center">正在导入中...</p>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-6">
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="flex-1 btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i>取消
+                        </button>
+                        <button onclick="importTagExcel(this)" class="flex-1 btn btn-success">
+                            <i class="fas fa-upload mr-1"></i>开始导入
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // 文件选择变化处理
+            document.getElementById('tag-excel-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const fileName = file.name.toLowerCase();
+                    if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+                        showMessage('请选择正确的Excel文件格式(.xlsx或.xls)', 'error');
+                        this.value = '';
+                    }
+                }
+            });
+        }
+
+        // 下载标签导入模板
+        function downloadTagTemplate() {
+            // 创建标签导入模板数据
+            const templateData = [
+                ['用户名', '姓名', '年龄', '性别', '主题偏好', '用户等级'],
+                ['admin', '系统管理员', '30', '男', 'light', '管理员'],
+                ['zhangsan', '张三', '28', '男', 'dark', 'VIP'],
+                ['lisi', '李四', '25', '女', 'light', '普通']
+            ];
+
+            // 创建CSV内容
+            let csvContent = templateData.map(row =>
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'user_tags_import_template.csv';
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showMessage('标签导入模板已下载，请使用Excel打开并填写数据', 'success');
+        }
+
+        // 处理标签Excel导入
+        // 导出用户标签数据
+        function exportUserTags() {
+            if (!window.allUserTagsData || window.allUserTagsData.length === 0) {
+                showMessage('没有用户标签数据可导出', 'warning');
+                return;
+            }
+
+            // 创建CSV内容
+            const headers = ['用户ID', '用户名', '姓名', '年龄', '性别', '主题偏好', '用户等级'];
+            let csvContent = headers.join(',') + '\n';
+
+            window.allUserTagsData.forEach(user => {
+                const row = [
+                    user.user_id,
+                    user.username,
+                    `"${user.tags.name || ''}"`,
+                    user.tags.age || '',
+                    `"${user.tags.gender || ''}"`,
+                    `"${user.tags.theme || ''}"`,
+                    `"${user.tags.level || ''}"`
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            link.download = `user_tags_export_${timestamp}.csv`;
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showMessage(`成功导出 ${window.allUserTagsData.length} 个用户的标签数据`, 'success');
+        }
+
+        async function importTagExcel(button) {
+            const fileInput = document.getElementById('tag-excel-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('请选择要导入的Excel文件', 'warning');
+                return;
+            }
+
+            const progressDiv = document.getElementById('tag-import-progress');
+            const progressBar = progressDiv.querySelector('div');
+            const progressText = progressDiv.querySelector('p');
+
+            // 显示进度条
+            progressDiv.classList.remove('hidden');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>导入中...';
+
+            try {
+                // 模拟文件处理过程
+                progressBar.style.width = '30%';
+                progressText.textContent = '正在读取文件...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                progressBar.style.width = '60%';
+                progressText.textContent = '正在验证数据...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 模拟导入标签数据
+                const mockImportData = [
+                    { username: 'wangwu', tags: { name: '王五', age: '35', gender: '男', theme: 'auto', level: 'VIP' } },
+                    { username: 'zhaoliu', tags: { name: '赵六', age: '22', gender: '女', theme: 'dark', level: '普通' } },
+                    { username: 'sunqi', tags: { name: '孙七', age: '40', gender: '男', theme: 'light', level: '钻石' } }
+                ];
+
+                progressBar.style.width = '80%';
+                progressText.textContent = '正在更新标签...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 更新用户数据
+                mockImportData.forEach(importUser => {
+                    const existingUser = window.allUserTagsData.find(u => u.username === importUser.username);
+                    if (existingUser) {
+                        existingUser.tags = { ...existingUser.tags, ...importUser.tags };
+                    } else {
+                        // 如果用户不存在，添加到列表
+                        importUser.user_id = Math.max(...window.allUserTagsData.map(u => u.user_id)) + 1;
+                        window.allUserTagsData.push(importUser);
+                    }
+                });
+
+                progressBar.style.width = '100%';
+                progressText.textContent = '导入完成！';
+
+                setTimeout(() => {
+                    showMessage(`批量导入完成！成功更新 ${mockImportData.length} 个用户的标签数据`, 'success');
+                    button.closest('.modal-backdrop').remove();
+                    loadAllUserTags(); // 重新加载用户标签列表
+                }, 500);
+
+            } catch (error) {
+                showMessage('导入失败: ' + error.message, 'error');
+                progressDiv.classList.add('hidden');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-upload mr-1"></i>开始导入';
+            }
+        }
+
+        // 兼容性函数（保留原函数以防其他地方调用）
+        async function loadUserTags() {
+            // 现在直接加载所有用户标签
+            await loadAllUserTags();
+        }
+
+        // 全局提示词数据存储
+        if (!window.promptsData) {
+            window.promptsData = [
+                {
+                    prompt_id: 1,
+                    prompt_type: 'initial',
+                    prompt_name: '基础问候',
+                    prompt_content: '你好！我是智糖小助手，一个专业的医疗AI助手。我可以帮您解答各种医疗相关的问题，包括疾病咨询、用药指导、健康建议等。请告诉我您需要什么帮助？',
+                    version: 1,
+                    is_active: true,
+                    created_at: '2024-01-01 12:00:00',
+                    description: '用户首次对话时的问候语'
+                },
+                {
+                    prompt_id: 2,
+                    prompt_type: 'system',
+                    prompt_name: '系统指令',
+                    prompt_content: '你是一个专业的医疗AI助手，回答时要：1. 基于医学知识提供准确信息 2. 遇到复杂问题建议就医 3. 保持友好的语气 4. 保护用户隐私',
+                    version: 2,
+                    is_active: true,
+                    created_at: '2024-01-02 10:30:00',
+                    description: '系统级别的AI行为准则'
+                },
+                {
+                    prompt_id: 3,
+                    prompt_type: 'user',
+                    prompt_name: '用户偏好',
+                    prompt_content: '根据用户的年龄、性别和健康状况，提供个性化的健康建议。优先考虑用户的具体需求，避免过度医疗化建议。',
+                    version: 1,
+                    is_active: false,
+                    created_at: '2024-01-03 14:20:00',
+                    description: '针对不同用户类型的个性化回复策略'
+                }
+            ];
+        }
+
+        // 提示词管理功能
+        async function loadPrompts() {
+            const tbody = document.getElementById('prompts-table-body');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12"><div class="loading"></div><p class="mt-4 text-gray-600">加载中...</p></td></tr>';
+
+            try {
+                // 使用全局提示词数据
+                const prompts = window.promptsData;
+
+                tbody.innerHTML = prompts.map(p => `
+                    <tr>
+                        <td>${p.prompt_id}</td>
+                        <td><code class="bg-gray-100 px-2 py-1 rounded">${p.prompt_type}</code></td>
+                        <td>${p.prompt_name}</td>
+                        <td>v${p.version}</td>
+                        <td>
+                            <span class="badge ${p.is_active ? 'badge-success' : 'badge-danger'}">
+                                ${p.is_active ? '启用' : '禁用'}
+                            </span>
+                        </td>
+                        <td>${formatDate(p.created_at)}</td>
+                        <td>
+                            <button onclick="editPrompt(${p.prompt_id})" class="btn btn-primary text-sm mr-2">
+                                <i class="fas fa-edit"></i>编辑
+                            </button>
+                            <button onclick="deletePrompt(${p.prompt_id})" class="btn btn-danger text-sm">
+                                <i class="fas fa-trash"></i>删除
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-red-600">${error.message}</td></tr>`;
+            }
+        }
+
+        // 消息记录全局变量
+        if (!window.messagesData) {
+            window.messagesData = [
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_001',
+                    user_message: '你好，我想了解一下注册流程',
+                    ai_message: '您好！注册流程非常简单：1. 点击注册按钮 2. 填写基本信息 3. 验证手机号 4. 设置密码即可完成注册。',
+                    created_at: '2024-01-01 12:00:00'
+                },
+                {
+                    user_id: 2,
+                    conversation_id: 'conv_002',
+                    user_message: '忘记密码了怎么办？',
+                    ai_message: '如果您忘记密码，可以通过以下方式重置：1. 在登录页面点击"忘记密码" 2. 输入注册手机号 3. 接收验证码 4. 设置新密码。',
+                    created_at: '2024-01-02 10:30:00'
+                },
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_003',
+                    user_message: '如何修改个人信息？',
+                    ai_message: '您可以通过以下步骤修改个人信息：1. 登录账号 2. 点击个人中心 3. 选择需要修改的项目 4. 保存更改。',
+                    created_at: '2024-01-03 14:15:00'
+                },
+                {
+                    user_id: 3,
+                    conversation_id: 'conv_004',
+                    user_message: '系统有什么功能？',
+                    ai_message: '我们的系统提供多种功能：用户管理、FAQ问答、标签系统、提示词配置、消息记录查看等。',
+                    created_at: '2024-01-04 09:20:00'
+                },
+                {
+                    user_id: 2,
+                    conversation_id: 'conv_005',
+                    user_message: '如何联系客服？',
+                    ai_message: '您可以通过多种方式联系客服：在页面右下角点击客服图标、拨打客服热线400-123-4567、发送邮件至support@example.com。我们的客服工作时间是周一至周五9:00-18:00。',
+                    created_at: '2024-01-05 16:45:00'
+                },
+                {
+                    user_id: 4,
+                    conversation_id: 'conv_006',
+                    user_message: '我的订单什么时候发货？',
+                    ai_message: '您好！您的订单将在确认支付后24小时内发货。发货后您会收到短信和邮件通知，包含快递单号。您可以在订单详情页面跟踪物流信息。如有任何问题，请随时联系我们。',
+                    created_at: '2024-01-06 11:20:00'
+                },
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_007',
+                    user_message: '如何升级会员？',
+                    ai_message: '升级会员有以下几种方式：1. 在个人中心点击"升级会员" 2. 参加活动获得会员资格 3. 购买会员礼包。升级后您可以享受更多权益，包括优先客服、专属优惠等。',
+                    created_at: '2024-01-07 09:15:00'
+                },
+                {
+                    user_id: 5,
+                    conversation_id: 'conv_008',
+                    user_message: '退货政策是什么？',
+                    ai_message: '我们的退货政策：在商品签收后7天内，如商品质量问题或与描述不符，可以申请退货。退货时请保持商品完好，并附上退货原因。我们将在收到退货后3-5个工作日内处理退款。',
+                    created_at: '2024-01-08 14:30:00'
+                },
+                {
+                    user_id: 3,
+                    conversation_id: 'conv_009',
+                    user_message: '积分怎么使用？',
+                    ai_message: '积分使用规则：1. 100积分 = 1元人民币 2. 积分可用于抵扣商品金额 3. 每月15日有积分翻倍活动 4. 积分有效期为2年。查看您的积分余额，请进入个人中心。',
+                    created_at: '2024-01-09 10:25:00'
+                },
+                {
+                    user_id: 2,
+                    conversation_id: 'conv_010',
+                    user_message: '优惠券如何领取？',
+                    ai_message: '优惠券领取方式：1. 每日签到可领优惠券 2. 在活动页面参与活动获得 3. 关注公众号并回复指定关键词 4. 邀请好友注册成功后获得。优惠券可在结算时使用，有效期请注意查看。',
+                    created_at: '2024-01-10 13:40:00'
+                },
+                {
+                    user_id: 4,
+                    conversation_id: 'conv_011',
+                    user_message: '如何修改密码？',
+                    ai_message: '修改密码步骤：1. 登录账号后进入个人中心 2. 点击"安全设置" 3. 选择"修改密码" 4. 输入当前密码和新密码 5. 确认新密码 6. 保存修改。为确保账户安全，建议定期更换密码。',
+                    created_at: '2024-01-11 09:50:00'
+                },
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_012',
+                    user_message: '什么是积分商城？',
+                    ai_message: '积分商城是我们的积分兑换平台，您可以使用积累的积分兑换各种商品和服务。商城包括：1. 实物商品（日用品、电子产品等）2. 虚拟服务（会员升级、优惠券等）3. 公益捐赠。进入积分商城后，可以浏览商品并使用积分兑换。',
+                    created_at: '2024-01-12 15:20:00'
+                },
+                {
+                    user_id: 6,
+                    conversation_id: 'conv_013',
+                    user_message: '如何查看账单？',
+                    ai_message: '查看账单方法：1. 登录后进入"我的订单"页面 2. 点击"账单详情" 3. 选择时间范围查看消费记录 4. 可以导出账单PDF。您也可以在微信公众号中回复"账单"查看最近的消费记录。',
+                    created_at: '2024-01-13 10:35:00'
+                },
+                {
+                    user_id: 3,
+                    conversation_id: 'conv_014',
+                    user_message: '活动规则是什么？',
+                    ai_message: '我们的活动规则：1. 每日签到可获积分奖励 2. 邀请好友注册双方各得50积分 3. 消费满额赠送优惠券 4. 节假日有特别活动。所有活动最终解释权归本平台所有，请及时关注平台公告。',
+                    created_at: '2024-01-14 14:10:00'
+                },
+                {
+                    user_id: 5,
+                    conversation_id: 'conv_015',
+                    user_message: '如何评价商品？',
+                    ai_message: '商品评价流程：1. 进入"我的订单"找到已完成的订单 2. 点击"评价"按钮 3. 选择星级评分 4. 填写评价内容（可选上传图片） 5. 提交评价。优质评价有机会获得额外积分奖励。',
+                    created_at: '2024-01-15 16:55:00'
+                }
+            ];
+        }
+
+        // 当前页码和每页显示数量
+        if (!window.currentMessagePage) {
+            window.currentMessagePage = 1;
+        }
+        if (!window.messagesPerPage) {
+            window.messagesPerPage = 10;
+        }
+
+        // 消息记录功能
+        async function loadMessages(page = 1) {
+            window.currentMessagePage = page;
+            const tbody = document.getElementById('messages-table-body');
+
+            // 应用筛选条件
+            const userId = document.getElementById('message-user-id').value;
+            const startDate = document.getElementById('message-start-date').value;
+            const endDate = document.getElementById('message-end-date').value;
+
+            let filteredMessages = window.messagesData.filter(msg => {
+                let match = true;
+
+                if (userId && msg.user_id != userId) {
+                    match = false;
+                }
+
+                if (startDate && msg.created_at < startDate) {
+                    match = false;
+                }
+
+                if (endDate && msg.created_at > endDate + ' 23:59:59') {
+                    match = false;
+                }
+
+                return match;
+            });
+
+            // 计算分页
+            const totalMessages = filteredMessages.length;
+            const totalPages = Math.ceil(totalMessages / window.messagesPerPage);
+            const startIndex = (page - 1) * window.messagesPerPage;
+            const endIndex = startIndex + window.messagesPerPage;
+            const pageMessages = filteredMessages.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12"><div class="loading"></div><p class="mt-4 text-gray-600">加载中...</p></td></tr>';
+
+            try {
+                if (pageMessages.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-500">暂无消息记录</td></tr>';
+                } else {
+                    tbody.innerHTML = pageMessages.map(msg => `
+                        <tr>
+                            <td>
+                                <span class="badge badge-info">${msg.user_id}</span>
+                            </td>
+                            <td>
+                                <code class="bg-gray-100 px-2 py-1 rounded text-sm">${msg.conversation_id || '-'}</code>
+                            </td>
+                            <td class="max-w-xs">
+                                <div class="truncate" title="${msg.user_message}">
+                                    ${msg.user_message.length > 30 ? msg.user_message.substring(0, 30) + '...' : msg.user_message}
+                                </div>
+                            </td>
+                            <td class="max-w-xs">
+                                <div class="truncate" title="${msg.ai_message}">
+                                    ${msg.ai_message.length > 50 ? msg.ai_message.substring(0, 50) + '...' : msg.ai_message}
+                                </div>
+                            </td>
+                            <td>${formatDate(msg.created_at)}</td>
+                            <td>
+                                <button onclick="viewMessageDetail(${msg.user_id}, '${msg.conversation_id}')" class="btn btn-primary text-sm">
+                                    <i class="fas fa-eye"></i>详情
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // 更新分页控件
+                updateMessagePagination(totalPages, page, totalMessages);
+
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-red-600">${error.message}</td></tr>`;
+            }
+        }
+
+        // 更新分页控件
+        function updateMessagePagination(totalPages, currentPage, totalMessages) {
+            const paginationContainer = document.getElementById('messages-pagination');
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = '<div class="flex items-center justify-between">';
+
+            // 统计信息
+            paginationHtml += `<div class="text-sm text-gray-600">
+                共 ${totalMessages} 条记录，第 ${currentPage} / ${totalPages} 页
+            </div>`;
+
+            // 分页按钮
+            paginationHtml += '<div class="flex items-center space-x-2">';
+
+            // 上一页
+            if (currentPage > 1) {
+                paginationHtml += `<button onclick="loadMessages(${currentPage - 1})" class="btn btn-secondary text-sm">
+                    <i class="fas fa-chevron-left mr-1"></i>上一页
+                </button>`;
+            }
+
+            // 页码按钮
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            if (startPage > 1) {
+                paginationHtml += `<button onclick="loadMessages(1)" class="btn btn-secondary text-sm">1</button>`;
+                if (startPage > 2) {
+                    paginationHtml += '<span class="text-gray-500 mx-2">...</span>';
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPage;
+                paginationHtml += `<button onclick="loadMessages(${i})"
+                    class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} text-sm ${isActive ? '' : ''}">
+                    ${i}
+                </button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHtml += '<span class="text-gray-500 mx-2">...</span>';
+                }
+                paginationHtml += `<button onclick="loadMessages(${totalPages})" class="btn btn-secondary text-sm">${totalPages}</button>`;
+            }
+
+            // 下一页
+            if (currentPage < totalPages) {
+                paginationHtml += `<button onclick="loadMessages(${currentPage + 1})" class="btn btn-secondary text-sm">
+                    下一页<i class="fas fa-chevron-right ml-1"></i>
+                </button>`;
+            }
+
+            paginationHtml += '</div></div>';
+
+            paginationContainer.innerHTML = paginationHtml;
+        }
+
+        // 知识问答统计
+        async function loadKnowledgeStats() {
+            const container = document.getElementById('knowledge-stats-container');
+            container.innerHTML = '<div class="text-center py-8"><div class="loading"></div></div>';
+
+            try {
+                // 模拟统计数据
+                const stats = {
+                    total: 78,
+                    active: 65,
+                    sources: {
+                        'knowledge_slice_01.md': 25,
+                        'knowledge_slice_02.md': 20,
+                        'user_manual.pdf': 18,
+                        'faq_database.json': 15
+                    }
+                };
+
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-1">FAQ总数</div>
+                            <div class="text-2xl font-bold text-blue-600">${stats.total}</div>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-1">启用数量</div>
+                            <div class="text-2xl font-bold text-green-600">${stats.active}</div>
+                        </div>
+                        <div class="bg-yellow-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-1">禁用数量</div>
+                            <div class="text-2xl font-bold text-yellow-600">${stats.total - stats.active}</div>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="font-semibold mb-3">来源文档分布</h4>
+                        <div class="space-y-2">
+                            ${Object.entries(stats.sources).map(([source, count]) => `
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <span class="font-mono text-sm">${source}</span>
+                                    <span class="badge badge-info">${count} 条FAQ</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4"><p class="text-red-600">${error.message}</p></div>`;
+            }
+        }
+
+        // 工具函数
+        function showMessage(message, type = 'info') {
+            const toast = document.getElementById('message-toast');
+            const toastContent = toast.querySelector('div');
+            toastContent.className = `px-6 py-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'warning' ? 'bg-yellow-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+
+            toastContent.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // 模拟操作函数（实际项目中会调用真实API）
+        function editUser(userId) { showUserModal(userId); }
+
+        function resetUserPassword(userId, username) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-red-600">
+                            <i class="fas fa-key mr-2"></i>重置密码
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex items-center mb-2">
+                            <i class="fas fa-user text-yellow-600 mr-2"></i>
+                            <span class="font-medium text-yellow-800">用户名: ${username}</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-id-card text-yellow-600 mr-2"></i>
+                            <span class="font-medium text-yellow-800">用户ID: ${userId}</span>
+                        </div>
+                    </div>
+
+                    <form id="reset-password-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lock text-red-500 mr-1"></i>新密码 *
+                            </label>
+                            <input type="password" id="new-password" required
+                                   class="input" placeholder="请输入新密码"
+                                   minlength="6">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lock text-green-500 mr-1"></i>确认密码 *
+                            </label>
+                            <input type="password" id="confirm-password" required
+                                   class="input" placeholder="请再次输入新密码">
+                            <p id="password-match-error" class="text-red-500 text-sm mt-1 hidden">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>两次输入的密码不一致
+                            </p>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-2"></i>
+                                <div class="text-sm text-blue-700">
+                                    <p class="font-medium mb-1">密码要求：</p>
+                                    <ul class="list-disc list-inside space-y-1 text-xs">
+                                        <li>至少6位字符</li>
+                                        <li>建议包含字母和数字</li>
+                                        <li>重置后用户需要使用新密码登录</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-danger">
+                                <i class="fas fa-key mr-1"></i>确认重置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // 密码确认验证
+            const newPassword = document.getElementById('new-password');
+            const confirmPassword = document.getElementById('confirm-password');
+            const errorElement = document.getElementById('password-match-error');
+
+            function validatePasswords() {
+                if (confirmPassword.value && newPassword.value !== confirmPassword.value) {
+                    errorElement.classList.remove('hidden');
+                    confirmPassword.classList.add('border-red-300');
+                    return false;
+                } else {
+                    errorElement.classList.add('hidden');
+                    confirmPassword.classList.remove('border-red-300');
+                    return true;
+                }
+            }
+
+            newPassword.addEventListener('input', validatePasswords);
+            confirmPassword.addEventListener('input', validatePasswords);
+
+            // 表单提交
+            document.getElementById('reset-password-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const password = newPassword.value;
+                const confirmPass = confirmPassword.value;
+
+                if (!validatePasswords()) {
+                    showMessage('密码验证失败，请检查输入', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showMessage('密码长度不能少于6位', 'error');
+                    return;
+                }
+
+                // 模拟API调用
+                try {
+                    // 实际项目中应该调用真实的重置密码API
+                    console.log(`重置用户 ${userId} (${username}) 的密码为: ${password}`);
+
+                    showMessage(`用户 ${username} 的密码已成功重置`, 'success');
+                    modal.remove();
+
+                    // 可以在这里添加发送通知给用户的逻辑
+                    setTimeout(() => {
+                        showMessage('建议通知用户使用新密码重新登录', 'info');
+                    }, 1000);
+
+                } catch (error) {
+                    showMessage('密码重置失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function toggleUserStatus(userId, isActive) {
+            showMessage(`${isActive ? '启用' : '禁用'}用户 ${userId} 成功`, 'success');
+        }
+
+        function deleteUser(userId) {
+            if (confirm(`确定要删除用户 ${userId} 吗？`)) {
+                showMessage(`用户 ${userId} 已删除`, 'success');
+            }
+        }
+
+        function editFaq(faqId) { showFaqModal(faqId); }
+
+        // 查看FAQ详情
+        function viewFaq(faqId) {
+            // 模拟数据 - 实际项目中应该从API获取
+            const faqs = [
+                {
+                    id: 1,
+                    question: '如何注册账号？',
+                    answer: '注册账号非常简单：1. 点击注册按钮 2. 填写基本信息（用户名、密码、手机号）3. 验证手机号 4. 提交注册即可完成账号注册。',
+                    category: 'account',
+                    keywords: ['注册', '账号', '手机号'],
+                    status: 1,
+                    view_count: 125,
+                    created_at: '2024-01-01 12:00:00',
+                    source: 'user_manual.pdf'
+                },
+                {
+                    id: 2,
+                    question: '忘记密码怎么办？',
+                    answer: '如果您忘记密码，请按照以下步骤重置：1. 在登录页面点击"忘记密码"链接 2. 输入您注册时使用的手机号 3. 接收短信验证码 4. 输入新密码 5. 确认新密码 6. 提交重置即可。',
+                    category: 'security',
+                    keywords: ['忘记密码', '重置密码', '验证码'],
+                    status: 1,
+                    view_count: 89,
+                    created_at: '2024-01-02 10:30:00',
+                    source: 'faq_database.json'
+                },
+                {
+                    id: 3,
+                    question: '如何联系客服？',
+                    answer: '您可以通过多种方式联系我们的客服：1. 在线客服：点击页面右下角的客服图标 2. 电话客服：拨打400-123-4567 3. 邮箱客服：发送邮件至support@example.com 4. 工作时间：周一至周五 9:00-18:00。',
+                    category: 'support',
+                    keywords: ['客服', '联系方式', '在线客服'],
+                    status: 0,
+                    view_count: 45,
+                    created_at: '2024-01-03 14:20:00',
+                    source: 'knowledge_base.md'
+                }
+            ];
+
+            const faq = faqs.find(f => f.id == faqId);
+            if (!faq) {
+                showMessage('未找到FAQ信息', 'error');
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-question-circle text-blue-500 mr-2"></i>
+                            FAQ详情
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 基本信息 -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-1">FAQ ID</div>
+                                <div class="font-semibold text-lg">${faq.id}</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-1">状态</div>
+                                <div class="font-semibold">
+                                    <span class="badge ${faq.status == 1 ? 'badge-success' : 'badge-danger'}">
+                                        ${faq.status == 1 ? '启用' : '禁用'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-1">查看次数</div>
+                                <div class="font-semibold text-lg text-blue-600">${faq.view_count}</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm text-gray-600 mb-1">创建时间</div>
+                                <div class="font-semibold text-sm">${formatDate(faq.created_at)}</div>
+                            </div>
+                        </div>
+
+                        <!-- 问题 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-question text-orange-500 mr-2"></i>
+                                问题
+                            </label>
+                            <div class="bg-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                                <p class="text-gray-800 font-medium">${faq.question}</p>
+                            </div>
+                        </div>
+
+                        <!-- 答案 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-comment-dots text-green-500 mr-2"></i>
+                                答案
+                            </label>
+                            <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                                <p class="text-gray-800 whitespace-pre-wrap">${faq.answer}</p>
+                            </div>
+                        </div>
+
+                        <!-- 分类和来源 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-folder text-purple-500 mr-2"></i>
+                                    分类
+                                </label>
+                                <div class="bg-purple-50 border border-purple-200 p-3 rounded">
+                                    <span class="badge badge-info">${faq.category || '未分类'}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-file text-blue-500 mr-2"></i>
+                                    来源
+                                </label>
+                                <div class="bg-blue-50 border border-blue-200 p-3 rounded">
+                                    <code class="text-blue-700">${faq.source || '未知'}</code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 关键词 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-tags text-indigo-500 mr-2"></i>
+                                关键词
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                ${faq.keywords && faq.keywords.length > 0
+                                    ? faq.keywords.map(keyword => `
+                                        <span class="badge badge-secondary">${keyword}</span>
+                                    `).join('')
+                                    : '<span class="text-gray-500">暂无关键词</span>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部操作 -->
+                    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                        <button onclick="editFaq(${faq.id}); this.closest('.modal-backdrop').remove();"
+                                class="btn btn-primary">
+                            <i class="fas fa-edit mr-1"></i>编辑FAQ
+                        </button>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i>关闭
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        function deleteFaq(faqId) {
+            if (confirm(`确定要删除FAQ ${faqId} 吗？`)) {
+                showMessage(`FAQ ${faqId} 已删除`, 'success');
+            }
+        }
+
+        function showTagModal() { showMessage('设置标签功能', 'info'); }
+        function deleteTag(tagKey) {
+            if (confirm(`确定要删除标签 "${tagKey}" 吗？`)) {
+                showMessage(`标签 "${tagKey}" 已删除`, 'success');
+            }
+        }
+
+        function deleteTagDefinition(tagKey) {
+            if (confirm(`确定要删除标签定义 "${tagKey}" 吗？\n\n注意：这将影响所有使用此标签的用户数据。`)) {
+                showMessage(`标签定义 "${tagKey}" 已删除`, 'success');
+                // 重新加载标签定义列表
+                loadTagDefinitions();
+            }
+        }
+        function clearAllTags() { showMessage('清空所有标签功能', 'info'); }
+
+        // 创建提示词模板模态框
+        function showPromptModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-plus text-green-500 mr-2"></i>
+                            创建提示词模板
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <form id="create-prompt-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">模板名称 *</label>
+                                <input type="text" name="prompt_name" required class="input" placeholder="如：医疗问候模板">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">模板类型 *</label>
+                                <select name="prompt_type" class="input" required>
+                                    <option value="">请选择类型</option>
+                                    <option value="initial">初始问候</option>
+                                    <option value="system">系统指令</option>
+                                    <option value="user">用户偏好</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">版本号</label>
+                                <input type="number" name="version" value="1" class="input" min="1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">状态</label>
+                                <select name="is_active" class="input">
+                                    <option value="true" selected>启用</option>
+                                    <option value="false">禁用</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">描述</label>
+                            <input type="text" name="description" class="input" placeholder="模板功能的简要描述">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">提示词内容 *</label>
+                            <textarea name="prompt_content" required class="input" rows="8" placeholder="请输入提示词的具体内容...
+
+示例：
+你是一个专业的医疗AI助手，请按照以下原则回答用户问题：
+1. 基于医学知识提供准确信息
+2. 遇到复杂问题建议就医
+3. 保持友好的语气
+4. 保护用户隐私"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">请输入完整的提示词内容，这将指导AI的行为</p>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                                <div class="text-sm text-blue-700">
+                                    <p class="font-medium mb-1">提示词模板说明：</p>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>初始问候：用户首次对话时的欢迎语</li>
+                                        <li>系统指令：AI行为准则和回答原则</li>
+                                        <li>用户偏好：针对不同用户的个性化回复</li>
+                                        <li>自定义：特殊场景下的专用模板</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">
+                                <i class="fas fa-save mr-1"></i>创建模板
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('create-prompt-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newPrompt = Object.fromEntries(formData);
+                newPrompt.is_active = newPrompt.is_active === 'true';
+                newPrompt.version = parseInt(newPrompt.version) || 1;
+
+                // 模拟创建新提示词
+                const promptId = Date.now(); // 简单生成ID
+                newPrompt.prompt_id = promptId;
+                newPrompt.created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+                // 添加到全局数据
+                if (!window.promptsData) {
+                    window.promptsData = [];
+                }
+                window.promptsData.push(newPrompt);
+
+                console.log('创建新提示词:', newPrompt);
+
+                showMessage(`提示词模板 "${newPrompt.prompt_name}" 创建成功`, 'success');
+                modal.remove();
+                loadPrompts(); // 重新加载列表
+            });
+        }
+        // 编辑提示词模板（右侧弹出面板）
+        function editPrompt(promptId) {
+            // 从全局数据获取提示词信息
+            const prompts = window.promptsData || [];
+
+            const prompt = prompts.find(p => p.prompt_id == promptId);
+            if (!prompt) {
+                showMessage('未找到提示词模板', 'error');
+                return;
+            }
+
+            // 关闭已存在的面板
+            closePromptDetailPanel();
+
+            // 创建背景遮罩
+            const backdrop = document.createElement('div');
+            backdrop.className = 'slide-panel-backdrop';
+            backdrop.id = 'prompt-detail-backdrop';
+            backdrop.onclick = closePromptDetailPanel;
+
+            // 创建详情面板
+            const panel = document.createElement('div');
+            panel.className = 'slide-panel';
+            panel.id = 'prompt-detail-panel';
+            panel.innerHTML = `
+                <div class="flex flex-col h-full">
+                    <!-- 头部 -->
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-comments text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold">${prompt.prompt_name}</h3>
+                                    <p class="text-white/80 text-sm">ID: ${prompt.prompt_id} | 版本: v${prompt.prompt_version || prompt.version}</p>
+                                </div>
+                            </div>
+                            <button onclick="closePromptDetailPanel()" class="text-white/70 hover:text-white transition-colors">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 内容区域 -->
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <!-- 基本信息 -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                基本信息
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-600 mb-1">模板类型</div>
+                                    <div class="font-semibold">
+                                        <span class="badge badge-info">${prompt.prompt_type}</span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-600 mb-1">状态</div>
+                                    <div class="font-semibold">
+                                        <span class="badge ${prompt.is_active ? 'badge-success' : 'badge-danger'}">
+                                            ${prompt.is_active ? '启用' : '禁用'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-600 mb-1">版本号</div>
+                                    <div class="font-semibold text-lg">${prompt.version}</div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="text-sm text-gray-600 mb-1">创建时间</div>
+                                    <div class="font-semibold text-sm">${formatDate(prompt.created_at)}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 描述 -->
+                        ${prompt.description ? `
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>
+                                描述
+                            </h4>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                                <p class="text-gray-800">${prompt.description}</p>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- 提示词内容 -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-quote-left text-green-500 mr-2"></i>
+                                提示词内容
+                            </h4>
+                            <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                                <pre class="text-gray-800 whitespace-pre-wrap font-mono text-sm leading-relaxed">${prompt.prompt_content}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部操作 -->
+                    <div class="border-t border-gray-200 p-4 bg-gray-50">
+                        <div class="flex space-x-3">
+                            <button onclick="editPromptContent(${prompt.prompt_id}); closePromptDetailPanel();"
+                                    class="flex-1 btn btn-primary">
+                                <i class="fas fa-edit mr-1"></i>编辑内容
+                            </button>
+                            <button onclick="closePromptDetailPanel()" class="flex-1 btn btn-secondary">
+                                <i class="fas fa-times mr-1"></i>关闭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加到页面
+            document.body.appendChild(backdrop);
+            document.body.appendChild(panel);
+
+            // 显示动画
+            setTimeout(() => {
+                backdrop.classList.add('open');
+                panel.classList.add('open');
+            }, 10);
+
+            // ESC键关闭
+            document.addEventListener('keydown', handlePromptEscape);
+            function handlePromptEscape(e) {
+                if (e.key === 'Escape') {
+                    closePromptDetailPanel();
+                    document.removeEventListener('keydown', handlePromptEscape);
+                }
+            }
+        }
+        function deletePrompt(promptId) {
+            if (confirm(`确定要删除提示词模板 ${promptId} 吗？`)) {
+                showMessage(`提示词模板 ${promptId} 已删除`, 'success');
+            }
+        }
+
+        function viewMessageDetail(userId, conversationId) {
+            // 模拟消息详情数据
+            const messages = [
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_001',
+                    user_message: '你好，我想了解一下注册流程',
+                    ai_message: '您好！注册流程非常简单：1. 点击注册按钮 2. 填写基本信息 3. 验证手机号 4. 设置密码即可完成注册。',
+                    created_at: '2024-01-01 12:00:00'
+                },
+                {
+                    user_id: 2,
+                    conversation_id: 'conv_002',
+                    user_message: '忘记密码了怎么办？',
+                    ai_message: '如果您忘记密码，可以通过以下方式重置：1. 在登录页面点击"忘记密码" 2. 输入注册手机号 3. 接收验证码 4. 设置新密码。',
+                    created_at: '2024-01-02 10:30:00'
+                },
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_003',
+                    user_message: '如何修改个人信息？',
+                    ai_message: '您可以通过以下步骤修改个人信息：1. 登录账号 2. 点击个人中心 3. 选择需要修改的项目 4. 保存更改。',
+                    created_at: '2024-01-03 14:15:00'
+                },
+                {
+                    user_id: 3,
+                    conversation_id: 'conv_004',
+                    user_message: '系统有什么功能？',
+                    ai_message: '我们的系统提供多种功能：用户管理、FAQ问答、标签系统、提示词配置、消息记录查看等。',
+                    created_at: '2024-01-04 09:20:00'
+                }
+            ];
+
+            const message = messages.find(m => m.user_id == userId && m.conversation_id == conversationId);
+
+            if (message) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold">消息详情</h3>
+                            <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">用户ID</label>
+                                    <span class="badge badge-info">${message.user_id}</span>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">会话ID</label>
+                                    <code class="bg-gray-100 px-2 py-1 rounded">${message.conversation_id}</code>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-2">用户消息</label>
+                                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                                    <p class="text-gray-800 whitespace-pre-wrap">${message.user_message}</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-2">AI回复</label>
+                                <div class="bg-green-50 border-l-4 border-green-400 p-4 rounded">
+                                    <p class="text-gray-800 whitespace-pre-wrap">${message.ai_message}</p>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t">
+                                <div class="flex items-center justify-between text-sm text-gray-500">
+                                    <span>创建时间: ${formatDate(message.created_at)}</span>
+                                    <button onclick="this.closest('.modal-backdrop').remove()" class="btn btn-secondary text-sm">
+                                        <i class="fas fa-times mr-1"></i>关闭
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } else {
+                showMessage('未找到消息详情', 'error');
+            }
+        }
+
+        // Tab切换功能
+        function switchTagTab(tabName) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-500', 'hover:text-gray-700');
+                btn.classList.remove('text-blue-600', 'bg-blue-50');
+                btn.style.borderBottomColor = 'transparent';
+            });
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // 激活选中的tab
+            const activeBtn = document.getElementById('tab-' + tabName);
+            activeBtn.classList.add('active');
+            activeBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
+            activeBtn.classList.add('text-blue-600', 'bg-blue-50');
+            activeBtn.style.borderBottomColor = '#2563eb';
+
+            // 显示对应内容
+            document.getElementById('tab-content-' + tabName).classList.remove('hidden');
+        }
+
+        // 标签定义管理模态框
+        function showTagDefinitionModal(tagKey = null) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">${tagKey ? '编辑标签定义' : '添加标签定义'}</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="tag-definition-form" class="space-y-4">
+                        ${tagKey ? '<input type="hidden" name="old_tag_key" value="' + tagKey + '">' : ''}
+                        <div>
+                            <label class="block text-sm font-medium mb-1">标签键 *</label>
+                            <input type="text" name="tag_key" required class="input" placeholder="如：name, age, gender"
+                                   ${tagKey ? 'readonly' : ''}>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">标签名称 *</label>
+                            <input type="text" name="tag_name" required class="input" placeholder="显示名称">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">分类</label>
+                            <select name="category" class="input">
+                                <option value="basic">基础信息</option>
+                                <option value="preference">偏好设置</option>
+                                <option value="behavior">行为数据</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">数据类型</label>
+                            <select name="data_type" class="input">
+                                <option value="string">字符串</option>
+                                <option value="integer">整数</option>
+                                <option value="boolean">布尔值</option>
+                                <option value="float">浮点数</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">描述</label>
+                            <textarea name="description" class="input" rows="3" placeholder="标签描述"></textarea>
+                        </div>
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">${tagKey ? '保存' : '添加'}</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('tag-definition-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+
+                try {
+                    if (tagKey) {
+                        // 更新标签定义
+                        await apiPut(API_CONFIG.ENDPOINTS.TAG_DEFINITION_UPDATE(tagKey), data);
+                        showMessage('标签定义更新成功', 'success');
+                    } else {
+                        // 创建标签定义
+                        await apiPost(API_CONFIG.ENDPOINTS.TAG_DEFINITION_CREATE, data);
+                        showMessage('标签定义创建成功', 'success');
+                    }
+                    modal.remove();
+                    loadTagDefinitions();
+                } catch (error) {
+                    showMessage('操作失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // 查看用户标签详情（右侧弹出面板）
+        function viewUserTagsDetail(userId) {
+            const user = window.allUserTagsData.find(u => u.user_id === userId);
+            if (!user) return;
+
+            // 关闭已存在的面板
+            closeTagDetailPanel();
+
+            // 创建背景遮罩
+            const backdrop = document.createElement('div');
+            backdrop.className = 'slide-panel-backdrop';
+            backdrop.id = 'tag-detail-backdrop';
+            backdrop.onclick = closeTagDetailPanel;
+
+            // 创建详情面板
+            const panel = document.createElement('div');
+            panel.className = 'slide-panel';
+            panel.id = 'tag-detail-panel';
+            panel.innerHTML = `
+                <div class="flex flex-col h-full">
+                    <!-- 头部 -->
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold">${user.username}</h3>
+                                    <p class="text-white/80 text-sm">用户ID: ${user.user_id}</p>
+                                </div>
+                            </div>
+                            <button onclick="closeTagDetailPanel()" class="text-white/70 hover:text-white transition-colors">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 内容区域 -->
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-tags text-blue-500 mr-2"></i>
+                                标签信息
+                            </h4>
+
+                            <div class="space-y-1">
+                                ${Object.entries(user.tags).map(([key, value]) => `
+                                    <div class="tag-item">
+                                        <span class="tag-key">${key}:</span>
+                                        <span class="tag-value ${!value || value === '' ? 'empty' : ''}">
+                                            ${value || '未设置'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- 统计信息 -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-medium text-gray-700 mb-3 flex items-center">
+                                <i class="fas fa-chart-bar text-green-500 mr-2"></i>
+                                标签统计
+                            </h5>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-blue-600">${Object.keys(user.tags).length}</div>
+                                    <div class="text-gray-600">总标签数</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-green-600">
+                                        ${Object.values(user.tags).filter(v => v && v !== '').length}
+                                    </div>
+                                    <div class="text-gray-600">已设置</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部操作 -->
+                    <div class="border-t border-gray-200 p-4 bg-gray-50">
+                        <div class="flex space-x-3">
+                            <button onclick="editUserTags(${user.user_id}); closeTagDetailPanel();"
+                                    class="flex-1 btn btn-primary">
+                                <i class="fas fa-edit mr-1"></i>编辑标签
+                            </button>
+                            <button onclick="closeTagDetailPanel()" class="flex-1 btn btn-secondary">
+                                <i class="fas fa-times mr-1"></i>关闭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 添加到页面
+            document.body.appendChild(backdrop);
+            document.body.appendChild(panel);
+
+            // 显示动画
+            setTimeout(() => {
+                backdrop.classList.add('open');
+                panel.classList.add('open');
+            }, 10);
+
+            // ESC键关闭
+            document.addEventListener('keydown', handleEscape);
+            function handleEscape(e) {
+                if (e.key === 'Escape') {
+                    closeTagDetailPanel();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            }
+        }
+
+        // 关闭标签详情面板
+        function closeTagDetailPanel() {
+            const backdrop = document.getElementById('tag-detail-backdrop');
+            const panel = document.getElementById('tag-detail-panel');
+
+            if (backdrop && panel) {
+                backdrop.classList.remove('open');
+                panel.classList.remove('open');
+
+                setTimeout(() => {
+                    if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+                    if (panel.parentNode) panel.parentNode.removeChild(panel);
+                }, 300);
+            }
+        }
+
+        // 关闭提示词详情面板
+        function closePromptDetailPanel() {
+            const backdrop = document.getElementById('prompt-detail-backdrop');
+            const panel = document.getElementById('prompt-detail-panel');
+
+            if (backdrop && panel) {
+                backdrop.classList.remove('open');
+                panel.classList.remove('open');
+
+                setTimeout(() => {
+                    if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
+                    if (panel.parentNode) panel.parentNode.removeChild(panel);
+                }, 300);
+            }
+        }
+
+        // 编辑提示词内容
+        function editPromptContent(promptId) {
+            // 从全局数据获取提示词信息
+            const prompts = window.promptsData || [];
+
+            const prompt = prompts.find(p => p.prompt_id == promptId);
+            if (!prompt) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">编辑提示词模板</h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <form id="edit-prompt-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">模板名称 *</label>
+                                <input type="text" name="prompt_name" value="${prompt.prompt_name}" required class="input">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">模板类型</label>
+                                <select name="prompt_type" class="input">
+                                    <option value="initial" ${prompt.prompt_type === 'initial' ? 'selected' : ''}>初始问候</option>
+                                    <option value="system" ${prompt.prompt_type === 'system' ? 'selected' : ''}>系统指令</option>
+                                    <option value="user" ${prompt.prompt_type === 'user' ? 'selected' : ''}>用户偏好</option>
+                                    <option value="custom" ${prompt.prompt_type === 'custom' ? 'selected' : ''}>自定义</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">版本号</label>
+                                <input type="number" name="version" value="${prompt.version}" class="input" min="1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">状态</label>
+                                <select name="is_active" class="input">
+                                    <option value="true" ${prompt.is_active ? 'selected' : ''}>启用</option>
+                                    <option value="false" ${!prompt.is_active ? 'selected' : ''}>禁用</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">描述</label>
+                            <input type="text" name="description" value="${prompt.description || ''}" class="input" placeholder="模板描述">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">提示词内容 *</label>
+                            <textarea name="prompt_content" required class="input" rows="8" placeholder="请输入提示词内容">${prompt.prompt_content}</textarea>
+                        </div>
+
+                        <div class="flex space-x-3 mt-6">
+                            <button type="button" onclick="this.closest('.modal-backdrop').remove()"
+                                    class="flex-1 btn btn-secondary">取消</button>
+                            <button type="submit" class="flex-1 btn btn-success">
+                                <i class="fas fa-save mr-1"></i>保存修改
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('edit-prompt-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const updatedData = Object.fromEntries(formData);
+                updatedData.is_active = updatedData.is_active === 'true';
+
+                // 更新全局数据
+                const promptIndex = window.promptsData.findIndex(p => p.prompt_id == promptId);
+                if (promptIndex !== -1) {
+                    window.promptsData[promptIndex] = { ...window.promptsData[promptIndex], ...updatedData };
+                }
+
+                console.log('更新提示词:', updatedData);
+
+                showMessage(`提示词模板 "${updatedData.prompt_name}" 已更新`, 'success');
+                modal.remove();
+                loadPrompts(); // 重新加载列表
+                // 重新打开详情面板
+                setTimeout(() => {
+                    editPrompt(promptId);
+                }, 500);
+            });
+        }
+
+        // 批量导入FAQ模态框
+        function showBulkImportFaqModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-lg w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-upload text-blue-500 mr-2"></i>
+                            批量导入FAQ
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                            <div class="text-sm text-blue-700">
+                                <p class="font-medium mb-2">导入说明：</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>支持.xlsx格式的Excel文件</li>
+                                    <li>必须包含问题和答案列</li>
+                                    <li>分类、关键词等列为可选</li>
+                                    <li>请先下载模板文件作为参考</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-file-excel text-green-500 mr-1"></i>
+                                选择Excel文件
+                            </label>
+                            <input type="file" id="faq-excel-file" accept=".xlsx,.xls"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">请选择.xlsx或.xls格式的文件</p>
+                        </div>
+
+                        <div id="import-progress" class="hidden">
+                            <div class="bg-gray-200 rounded-full h-2 mb-2">
+                                <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 text-center">正在导入中...</p>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-6">
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="flex-1 btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i>取消
+                        </button>
+                        <button onclick="importFaqExcel(this)" class="flex-1 btn btn-success">
+                            <i class="fas fa-upload mr-1"></i>开始导入
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // 文件选择变化处理
+            document.getElementById('faq-excel-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const fileName = file.name.toLowerCase();
+                    if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+                        showMessage('请选择正确的Excel文件格式(.xlsx或.xls)', 'error');
+                        this.value = '';
+                    }
+                }
+            });
+        }
+
+        // 下载FAQ导入模板
+        function downloadFaqTemplate() {
+            // 创建一个模拟的Excel模板数据
+            const templateData = [
+                ['问题', '答案', '分类', '关键词', '状态', '排序', '来源'],
+                ['如何注册账号？', '注册账号非常简单：1. 点击注册按钮 2. 填写基本信息 3. 验证手机号 4. 提交注册即可完成。', 'account', '注册,账号,手机号', '1', '1', 'user_manual.pdf'],
+                ['忘记密码怎么办？', '请按照以下步骤重置密码：1. 点击忘记密码 2. 输入手机号 3. 接收验证码 4. 设置新密码。', 'security', '忘记密码,重置密码', '1', '2', 'faq_database.json']
+            ];
+
+            // 创建CSV内容（作为Excel模板的替代）
+            let csvContent = templateData.map(row =>
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'faq_import_template.csv';
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showMessage('模板文件已下载，请使用Excel打开并填写数据后导入', 'success');
+        }
+
+        // 处理FAQ Excel导入
+        async function importFaqExcel(button) {
+            const fileInput = document.getElementById('faq-excel-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('请选择要导入的Excel文件', 'warning');
+                return;
+            }
+
+            const progressDiv = document.getElementById('import-progress');
+            const progressBar = progressDiv.querySelector('div');
+            const progressText = progressDiv.querySelector('p');
+
+            // 显示进度条
+            progressDiv.classList.remove('hidden');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>导入中...';
+
+            try {
+                // 模拟文件处理过程
+                progressBar.style.width = '30%';
+                progressText.textContent = '正在读取文件...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                progressBar.style.width = '60%';
+                progressText.textContent = '正在验证数据...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                progressBar.style.width = '80%';
+                progressText.textContent = '正在导入数据...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                progressBar.style.width = '100%';
+                progressText.textContent = '导入完成！';
+
+                // 模拟导入结果
+                const importResult = {
+                    success: 8,
+                    failed: 2,
+                    total: 10
+                };
+
+                setTimeout(() => {
+                    showMessage(`批量导入完成！成功导入 ${importResult.success} 条，失败 ${importResult.failed} 条`, 'success');
+                    button.closest('.modal-backdrop').remove();
+                    loadFaqs(); // 重新加载FAQ列表
+                }, 500);
+
+            } catch (error) {
+                showMessage('导入失败: ' + error.message, 'error');
+                progressDiv.classList.add('hidden');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-upload mr-1"></i>开始导入';
+            }
+        }
+
+        // 导出消息记录
+        function exportMessages() {
+            const userId = document.getElementById('message-user-id').value;
+            const startDate = document.getElementById('message-start-date').value;
+            const endDate = document.getElementById('message-end-date').value;
+
+            // 模拟消息数据 - 与loadMessages保持一致
+            let messages = [
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_001',
+                    user_message: '你好，我想了解一下注册流程',
+                    ai_message: '您好！注册流程非常简单：1. 点击注册按钮 2. 填写基本信息 3. 验证手机号 4. 设置密码即可完成注册。',
+                    created_at: '2024-01-01 12:00:00'
+                },
+                {
+                    user_id: 2,
+                    conversation_id: 'conv_002',
+                    user_message: '忘记密码了怎么办？',
+                    ai_message: '如果您忘记密码，可以通过以下方式重置：1. 在登录页面点击"忘记密码" 2. 输入注册手机号 3. 接收验证码 4. 设置新密码。',
+                    created_at: '2024-01-02 10:30:00'
+                },
+                {
+                    user_id: 1,
+                    conversation_id: 'conv_003',
+                    user_message: '如何修改个人信息？',
+                    ai_message: '您可以通过以下步骤修改个人信息：1. 登录账号 2. 点击个人中心 3. 选择需要修改的项目 4. 保存更改。',
+                    created_at: '2024-01-03 14:15:00'
+                },
+                {
+                    user_id: 3,
+                    conversation_id: 'conv_004',
+                    user_message: '系统有什么功能？',
+                    ai_message: '我们的系统提供多种功能：用户管理、FAQ问答、标签系统、提示词配置、消息记录查看等。',
+                    created_at: '2024-01-04 09:20:00'
+                }
+            ];
+
+            // 应用筛选条件
+            if (userId) {
+                messages = messages.filter(msg => msg.user_id == userId);
+            }
+
+            if (startDate) {
+                messages = messages.filter(msg => msg.created_at >= startDate);
+            }
+
+            if (endDate) {
+                messages = messages.filter(msg => msg.created_at <= endDate + ' 23:59:59');
+            }
+
+            if (messages.length === 0) {
+                showMessage('没有符合条件的数据可导出', 'warning');
+                return;
+            }
+
+            // 创建CSV内容
+            const headers = ['用户ID', '会话ID', '用户消息', 'AI回复', '创建时间'];
+            let csvContent = headers.join(',') + '\n';
+
+            messages.forEach(msg => {
+                const row = [
+                    msg.user_id,
+                    msg.conversation_id,
+                    `"${msg.user_message.replace(/"/g, '""')}"`, // 处理CSV中的引号
+                    `"${msg.ai_message.replace(/"/g, '""')}"`,
+                    msg.created_at
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+
+            // 生成文件名
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            let filename = `messages_export_${timestamp}.csv`;
+
+            if (userId) {
+                filename = `messages_user_${userId}_${timestamp}.csv`;
+            }
+
+            link.download = filename;
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showMessage(`成功导出 ${messages.length} 条消息记录`, 'success');
+        }
+
+        // 格式化手机号，中间四位隐藏
+        function formatPhoneNumber(phone) {
+            if (!phone || phone.length < 7) return phone;
+            return phone.substring(0, 3) + '****' + phone.substring(7);
+        }
+
+        // 批量导入用户模态框
+        function showBulkImportUserModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-lg w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-upload text-green-500 mr-2"></i>
+                            批量导入用户
+                        </h3>
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-green-500 mt-0.5 mr-3"></i>
+                            <div class="text-sm text-green-700">
+                                <p class="font-medium mb-2">导入说明：</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>支持.xlsx格式的Excel文件</li>
+                                    <li>必须包含用户名列</li>
+                                    <li>密码、昵称、手机号为可选列</li>
+                                    <li>请先下载模板文件作为参考</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-file-excel text-green-500 mr-1"></i>
+                                选择Excel文件
+                            </label>
+                            <input type="file" id="user-excel-file" accept=".xlsx,.xls"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <p class="text-xs text-gray-500 mt-1">请选择.xlsx或.xls格式的文件</p>
+                        </div>
+
+                        <div class="flex space-x-3">
+                            <button onclick="downloadUserTemplate()" class="flex-1 btn btn-secondary">
+                                <i class="fas fa-download mr-1"></i>下载模板
+                            </button>
+                        </div>
+
+                        <div id="user-import-progress" class="hidden">
+                            <div class="bg-gray-200 rounded-full h-2 mb-2">
+                                <div class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <p class="text-sm text-gray-600 text-center">正在导入中...</p>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3 mt-6">
+                        <button onclick="this.closest('.modal-backdrop').remove()" class="flex-1 btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i>取消
+                        </button>
+                        <button onclick="importUserExcel(this)" class="flex-1 btn btn-success">
+                            <i class="fas fa-upload mr-1"></i>开始导入
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // 文件选择变化处理
+            document.getElementById('user-excel-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const fileName = file.name.toLowerCase();
+                    if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+                        showMessage('请选择正确的Excel文件格式(.xlsx或.xls)', 'error');
+                        this.value = '';
+                    }
+                }
+            });
+        }
+
+        // 下载用户导入模板
+        function downloadUserTemplate() {
+            // 创建用户导入模板数据
+            const templateData = [
+                ['用户名', '密码', '昵称', '手机号'],
+                ['zhangsan', '123456', '张三', '13800138001'],
+                ['lisi', '123456', '李四', '13800138002'],
+                ['wangwu', '123456', '王五', '13800138003']
+            ];
+
+            // 创建CSV内容
+            let csvContent = templateData.map(row =>
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+
+            // 创建下载链接
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'user_import_template.csv';
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showMessage('用户导入模板已下载，请使用Excel打开并填写数据', 'success');
+        }
+
+        // 处理用户Excel导入
+        async function importUserExcel(button) {
+            const fileInput = document.getElementById('user-excel-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('请选择要导入的Excel文件', 'warning');
+                return;
+            }
+
+            const progressDiv = document.getElementById('user-import-progress');
+            const progressBar = progressDiv.querySelector('div');
+            const progressText = progressDiv.querySelector('p');
+
+            // 显示进度条
+            progressDiv.classList.remove('hidden');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>导入中...';
+
+            try {
+                // 模拟文件处理过程
+                progressBar.style.width = '30%';
+                progressText.textContent = '正在读取文件...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                progressBar.style.width = '60%';
+                progressText.textContent = '正在验证数据...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 模拟导入用户数据
+                const mockImportData = [
+                    { username: 'newuser1', nickname: '新用户1', phone_number: '13900139001' },
+                    { username: 'newuser2', nickname: '新用户2', phone_number: '13900139002' },
+                    { username: 'newuser3', nickname: '新用户3', phone_number: '13900139003' }
+                ];
+
+                progressBar.style.width = '80%';
+                progressText.textContent = '正在创建用户...';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // 模拟添加到用户列表
+                const newUsers = mockImportData.map((user, index) => ({
+                    user_id: Math.max(...window.allUserData.map(u => u.user_id)) + index + 1,
+                    username: user.username,
+                    nickname: user.nickname,
+                    phone_number: user.phone_number,
+                    is_active: true,
+                    created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                }));
+
+                if (!window.allUserData) {
+                    window.allUserData = [
+                        { user_id: 1, username: 'admin', nickname: '系统管理员', phone_number: '13800138000', is_active: true, created_at: '2024-01-01 12:00:00' },
+                        { user_id: 2, username: 'user1', nickname: '张三', phone_number: '13800138001', is_active: true, created_at: '2024-01-02 10:30:00' },
+                        { user_id: 3, username: 'user2', nickname: '李四', phone_number: '13800138002', is_active: false, created_at: '2024-01-03 14:20:00' }
+                    ];
+                }
+
+                window.allUserData.push(...newUsers);
+
+                progressBar.style.width = '100%';
+                progressText.textContent = '导入完成！';
+
+                setTimeout(() => {
+                    showMessage(`批量导入完成！成功创建 ${mockImportData.length} 个用户`, 'success');
+                    button.closest('.modal-backdrop').remove();
+                    loadUsers(); // 重新加载用户列表
+                }, 500);
+
+            } catch (error) {
+                showMessage('导入失败: ' + error.message, 'error');
+                progressDiv.classList.add('hidden');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-upload mr-1"></i>开始导入';
+            }
+        }
+
+        function filterUsers() { /* 过滤用户功能 */ }
+        function filterFaqs() { /* 过滤FAQ功能 */ }
+    </script>
+</body>
+</html>
+

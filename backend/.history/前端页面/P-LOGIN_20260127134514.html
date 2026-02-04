@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智糖小助手 - 登录</title>
+    <script src="libs/tailwindcss.js"></script>
+    <script src="libs/fontawesome.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#969FFF',
+                        secondary: '#5147FF', 
+                        accent: '#3E3987',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444'
+                    },
+                    backgroundImage: {
+                        'gradient-primary': 'linear-gradient(135deg, #969FFF 0%, #5147FF 100%)',
+                        'gradient-secondary': 'linear-gradient(135deg, #5147FF 0%, #3E3987 100%)',
+                        'gradient-card': 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                        'gradient-hero': 'linear-gradient(135deg, #969FFF 0%, #5147FF 50%, #3E3987 100%)'
+                    },
+                    boxShadow: {
+                        'card': '0 4px 20px rgba(150, 159, 255, 0.1)',
+                        'button': '0 4px 15px rgba(150, 159, 255, 0.3)',
+                        'nav': '0 -2px 20px rgba(150, 159, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .form-input-focus:focus {
+            outline: none;
+            border-color: #969FFF;
+            box-shadow: 0 0 0 2px rgba(150, 159, 255, 0.2);
+        }
+        
+        .button-hover:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+    </style>
+    <script src="config.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+
+
+    <!-- 主要内容区域 -->
+    <div id="main-content" class="min-h-screen flex flex-col">
+        <!-- 顶部Logo区域 -->
+        <header id="logo-header" class="flex-1 flex flex-col justify-center items-center px-6 py-12">
+            <!-- App Logo -->
+            <div id="app-logo" class="text-center mb-12">
+                <div class="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-card overflow-hidden bg-white">
+                    <!-- 使用实际的logo图片 -->
+                    <img src="/logo.png" 
+                         alt="智糖小助手 Logo" 
+                         class="w-full h-full object-contain">
+                </div>
+                <h1 id="app-name" class="text-3xl font-bold gradient-text mb-2">智糖小助手</h1>
+                <p id="app-slogan" class="text-gray-600 text-sm">您的智能糖尿病管理伙伴</p>
+            </div>
+
+            <!-- 登录表单 -->
+            <div id="login-form-container" class="w-full max-w-sm">
+                <form id="login-form" class="space-y-6">
+                    <!-- 账号输入框 -->
+                    <div id="username-field" class="space-y-2">
+                        <label for="username" class="block text-sm font-medium text-gray-700">手机号</label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="username" 
+                                   name="username" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500" 
+                                   placeholder="请输入手机号"
+                                   required>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 密码输入框 -->
+                    <div id="password-field" class="space-y-2">
+                        <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500 pr-12" 
+                                   placeholder="请输入密码"
+                                   required>
+                            <button type="button" 
+                                    id="toggle-password" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 登录按钮 -->
+
+                    <!-- 登录按钮 -->
+                    <button type="submit" 
+                            id="login-btn" 
+                            class="w-full bg-gradient-primary text-white py-3 rounded-xl font-medium shadow-button button-hover flex items-center justify-center space-x-2">
+                        <span>登录</span>
+                        <i class="fas fa-sign-in-alt"></i>
+                    </button>
+                </form>
+
+            </div>
+        </header>
+
+        <!-- 底部安全区域 -->
+        <div id="bottom-safe-area" class="safe-bottom"></div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 flex flex-col items-center space-y-3">
+            <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-700">正在登录...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API配置
+            const API_BASE_URL = AppConfig.API.BASE_URL;
+            
+            // 密码显示/隐藏切换
+            document.querySelector('#toggle-password').addEventListener('click', function() {
+                const passwordInput = document.querySelector('#password');
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+
+            // 登录表单提交
+            document.querySelector('#login-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.querySelector('#username').value.trim();
+                const password = document.querySelector('#password').value.trim();
+                
+                // 简单验证
+                if (!username) {
+                    alert('请输入手机号或用户名');
+                    return;
+                }
+                
+                if (!password) {
+                    alert('请输入密码');
+                    return;
+                }
+                
+                // 显示加载状态
+                document.querySelector('#loading-overlay').classList.remove('hidden');
+                document.querySelector('#login-btn').disabled = true;
+                
+                try {
+                    console.log('📤 发送登录请求...');
+                    console.log('👤 用户名:', username);
+                    
+                    // 调用后端登录API
+                    console.log('🔍 发送请求到:', AppConfig.getApiUrl('/api/login'));
+                    const response = await fetch(`${AppConfig.getApiUrl('/api/login')}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+
+                    console.log('🔍 响应状态:', response.status, response.statusText);
+                    console.log('🔍 响应头:', Object.fromEntries(response.headers.entries()));
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('❌ 响应错误:', errorText);
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    let data;
+                    try {
+                        const responseText = await response.text();
+                        console.log('🔍 原始响应文本:', responseText);
+                        data = JSON.parse(responseText);
+                        console.log('🔍 解析后的数据:', data);
+                    } catch (parseError) {
+                        console.error('❌ JSON解析失败:', parseError);
+                        throw new Error('响应格式错误');
+                    }
+
+                    console.log('🔍 data对象:', data);
+                    console.log('🔍 data.data对象:', data.data);
+                    console.log('🔍 响应数据结构:', data);
+
+                    if (response.ok) {
+                        console.log('✅ 登录成功:', data);
+
+                        // 从正确的路径获取数据
+                        const loginData = data.data || {};
+                        const token = loginData.token;
+
+                        console.log('🔍 保存的token值:', token);
+                        console.log('🔍 token类型:', typeof token);
+                        console.log('🔍 token长度:', token ? token.length : 0);
+
+                        if (token) {
+                            // 保存token到localStorage（使用统一方法）
+                            AppConfig.setToken(token);
+                            console.log('✅ Token已保存到localStorage');
+                        } else {
+                            console.error('❌ 登录响应中没有token');
+                            showError('登录失败：服务器返回数据异常');
+                            return;
+                        }
+
+                        // 保存用户信息
+                        if (loginData.user_id) {
+                            localStorage.setItem(AppConfig.STORAGE_KEYS.USER_ID, loginData.user_id);
+                            localStorage.setItem(AppConfig.STORAGE_KEYS.USERNAME, loginData.username || '');
+                            localStorage.setItem('nickname', loginData.nickname || loginData.username || '');
+                            console.log('✅ 用户信息已保存到localStorage');
+                            console.log('   user_id:', loginData.user_id);
+                            console.log('   username:', loginData.username);
+                            console.log('   nickname:', loginData.nickname);
+                        } else {
+                            console.warn('⚠️ 登录响应中没有用户信息');
+                        }
+
+                        console.log('💾 Token已保存');
+
+                        // 短暂延迟后跳转，让用户看到成功提示
+                        setTimeout(function() {
+                            console.log('🚀 跳转到对话页面...');
+                            console.log('🔍 跳转前最后检查token:', localStorage.getItem('api_token'));
+                            console.log('🔍 跳转前强制刷新localStorage...');
+
+                            // 强制再次保存token，确保localStorage持久化
+                            localStorage.setItem('api_token', data.data.token);
+                            localStorage.setItem('user_id', data.data.user_id);
+                            localStorage.setItem('username', data.data.username);
+                            localStorage.setItem('nickname', data.data.nickname);
+
+                            console.log('🔍 跳转前最终检查:', localStorage.getItem('api_token'));
+
+                            window.location.href = AppConfig.getPath('/chat');
+                        }, 1000); // 增加延迟到1秒
+                        
+                    } else {
+                        // 登录失败
+                        console.error('❌ 登录失败:', data.message);
+                        alert(data.message || '登录失败，请检查用户名和密码');
+                        
+                        // 隐藏加载状态
+                        document.querySelector('#loading-overlay').classList.add('hidden');
+                        document.querySelector('#login-btn').disabled = false;
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ 登录请求失败:', error);
+                    
+                    // 检查是否是网络错误
+                    if (error.message === 'Failed to fetch') {
+                        alert('无法连接到服务器，请检查：\n1. 后端服务是否已启动\n2. API地址是否正确\n3. 网络连接是否正常');
+                    } else {
+                        alert('登录失败：' + error.message);
+                    }
+                    
+                    // 隐藏加载状态
+                    document.querySelector('#loading-overlay').classList.add('hidden');
+                    document.querySelector('#login-btn').disabled = false;
+                }
+            });
+
+
+
+            // 输入框焦点效果
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('ring-2', 'ring-primary/20');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('ring-2', 'ring-primary/20');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

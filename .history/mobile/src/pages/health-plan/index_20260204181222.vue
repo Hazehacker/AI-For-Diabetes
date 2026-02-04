@@ -1,0 +1,879 @@
+<template>
+  <view class="health-plan-page">
+    <!-- 顶部导航 -->
+    <view class="page-header">
+      <text class="page-title">健康计划工坊</text>
+      <text class="page-subtitle">AI 助力，科学管理</text>
+    </view>
+
+    <!-- 角色视图切换 -->
+    <view v-if="userRole === 'child_under_12'" class="child-view">
+      <!-- 儿童游戏化视图 -->
+      <view class="game-header">
+        <view class="level-badge">
+          <text class="level-icon">🏆</text>
+          <text class="level-text">Lv.{{ gamifiedView.level }}</text>
+        </view>
+        <view class="progress-info">
+          <text class="progress-text">今日进度</text>
+          <text class="progress-value">{{ gamifiedView.progress }}/{{ gamifiedView.total }}</text>
+        </view>
+      </view>
+
+      <view class="progress-bar-container">
+        <view class="progress-bar">
+          <view class="progress-fill" :style="{ width: todayCompletionRate + '%' }"></view>
+        </view>
+        <text class="progress-label">{{ todayCompletionRate }}%</text>
+      </view>
+
+      <!-- 勋章展示 -->
+      <view v-if="gamifiedView.badges.length > 0" class="badges-section">
+        <text class="section-title">我的勋章</text>
+        <view class="badges-list">
+          <view v-for="badge in gamifiedView.badges" :key="badge.name" class="badge-item">
+            <text class="badge-icon">{{ badge.icon }}</text>
+            <text class="badge-name">{{ badge.name }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 今日任务（游戏化） -->
+      <view class="tasks-section">
+        <text class="section-title">今日挑战</text>
+        <view class="task-cards">
+          <view 
+            v-for="task in todayPendingTasks" 
+            :key="task.id"
+            class="task-card child-mode"
+            @tap="completeChildTask(task)"
+          >
+            <view class="task-icon">{{ getTaskEmoji(task.content) }}</view>
+            <view class="task-info">
+              <text class="task-content">{{ simplifyTaskContent(task.content) }}</text>
+              <text class="task-time">{{ formatTime(task.scheduled_time) }}</text>
+            </view>
+            <view class="task-action">
+              <text class="action-btn">✓</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view v-else class="normal-view">
+      <!-- 青少年/家属视图 -->
+      
+      <!-- 快速统计 -->
+      <view class="stats-cards">
+        <view class="stat-card">
+          <text class="stat-value">{{ activePlans.length }}</text>
+          <text class="stat-label">进行中</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-value">{{ todayCompletionRate }}%</text>
+          <text class="stat-label">今日完成</text>
+        </view>
+        <view v-if="userRole === 'guardian'" class="stat-card highlight">
+          <text class="stat-value">{{ pendingPlans.length }}</text>
+          <text class="stat-label">待审核</text>
+        </view>
+      </view>
+
+      <!-- 今日任务时间轴 -->
+      <view class="today-section">
+        <view class="section-header">
+          <text class="section-title">今日清单</text>
+          <text class="section-date">{{ todayDate }}</text>
+        </view>
+
+        <view class="timeline">
+          <!-- 待完成任务 -->
+          <view 
+            v-for="task in todayPendingTasks" 
+            :key="task.id"
+            class="timeline-item pending"
+          >
+            <view class="timeline-dot"></view>
+            <view class="timeline-content">
+              <view class="task-header">
+                <text class="task-time">{{ formatTime(task.scheduled_time) }}</text>
+                <view class="task-level" :class="'level-' + task.reminder_level">
+                  {{ getLevelText(task.reminder_level) }}
+                </view>
+              </view>
+              <text class="task-content">{{ task.content }}</text>
+              <view class="task-actions">
+                <button class="btn-complete" @tap="completeTask(task)">完成</button>
+                <button class="btn-difficult" @tap="markDifficult(task)">太难了</button>
+              </view>
+            </view>
+          </view>
+
+          <!-- 已完成任务 -->
+          <view 
+            v-for="task in todayCompletedTasks" 
+            :key="task.id"
+            class="timeline-item completed"
+          >
+            <view class="timeline-dot checked"></view>
+            <view class="timeline-content">
+              <view class="task-header">
+                <text class="task-time">{{ formatTime(task.scheduled_time) }}</text>
+                <text class="completed-tag">✓ 已完成</text>
+              </view>
+              <text class="task-content">{{ task.content }}</text>
+            </view>
+          </view>
+
+          <!-- 空状态 -->
+          <view v-if="todayTasks.length === 0" class="empty-state">
+            <text class="empty-icon">📋</text>
+            <text class="empty-text">暂无任务</text>
+            <text class="empty-hint">创建一个健康计划开始吧</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 我的计划列表 -->
+      <view class="plans-section">
+        <view class="section-header">
+          <text class="section-title">我的计划</text>
+          <text v-if="canCreatePlan" class="create-link" @tap="goToCreate">+ 新建</text>
+        </view>
+
+        <view class="plan-cards">
+          <!-- 待审核计划（仅家属可见） -->
+          <view 
+            v-for="plan in pendingPlans" 
+            :key="plan.id"
+            class="plan-card pending"
+            @tap="reviewPlan(plan)"
+          >
+            <view class="plan-header">
+              <text class="plan-title">{{ plan.target_goal }}</text>
+              <view class="plan-badge pending">待审核</view>
+            </view>
+            <text class="plan-type">{{ getPlanTypeText(plan.plan_type) }}</text>
+            <text class="plan-date">创建于 {{ formatDate(plan.created_at) }}</text>
+          </view>
+
+          <!-- 进行中的计划 -->
+          <view 
+            v-for="plan in activePlans" 
+            :key="plan.id"
+            class="plan-card active"
+            @tap="viewPlanDetail(plan)"
+          >
+            <view class="plan-header">
+              <text class="plan-title">{{ plan.target_goal }}</text>
+              <view class="plan-badge active">进行中</view>
+            </view>
+            <text class="plan-type">{{ getPlanTypeText(plan.plan_type) }}</text>
+            <view class="plan-progress">
+              <text class="progress-text">任务进度</text>
+              <text class="progress-value">{{ calculatePlanProgress(plan) }}%</text>
+            </view>
+            <text class="plan-date">{{ formatDateRange(plan.start_date, plan.end_date) }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 创建计划按钮（浮动） -->
+    <view v-if="canCreatePlan && userRole !== 'child_under_12'" class="fab" @tap="goToCreate">
+      <text class="fab-icon">+</text>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useHealthPlanStore } from '@/store/healthPlan'
+import { storeToRefs } from 'pinia'
+
+const healthPlanStore = useHealthPlanStore()
+const {
+  userRole,
+  todayTasks,
+  activePlans,
+  pendingPlans,
+  todayPendingTasks,
+  todayCompletedTasks,
+  todayCompletionRate,
+  canCreatePlan,
+  gamifiedView
+} = storeToRefs(healthPlanStore)
+
+// 今日日期
+const todayDate = computed(() => {
+  const today = new Date()
+  const month = today.getMonth() + 1
+  const day = today.getDate()
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  const weekday = weekdays[today.getDay()]
+  
+  return `${month}月${day}日 星期${weekday}`
+})
+
+// 计划类型文本
+const getPlanTypeText = (type) => {
+  const map = {
+    1: '用药计划',
+    2: '复查计划',
+    3: '饮食计划',
+    4: '运动计划'
+  }
+  return map[type] || '健康计划'
+}
+
+// 提醒级别文本
+const getLevelText = (level) => {
+  const map = {
+    1: '普通',
+    2: '重要',
+    3: '紧急'
+  }
+  return map[level] || '普通'
+}
+
+// 格式化时间
+const formatTime = (date) => {
+  const d = new Date(date)
+  const hours = d.getHours().toString().padStart(2, '0')
+  const minutes = d.getMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+// 格式化日期
+const formatDate = (date) => {
+  const d = new Date(date)
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  return `${month}月${day}日`
+}
+
+// 格式化日期范围
+const formatDateRange = (start, end) => {
+  return `${formatDate(start)} - ${formatDate(end)}`
+}
+
+// 计算计划进度
+const calculatePlanProgress = (plan) => {
+  const completed = todayCompletedTasks.value.filter(t => t.plan_id === plan.id).length
+  const total = todayTasks.value.filter(t => t.plan_id === plan.id).length
+  
+  if (total === 0) return 0
+  return Math.round((completed / total) * 100)
+}
+
+// 完成任务
+const completeTask = (task) => {
+  // 如果任务需要输入数据（如血糖值）
+  if (task.content.includes('监测血糖') || task.content.includes('测血糖')) {
+    uni.showModal({
+      title: '记录血糖值',
+      editable: true,
+      placeholderText: '请输入血糖值',
+      success: (res) => {
+        if (res.confirm && res.content) {
+          healthPlanStore.completeTask(task.id, {
+            glucose_value: parseFloat(res.content)
+          })
+          
+          // 撒花特效
+          showCelebration()
+        }
+      }
+    })
+  } else {
+    healthPlanStore.completeTask(task.id)
+    showCelebration()
+  }
+}
+
+// 儿童模式完成任务
+const completeChildTask = (task) => {
+  healthPlanStore.completeTask(task.id)
+  showCelebration()
+  
+  // 检查是否获得新勋章
+  const badges = gamifiedView.value.badges
+  if (badges.length > 0) {
+    const latestBadge = badges[badges.length - 1]
+    uni.showToast({
+      title: `获得勋章：${latestBadge.name}`,
+      icon: 'success',
+      duration: 2000
+    })
+  }
+}
+
+// 标记任务太难
+const markDifficult = (task) => {
+  uni.showModal({
+    title: '任务反馈',
+    content: '这个任务对你来说太难了吗？我们会调整难度。',
+    confirmText: '是的',
+    cancelText: '取消',
+    success: (res) => {
+      if (res.confirm) {
+        healthPlanStore.feedbackTaskDifficulty(task.id, 2)
+        
+        uni.showToast({
+          title: '已记录反馈，下次会调整',
+          icon: 'none'
+        })
+      }
+    }
+  })
+}
+
+// 撒花特效
+const showCelebration = () => {
+  uni.showToast({
+    title: '太棒了！',
+    icon: 'success'
+  })
+}
+
+// 简化任务内容（儿童模式）
+const simplifyTaskContent = (content) => {
+  const map = {
+    '监测血糖': '测一测',
+    '快走': '去散步',
+    '胰岛素': '打针针',
+    '补充水分': '喝水水'
+  }
+  
+  for (const [key, value] of Object.entries(map)) {
+    if (content.includes(key)) {
+      return value
+    }
+  }
+  
+  return content
+}
+
+// 获取任务表情
+const getTaskEmoji = (content) => {
+  if (content.includes('监测') || content.includes('测')) return '🩺'
+  if (content.includes('运动') || content.includes('散步') || content.includes('快走')) return '🏃'
+  if (content.includes('胰岛素') || content.includes('用药')) return '💉'
+  if (content.includes('饮食') || content.includes('餐')) return '🍽️'
+  if (content.includes('水')) return '💧'
+  return '✨'
+}
+
+// 跳转到创建页面
+const goToCreate = () => {
+  uni.navigateTo({
+    url: '/pages/health-plan/create'
+  })
+}
+
+// 查看计划详情
+const viewPlanDetail = (plan) => {
+  uni.navigateTo({
+    url: `/pages/health-plan/detail?id=${plan.id}`
+  })
+}
+
+// 审核计划
+const reviewPlan = (plan) => {
+  uni.navigateTo({
+    url: `/pages/health-plan/review?id=${plan.id}`
+  })
+}
+
+onMounted(() => {
+  // 生成模拟数据
+  if (healthPlanStore.plans.length === 0) {
+    healthPlanStore.generateMockData()
+  }
+})
+</script>
+
+<style scoped>
+.health-plan-page {
+  min-height: 100vh;
+  background: #F3F4F6;
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 页面头部 */
+.page-header {
+  padding: 40rpx 20rpx;
+  text-align: center;
+}
+
+.page-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #1F2937;
+  margin-bottom: 8rpx;
+}
+
+.page-subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #9CA3AF;
+}
+
+/* 儿童游戏化视图 */
+.child-view {
+  padding: 20rpx;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.level-badge {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 32rpx;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  border-radius: 40rpx;
+}
+
+.level-icon {
+  font-size: 40rpx;
+}
+
+.level-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.progress-text {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.progress-value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.progress-bar-container {
+  margin-bottom: 32rpx;
+}
+
+.progress-bar {
+  height: 40rpx;
+  background: #E5E7EB;
+  border-radius: 20rpx;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+  transition: width 0.5s ease;
+}
+
+.progress-label {
+  display: block;
+  text-align: right;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #10B981;
+}
+
+/* 勋章 */
+.badges-section {
+  margin-bottom: 32rpx;
+}
+
+.badges-list {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.badge-icon {
+  font-size: 60rpx;
+  margin-bottom: 8rpx;
+}
+
+.badge-name {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 任务卡片（儿童模式） */
+.task-card.child-mode {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  background: white;
+  border-radius: 20rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.task-icon {
+  font-size: 60rpx;
+}
+
+.task-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.action-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  font-weight: bold;
+}
+
+/* 正常视图 */
+.normal-view {
+  padding: 20rpx;
+}
+
+/* 统计卡片 */
+.stats-cards {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 32rpx;
+  background: white;
+  border-radius: 16rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.stat-card.highlight {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 2rpx solid #3B82F6;
+}
+
+.stat-value {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #1F2937;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 区块 */
+.today-section,
+.plans-section,
+.tasks-section {
+  margin-bottom: 32rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.section-date {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.create-link {
+  font-size: 28rpx;
+  color: #3B82F6;
+  font-weight: 500;
+}
+
+/* 时间轴 */
+.timeline {
+  background: white;
+  border-radius: 16rpx;
+  padding: 32rpx;
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 60rpx;
+  padding-bottom: 40rpx;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 16rpx;
+  top: 32rpx;
+  bottom: -8rpx;
+  width: 2rpx;
+  background: #E5E7EB;
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 8rpx;
+  top: 8rpx;
+  width: 20rpx;
+  height: 20rpx;
+  background: #3B82F6;
+  border-radius: 50%;
+  border: 4rpx solid white;
+  box-shadow: 0 0 0 2rpx #3B82F6;
+}
+
+.timeline-dot.checked {
+  background: #10B981;
+  box-shadow: 0 0 0 2rpx #10B981;
+}
+
+.timeline-content {
+  background: #F9FAFB;
+  padding: 20rpx;
+  border-radius: 12rpx;
+}
+
+.timeline-item.completed .timeline-content {
+  opacity: 0.6;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.task-time {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.task-level {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  color: white;
+}
+
+.task-level.level-1 {
+  background: #9CA3AF;
+}
+
+.task-level.level-2 {
+  background: #F59E0B;
+}
+
+.task-level.level-3 {
+  background: #EF4444;
+}
+
+.completed-tag {
+  font-size: 24rpx;
+  color: #10B981;
+  font-weight: 500;
+}
+
+.task-content {
+  display: block;
+  font-size: 28rpx;
+  color: #374151;
+  margin-bottom: 16rpx;
+}
+
+.task-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.btn-complete,
+.btn-difficult {
+  flex: 1;
+  height: 64rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  border: none;
+}
+
+.btn-complete {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+}
+
+.btn-difficult {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+/* 计划卡片 */
+.plan-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.plan-card {
+  padding: 32rpx;
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.plan-card.pending {
+  border-left: 8rpx solid #F59E0B;
+}
+
+.plan-card.active {
+  border-left: 8rpx solid #10B981;
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.plan-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.plan-badge {
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: white;
+}
+
+.plan-badge.pending {
+  background: #F59E0B;
+}
+
+.plan-badge.active {
+  background: #10B981;
+}
+
+.plan-type {
+  display: block;
+  font-size: 24rpx;
+  color: #6B7280;
+  margin-bottom: 8rpx;
+}
+
+.plan-progress {
+  display: flex;
+  justify-content: space-between;
+  margin: 12rpx 0;
+}
+
+.plan-date {
+  display: block;
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 8rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 80rpx 20rpx;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 32rpx;
+  color: #6B7280;
+  margin-bottom: 8rpx;
+}
+
+.empty-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+/* 浮动按钮 */
+.fab {
+  position: fixed;
+  bottom: 100rpx;
+  right: 40rpx;
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.4);
+  z-index: 100;
+}
+
+.fab-icon {
+  font-size: 60rpx;
+  color: white;
+  font-weight: bold;
+}
+</style>

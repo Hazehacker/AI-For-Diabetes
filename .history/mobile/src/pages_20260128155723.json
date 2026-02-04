@@ -1,0 +1,48 @@
+{
+	"pages": [
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/test/test",
+			"style": {
+				"navigationBarTitleText": "调试测试",
+				"navigationBarBackgroundColor": "#969FFF",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/chat/chat-complete",
+			"style": {
+				"navigationBarTitleText": "智糖小助手",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/checkin/checkin",
+			"style": {
+				"navigationBarTitleText": "打卡",
+				"navigationBarBackgroundColor": "#969FFF",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "个人中心",
+				"navigationBarBackgroundColor": "#969FFF",
+				"navigationBarTextStyle": "white"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "white",
+		"navigationBarTitleText": "智糖小助手",
+		"navigationBarBackgroundColor": "#969FFF",
+		"backgroundColor": "#F3F4F6"
+	}
+}

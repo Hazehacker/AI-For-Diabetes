@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智糖小助手 - 用户端</title>
+    <script src="config.js"></script>
+    <script src="libs/tailwindcss.js"></script>
+    <script src="libs/fontawesome.min.js"></script>
+    <style>
+        .gradient-primary {
+            background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+    
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-lg px-4 py-4">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold gradient-text">智糖小助手</h1>
+                    <p class="text-sm text-gray-600">智能糖尿病管理助手</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-600">
+                    <span>用户端服务</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- 智能对话 -->
+            <a href="P-CHAT.html" class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 gradient-primary rounded-full flex items-center justify-center">
+                        <i class="fas fa-comments text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">智能对话</h3>
+                        <p class="text-sm text-gray-600">AI健康咨询</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">与AI助手进行健康对话，获取专业的糖尿病管理建议</p>
+            </a>
+
+            <!-- 健康打卡 -->
+            <a href="P-CHECKIN.html" class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-calendar-check text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">健康打卡</h3>
+                        <p class="text-sm text-gray-600">记录健康数据</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">记录血糖、饮食、运动等健康数据，建立健康档案</p>
+            </a>
+
+            <!-- 个人中心 -->
+            <a href="P-USER_PROFILE.html" class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">个人中心</h3>
+                        <p class="text-sm text-gray-600">个人信息管理</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">管理个人信息、健康档案和账户设置</p>
+            </a>
+
+            <!-- 登录页面 -->
+            <a href="P-LOGIN.html" class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-sign-in-alt text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">用户登录</h3>
+                        <p class="text-sm text-gray-600">账户登录</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">登录您的账户，开始使用智糖小助手</p>
+            </a>
+
+            <!-- 设置页面 -->
+            <a href="P-SETTINGS.html" class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-cog text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">系统设置</h3>
+                        <p class="text-sm text-gray-600">应用设置</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">配置应用设置、通知偏好和隐私选项</p>
+            </a>
+
+            <!-- 首页 -->
+            <a href="P-HOME.html" class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-home text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">首页</h3>
+                        <p class="text-sm text-gray-600">应用首页</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">查看健康概览、快速操作和重要提醒</p>
+            </a>
+        </div>
+
+        <!-- 服务状态 -->
+        <div class="mt-12 bg-white rounded-xl p-6 shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">服务状态</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-check text-green-600 text-xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800">用户服务</h4>
+                    <p class="text-sm text-gray-600">端口 8900</p>
+                    <p class="text-xs text-green-600">运行中</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-cog text-blue-600 text-xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800">管理服务</h4>
+                    <p class="text-sm text-gray-600">端口 8901</p>
+                    <p class="text-xs text-blue-600">独立运行</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-database text-purple-600 text-xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-800">数据库</h4>
+                    <p class="text-sm text-gray-600">MySQL</p>
+                    <p class="text-xs text-purple-600">已连接</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部信息 -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <div class="text-center text-gray-600">
+                <p class="text-sm">智糖小助手 - 智能糖尿病管理平台</p>
+                <p class="text-xs mt-2">用户端服务 | 管理端服务独立运行</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

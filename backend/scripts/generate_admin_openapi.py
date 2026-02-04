@@ -1,0 +1,1644 @@
+#!/usr/bin/env python3
+"""
+生成后台管理接口的 OpenAPI 3.0 规范文档
+用于导入到 Apifox 等 API 管理工具
+
+使用方法:
+    python scripts/generate_admin_openapi.py
+
+输出:
+    admin_openapi.json - 后台管理接口 OpenAPI 3.0 规范文档（JSON格式）
+    admin_openapi.yaml - 后台管理接口 OpenAPI 3.0 规范文档（YAML格式）
+"""
+
+import json
+import yaml
+import os
+import sys
+from pathlib import Path
+
+# 添加项目根目录到路径
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+# OpenAPI 3.0 基础结构
+openapi_spec = {
+    "openapi": "3.0.3",
+    "info": {
+        "title": "智糖小助手 - 后台管理API",
+        "description": "智糖小助手后台管理接口文档\n\n包含用户管理、FAQ管理、标签管理、Prompt管理、消息记录管理等模块。",
+        "version": "2.0.0",
+        "contact": {
+            "name": "智糖团队"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:8900",
+            "description": "本地开发环境"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "JWT Token认证，格式: Bearer <token>"
+            }
+        },
+        "schemas": {
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": False
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "错误信息"
+                    }
+                }
+            },
+            "SuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "example": True
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "操作成功"
+                    }
+                }
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer", "example": 1},
+                    "username": {"type": "string", "example": "user123"},
+                    "nickname": {"type": "string", "example": "用户昵称"},
+                    "phone_number": {"type": "string", "example": "13800138000"},
+                    "email": {"type": "string", "example": "user@example.com"},
+                    "date_of_birth": {"type": "string", "format": "date", "example": "1990-01-01"},
+                    "is_active": {"type": "boolean", "example": True},
+                    "is_admin": {"type": "boolean", "example": False},
+                    "created_at": {"type": "string", "format": "date-time"},
+                    "last_login": {"type": "string", "format": "date-time"}
+                }
+            },
+            "UserListResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {"type": "boolean"},
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "users": {
+                                "type": "array",
+                                "items": {"$ref": "#/components/schemas/User"}
+                            },
+                            "total": {"type": "integer"},
+                            "page": {"type": "integer"},
+                            "page_size": {"type": "integer"},
+                            "total_pages": {"type": "integer"}
+                        }
+                    }
+                }
+            },
+            "FAQ": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "question": {"type": "string"},
+                    "answer": {"type": "string"},
+                    "category": {"type": "string", "nullable": True},
+                    "source": {"type": "string", "nullable": True},
+                    "status": {"type": "integer", "enum": [0, 1]},
+                    "sort_order": {"type": "integer"},
+                    "view_count": {"type": "integer"},
+                    "like_count": {"type": "integer"},
+                    "is_manual": {"type": "boolean"},
+                    "description": {"type": "string", "nullable": True},
+                    "keywords": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "keyword": {"type": "string"},
+                                "type": {"type": "string", "enum": ["manual", "auto"]},
+                                "weight": {"type": "number"}
+                            }
+                        }
+                    },
+                    "created_at": {"type": "string", "format": "date-time"},
+                    "updated_at": {"type": "string", "format": "date-time"}
+                }
+            },
+            "TagDefinition": {
+                "type": "object",
+                "properties": {
+                    "tag_key": {"type": "string"},
+                    "tag_name": {"type": "string"},
+                    "tag_type": {"type": "string"},
+                    "category": {"type": "string"},
+                    "description": {"type": "string"},
+                    "validation_rules": {"type": "object"}
+                }
+            },
+            "PromptTemplate": {
+                "type": "object",
+                "properties": {
+                    "prompt_id": {"type": "integer"},
+                    "prompt_type": {"type": "string", "enum": ["initial", "normal", "tagging"]},
+                    "prompt_name": {"type": "string"},
+                    "prompt_content": {"type": "string"},
+                    "version": {"type": "integer"},
+                    "is_active": {"type": "boolean"},
+                    "created_at": {"type": "string", "format": "date-time"}
+                }
+            },
+            "ChatMessage": {
+                "type": "object",
+                "properties": {
+                    "message_id": {"type": "integer"},
+                    "conversation_id": {"type": "string"},
+                    "user_id": {"type": "integer"},
+                    "sender": {"type": "string", "enum": ["user", "assistant"]},
+                    "content": {"type": "string"},
+                    "created_at": {"type": "string", "format": "date-time"}
+                }
+            },
+            "ChatSession": {
+                "type": "object",
+                "properties": {
+                    "conversation_id": {"type": "string"},
+                    "user_id": {"type": "integer"},
+                    "username": {"type": "string"},
+                    "nickname": {"type": "string"},
+                    "message_count": {"type": "integer"},
+                    "last_message": {"type": "string", "nullable": True},
+                    "last_message_at": {"type": "string", "format": "date-time"},
+                    "created_at": {"type": "string", "format": "date-time"}
+                }
+            }
+        }
+    },
+    "paths": {},
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ]
+}
+
+# 通用响应定义
+def get_error_responses():
+    return {
+        "400": {
+            "description": "请求参数错误",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                }
+            }
+        },
+        "401": {
+            "description": "未授权，需要登录",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                }
+            }
+        },
+        "403": {
+            "description": "无权限访问",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                }
+            }
+        },
+        "404": {
+            "description": "资源不存在",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                }
+            }
+        },
+        "500": {
+            "description": "服务器错误",
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                }
+            }
+        }
+    }
+
+# 1. 用户管理接口
+def add_user_paths():
+    paths = {
+        "/api/users": {
+            "get": {
+                "tags": ["用户管理"],
+                "summary": "获取用户列表（分页）",
+                "description": "获取用户列表，支持分页、搜索和筛选",
+                "operationId": "getUsersList",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "页码",
+                        "required": False,
+                        "schema": {"type": "integer", "default": 1}
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "description": "每页数量",
+                        "required": False,
+                        "schema": {"type": "integer", "default": 20}
+                    },
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "搜索关键词（用户名/昵称/手机号）",
+                        "required": False,
+                        "schema": {"type": "string"}
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "是否激活",
+                        "required": False,
+                        "schema": {"type": "boolean"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/UserListResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "post": {
+                "tags": ["用户管理"],
+                "summary": "创建用户",
+                "description": "创建新用户",
+                "operationId": "createUser",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["username", "password"],
+                                "properties": {
+                                    "username": {"type": "string", "example": "newuser"},
+                                    "password": {"type": "string", "example": "password123"},
+                                    "nickname": {"type": "string", "example": "新用户"},
+                                    "phone_number": {"type": "string", "example": "13800138000"},
+                                    "email": {"type": "string", "example": "user@example.com"},
+                                    "is_admin": {"type": "boolean", "example": False}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "user_id": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/users/{user_id}": {
+            "get": {
+                "tags": ["用户管理"],
+                "summary": "获取用户详情",
+                "description": "获取指定用户的详细信息",
+                "operationId": "getUserDetail",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                        "description": "用户ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "user": {"$ref": "#/components/schemas/User"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "put": {
+                "tags": ["用户管理"],
+                "summary": "更新用户信息",
+                "description": "更新指定用户的信息",
+                "operationId": "updateUser",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                        "description": "用户ID"
+                    }
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nickname": {"type": "string"},
+                                    "phone_number": {"type": "string"},
+                                    "email": {"type": "string"},
+                                    "date_of_birth": {"type": "string", "format": "date"},
+                                    "is_admin": {"type": "boolean"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "delete": {
+                "tags": ["用户管理"],
+                "summary": "删除用户",
+                "description": "删除指定用户",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                        "description": "用户ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/users/{user_id}/status": {
+            "put": {
+                "tags": ["用户管理"],
+                "summary": "切换用户状态",
+                "description": "切换用户的激活状态",
+                "operationId": "toggleUserStatus",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"},
+                        "description": "用户ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "切换成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "is_active": {"type": "boolean"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        }
+    }
+    openapi_spec["paths"].update(paths)
+
+# 2. FAQ管理接口
+def add_faq_paths():
+    paths = {
+        "/api/faq/list": {
+            "get": {
+                "tags": ["FAQ管理"],
+                "summary": "获取FAQ列表（分页）",
+                "description": "获取FAQ列表，支持分页、筛选和搜索",
+                "operationId": "getFAQList",
+                "parameters": [
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
+                    {"name": "category", "in": "query", "schema": {"type": "string"}},
+                    {"name": "status", "in": "query", "schema": {"type": "integer", "enum": [0, 1]}},
+                    {"name": "search", "in": "query", "schema": {"type": "string"}},
+                    {"name": "source", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total": {"type": "integer"},
+                                                "page": {"type": "integer"},
+                                                "page_size": {"type": "integer"},
+                                                "total_pages": {"type": "integer"},
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/components/schemas/FAQ"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/faq/{faq_id}": {
+            "get": {
+                "tags": ["FAQ管理"],
+                "summary": "获取FAQ详情",
+                "description": "获取指定FAQ的详细信息",
+                "operationId": "getFAQDetail",
+                "parameters": [
+                    {"name": "faq_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {"$ref": "#/components/schemas/FAQ"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "put": {
+                "tags": ["FAQ管理"],
+                "summary": "更新FAQ",
+                "description": "更新指定FAQ",
+                "operationId": "updateFAQ",
+                "parameters": [
+                    {"name": "faq_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["question", "answer"],
+                                "properties": {
+                                    "question": {"type": "string"},
+                                    "answer": {"type": "string"},
+                                    "category": {"type": "string"},
+                                    "source": {"type": "string"},
+                                    "keywords": {"type": "array", "items": {"type": "string"}},
+                                    "status": {"type": "integer", "enum": [0, 1]},
+                                    "sort_order": {"type": "integer"},
+                                    "description": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "delete": {
+                "tags": ["FAQ管理"],
+                "summary": "删除FAQ",
+                "description": "删除指定FAQ",
+                "operationId": "deleteFAQ",
+                "parameters": [
+                    {"name": "faq_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/faq": {
+            "post": {
+                "tags": ["FAQ管理"],
+                "summary": "创建FAQ",
+                "description": "创建新FAQ，支持AI关键词扩充",
+                "operationId": "createFAQ",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["question", "answer"],
+                                "properties": {
+                                    "question": {"type": "string"},
+                                    "answer": {"type": "string"},
+                                    "category": {"type": "string"},
+                                    "source": {"type": "string"},
+                                    "keywords": {"type": "array", "items": {"type": "string"}},
+                                    "status": {"type": "integer", "enum": [0, 1], "default": 1},
+                                    "sort_order": {"type": "integer", "default": 0},
+                                    "description": {"type": "string"},
+                                    "use_ai_keywords": {"type": "boolean", "default": True}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {"type": "integer"},
+                                                "keywords_count": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/faq/batch": {
+            "post": {
+                "tags": ["FAQ管理"],
+                "summary": "批量操作FAQ",
+                "description": "批量启用/禁用/删除FAQ",
+                "operationId": "batchOperationFAQ",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["operation", "faq_ids"],
+                                "properties": {
+                                    "operation": {"type": "string", "enum": ["enable", "disable", "delete"]},
+                                    "faq_ids": {"type": "array", "items": {"type": "integer"}}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "操作成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "affected_count": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        }
+    }
+    openapi_spec["paths"].update(paths)
+
+# 3. 标签管理接口
+def add_tag_paths():
+    paths = {
+        "/api/tag/": {
+            "get": {
+                "tags": ["标签管理"],
+                "summary": "获取用户标签",
+                "description": "获取当前用户的标签",
+                "operationId": "getUserTags",
+                "parameters": [
+                    {"name": "category", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "tags": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "post": {
+                "tags": ["标签管理"],
+                "summary": "设置单个标签",
+                "description": "设置或更新用户标签",
+                "operationId": "setUserTag",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["tag_key", "tag_value"],
+                                "properties": {
+                                    "user_id": {"type": "integer"},
+                                    "tag_key": {"type": "string"},
+                                    "tag_value": {"type": "string"},
+                                    "source": {"type": "string", "default": "manual"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "设置成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/tag/definitions": {
+            "get": {
+                "tags": ["标签管理"],
+                "summary": "获取标签定义列表（分页）",
+                "description": "获取所有可用的标签定义",
+                "operationId": "getTagDefinitions",
+                "parameters": [
+                    {"name": "category", "in": "query", "schema": {"type": "string"}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 50}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "definitions": {
+                                            "type": "array",
+                                            "items": {"$ref": "#/components/schemas/TagDefinition"}
+                                        },
+                                        "total": {"type": "integer"},
+                                        "page": {"type": "integer"},
+                                        "page_size": {"type": "integer"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/tag/batch": {
+            "post": {
+                "tags": ["标签管理"],
+                "summary": "批量设置标签",
+                "description": "批量设置多个标签",
+                "operationId": "batchSetTags",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["tags"],
+                                "properties": {
+                                    "user_id": {"type": "integer"},
+                                    "tags": {"type": "object"},
+                                    "source": {"type": "string", "default": "manual"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "设置成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "total": {"type": "integer"},
+                                        "success_count": {"type": "integer"},
+                                        "failed_count": {"type": "integer"},
+                                        "failed_tags": {"type": "array", "items": {"type": "string"}}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "delete": {
+                "tags": ["标签管理"],
+                "summary": "批量删除标签",
+                "description": "批量删除用户标签",
+                "operationId": "batchDeleteTags",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "user_id": {"type": "integer"},
+                                    "tag_keys": {"type": "array", "items": {"type": "string"}},
+                                    "clear_all": {"type": "boolean", "default": False}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "deleted_count": {"type": "integer"},
+                                        "total_requested": {"type": "integer"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/tag/{tag_key}": {
+            "delete": {
+                "tags": ["标签管理"],
+                "summary": "删除单个标签",
+                "description": "删除指定标签",
+                "operationId": "deleteUserTag",
+                "parameters": [
+                    {"name": "tag_key", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/tag/clear": {
+            "post": {
+                "tags": ["标签管理"],
+                "summary": "清空所有标签",
+                "description": "清空用户的所有标签",
+                "operationId": "clearAllTags",
+                "responses": {
+                    "200": {
+                        "description": "清空成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "deleted_count": {"type": "integer"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/tag/history": {
+            "get": {
+                "tags": ["标签管理"],
+                "summary": "获取标签历史",
+                "description": "获取标签更新历史记录",
+                "operationId": "getTagHistory",
+                "parameters": [
+                    {"name": "user_id", "in": "query", "schema": {"type": "integer"}},
+                    {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 50}},
+                    {"name": "tag_key", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "history": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "tag_key": {"type": "string"},
+                                                    "old_value": {"type": "string"},
+                                                    "new_value": {"type": "string"},
+                                                    "source": {"type": "string"},
+                                                    "created_at": {"type": "string", "format": "date-time"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        }
+    }
+    openapi_spec["paths"].update(paths)
+
+# 4. Prompt管理接口
+def add_prompt_paths():
+    paths = {
+        "/api/prompt/templates": {
+            "get": {
+                "tags": ["Prompt管理"],
+                "summary": "获取提示词模板列表（分页）",
+                "description": "获取提示词模板列表",
+                "operationId": "getPromptTemplates",
+                "parameters": [
+                    {"name": "type", "in": "query", "schema": {"type": "string", "enum": ["initial", "normal", "tagging"]}},
+                    {"name": "active_only", "in": "query", "schema": {"type": "boolean", "default": True}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 50}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {
+                                            "type": "array",
+                                            "items": {"$ref": "#/components/schemas/PromptTemplate"}
+                                        },
+                                        "total": {"type": "integer"},
+                                        "page": {"type": "integer"},
+                                        "page_size": {"type": "integer"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "post": {
+                "tags": ["Prompt管理"],
+                "summary": "创建提示词模板",
+                "description": "创建新的提示词模板",
+                "operationId": "createPromptTemplate",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["prompt_type", "prompt_name", "prompt_content"],
+                                "properties": {
+                                    "prompt_type": {"type": "string", "enum": ["initial", "normal", "tagging"]},
+                                    "prompt_name": {"type": "string"},
+                                    "prompt_content": {"type": "string"},
+                                    "version": {"type": "integer", "default": 1},
+                                    "is_active": {"type": "boolean", "default": True}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "prompt_id": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/prompt/templates/{prompt_id}": {
+            "get": {
+                "tags": ["Prompt管理"],
+                "summary": "获取指定提示词模板",
+                "description": "获取指定提示词模板的详细信息",
+                "operationId": "getPromptTemplate",
+                "parameters": [
+                    {"name": "prompt_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {"$ref": "#/components/schemas/PromptTemplate"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "put": {
+                "tags": ["Prompt管理"],
+                "summary": "更新提示词模板",
+                "description": "更新指定提示词模板",
+                "operationId": "updatePromptTemplate",
+                "parameters": [
+                    {"name": "prompt_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "prompt_name": {"type": "string"},
+                                    "prompt_content": {"type": "string"},
+                                    "version": {"type": "integer"},
+                                    "is_active": {"type": "boolean"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "delete": {
+                "tags": ["Prompt管理"],
+                "summary": "删除提示词模板",
+                "description": "删除指定提示词模板",
+                "operationId": "deletePromptTemplate",
+                "parameters": [
+                    {"name": "prompt_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/prompt/user-settings": {
+            "get": {
+                "tags": ["Prompt管理"],
+                "summary": "获取用户提示词设置",
+                "description": "获取用户的提示词设置",
+                "operationId": "getUserPromptSettings",
+                "parameters": [
+                    {"name": "user_id", "in": "query", "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {"type": "object"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "put": {
+                "tags": ["Prompt管理"],
+                "summary": "更新用户提示词设置",
+                "description": "批量更新用户的提示词设置",
+                "operationId": "updateUserPromptSettings",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "user_id": {"type": "integer"},
+                                    "settings": {
+                                        "type": "object",
+                                        "properties": {
+                                            "initial": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "prompt_id": {"type": "integer"},
+                                                    "custom_content": {"type": "string"}
+                                                }
+                                            },
+                                            "normal": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "prompt_id": {"type": "integer"},
+                                                    "custom_content": {"type": "string"}
+                                                }
+                                            },
+                                            "tagging": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "prompt_id": {"type": "integer"},
+                                                    "custom_content": {"type": "string"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "success_count": {"type": "integer"},
+                                        "errors": {"type": "array", "items": {"type": "string"}}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/prompt/user-settings/{prompt_type}": {
+            "put": {
+                "tags": ["Prompt管理"],
+                "summary": "更新单个提示词设置",
+                "description": "更新用户指定类型的提示词设置",
+                "operationId": "updateSinglePromptSetting",
+                "parameters": [
+                    {"name": "prompt_type", "in": "path", "required": True, "schema": {"type": "string", "enum": ["initial", "normal", "tagging"]}}
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "user_id": {"type": "integer"},
+                                    "prompt_id": {"type": "integer"},
+                                    "custom_content": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "delete": {
+                "tags": ["Prompt管理"],
+                "summary": "重置用户提示词设置",
+                "description": "重置用户指定类型的提示词设置为默认值",
+                "operationId": "resetUserPromptSetting",
+                "parameters": [
+                    {"name": "prompt_type", "in": "path", "required": True, "schema": {"type": "string", "enum": ["initial", "normal", "tagging"]}},
+                    {"name": "user_id", "in": "query", "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "重置成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        }
+    }
+    openapi_spec["paths"].update(paths)
+
+# 5. 消息记录管理接口
+def add_chat_paths():
+    paths = {
+        "/api/chat/history": {
+            "get": {
+                "tags": ["消息记录管理"],
+                "summary": "获取对话历史（分页）",
+                "description": "获取对话历史记录，支持分页和筛选",
+                "operationId": "getChatHistory",
+                "parameters": [
+                    {"name": "user_id", "in": "query", "schema": {"type": "integer"}},
+                    {"name": "conversation_id", "in": "query", "schema": {"type": "string"}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 50}},
+                    {"name": "start_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+                    {"name": "end_date", "in": "query", "schema": {"type": "string", "format": "date"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "messages": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/components/schemas/ChatMessage"}
+                                                },
+                                                "total": {"type": "integer"},
+                                                "page": {"type": "integer"},
+                                                "page_size": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/chat/sessions": {
+            "get": {
+                "tags": ["消息记录管理"],
+                "summary": "获取对话会话列表（分页）",
+                "description": "获取对话会话列表",
+                "operationId": "getChatSessions",
+                "parameters": [
+                    {"name": "user_id", "in": "query", "schema": {"type": "integer"}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sessions": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/components/schemas/ChatSession"}
+                                                },
+                                                "total": {"type": "integer"},
+                                                "page": {"type": "integer"},
+                                                "page_size": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/chat/sessions/{conversation_id}": {
+            "get": {
+                "tags": ["消息记录管理"],
+                "summary": "获取指定会话详情",
+                "description": "获取指定对话会话的详细信息",
+                "operationId": "getChatSessionDetail",
+                "parameters": [
+                    {"name": "conversation_id", "in": "path", "required": True, "schema": {"type": "string"}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                    {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 50}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "conversation_id": {"type": "string"},
+                                                "user_id": {"type": "integer"},
+                                                "username": {"type": "string"},
+                                                "nickname": {"type": "string"},
+                                                "message_count": {"type": "integer"},
+                                                "created_at": {"type": "string", "format": "date-time"},
+                                                "last_message_at": {"type": "string", "format": "date-time"},
+                                                "messages": {
+                                                    "type": "array",
+                                                    "items": {"$ref": "#/components/schemas/ChatMessage"}
+                                                },
+                                                "total": {"type": "integer"},
+                                                "page": {"type": "integer"},
+                                                "page_size": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            },
+            "delete": {
+                "tags": ["消息记录管理"],
+                "summary": "删除对话会话",
+                "description": "删除指定对话会话",
+                "operationId": "deleteChatSession",
+                "parameters": [
+                    {"name": "conversation_id", "in": "path", "required": True, "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/chat/messages/{message_id}": {
+            "delete": {
+                "tags": ["消息记录管理"],
+                "summary": "删除对话消息",
+                "description": "删除指定对话消息",
+                "operationId": "deleteChatMessage",
+                "parameters": [
+                    {"name": "message_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SuccessResponse"}
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        },
+        "/api/chat/messages/batch": {
+            "delete": {
+                "tags": ["消息记录管理"],
+                "summary": "批量删除对话消息",
+                "description": "批量删除对话消息",
+                "operationId": "batchDeleteChatMessages",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["message_ids"],
+                                "properties": {
+                                    "message_ids": {"type": "array", "items": {"type": "integer"}}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "deleted_count": {"type": "integer"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        }
+    }
+    openapi_spec["paths"].update(paths)
+
+# 添加登录接口（不需要认证）
+def add_auth_paths():
+    paths = {
+        "/api/login": {
+            "post": {
+                "tags": ["认证"],
+                "summary": "管理员登录",
+                "description": "管理员登录获取Token",
+                "operationId": "adminLogin",
+                "security": [],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["username", "password"],
+                                "properties": {
+                                    "username": {"type": "string", "example": "admin"},
+                                    "password": {"type": "string", "example": "admin_password"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "登录成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {"type": "boolean"},
+                                        "message": {"type": "string"},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token": {"type": "string"},
+                                                "user": {"$ref": "#/components/schemas/User"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    **get_error_responses()
+                }
+            }
+        }
+    }
+    openapi_spec["paths"].update(paths)
+
+# 主函数
+def main():
+    
+    # 添加所有接口路径
+    add_auth_paths()
+    add_user_paths()
+    add_faq_paths()
+    add_tag_paths()
+    add_prompt_paths()
+    add_chat_paths()
+    
+    # 输出目录
+    output_dir = project_root
+    json_file = output_dir / "admin_openapi.json"
+    yaml_file = output_dir / "admin_openapi.yaml"
+    
+    # 保存JSON格式
+    with open(json_file, 'w', encoding='utf-8') as f:
+        json.dump(openapi_spec, f, ensure_ascii=False, indent=2)
+    
+    # 保存YAML格式（如果pyyaml可用）
+    try:
+        import yaml
+        with open(yaml_file, 'w', encoding='utf-8') as f:
+            yaml.dump(openapi_spec, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
+    except ImportError:
+        pass
+
+    # 统计信息
+    total_paths = len(openapi_spec["paths"])
+
+
+if __name__ == "__main__":
+    main()
+

@@ -1,0 +1,158 @@
+# ===========================================
+# 智糖小助手 - 配置文件模板
+# ===========================================
+# 复制此文件为 config.yaml 并填入正确的配置信息
+
+# ===========================================
+# 应用基本配置
+# ===========================================
+APP_NAME: "智糖小助手"
+API_BASE_URL: "http://localhost:8900"
+API_PORT: 8900
+DEBUG: true
+LOG_LEVEL: "INFO"
+
+# ===========================================
+# 数据库配置
+# ===========================================
+DATABASE:
+  HOST: "localhost"
+  PORT: 3306
+  USER: "root"
+  PASSWORD: "your_password_here"
+  NAME: "ai"
+  CHARSET: "utf8mb4"
+  POOL_SIZE: 10
+  MAX_OVERFLOW: 20
+  POOL_RECYCLE: 3600
+
+# ===========================================
+# Redis配置（可选，用于缓存）
+# ===========================================
+REDIS:
+  ENABLED: false
+  HOST: "localhost"
+  PORT: 6379
+  DB: 0
+  PASSWORD: ""
+  DECODE_RESPONSES: true
+
+# ===========================================
+# JWT认证配置
+# ===========================================
+JWT:
+  SECRET_KEY: "your_secret_key_here_change_in_production"
+  ALGORITHM: "HS256"
+  EXPIRATION_HOURS: 240
+
+# ===========================================
+# DeepSeek AI配置
+# ===========================================
+DEEPSEEK:
+  V3_MODEL_ID: 1742989917
+  API_BASE_URL: "https://api.deepseek.com/v1"
+  API_KEY: "your_deepseek_api_key_here"
+  MAX_TOKENS: 4096
+  TEMPERATURE: 0.7
+  TIMEOUT: 30
+
+# ===========================================
+# Coze AI配置
+# ===========================================
+COZE:
+  # OAuth应用配置
+  CLIENT_ID: "your_client_id"
+  PUBLIC_KEY_ID: "your_public_key_id"
+  PRIVATE_KEY_FILE: "../private_key.pem"
+
+  # Bot配置
+  BOT_ID: "your_bot_id"
+  ACCESS_TOKEN: "your_access_token"
+
+  # API配置
+  API_BASE: "https://api.coze.cn"
+  API_URL: "https://api.coze.cn/open_api/v2/chat"
+  KNOWLEDGE_BASE_URL: "https://api.coze.cn/open_api/knowledge"
+
+  # 知识库配置
+  KNOWLEDGE_DATASET_ID: "your_knowledge_dataset_id"
+  FAQ_DATASET_ID: "your_faq_dataset_id"
+  FAQ_DOCUMENT_ID: ""
+
+  # ASR配置
+  ASR_MODEL: "whisper-1"
+  ASR_SUPPORTED_FORMATS: ["wav", "mp3", "webm", "ogg"]
+
+# ===========================================
+# 腾讯云TTS配置
+# ===========================================
+TENCENT_TTS:
+  APP_ID: "your_app_id"
+  SECRET_ID: "your_secret_id"
+  SECRET_KEY: "your_secret_key"
+
+  # TTS参数配置
+  VOICE_TYPE: "502001"
+  CODEC: "pcm"
+  SAMPLE_RATE: 16000
+  VOLUME: 0
+  SPEED: 0
+  ENABLE_SUBTITLE: 1
+
+  # WebSocket配置
+  WSS_URL: "wss://tts.cloud.tencent.com/stream_wsv2"
+
+  # 文本分句配置
+  SENTENCE_DELIMITERS: ['。', '；', '？', '！', ';', '?', '!', '\n']
+  MIN_SENTENCE_LENGTH: 10
+  MAX_CACHE_TIME: 2.0
+
+# ===========================================
+# Keycloak身份认证配置（可选）
+# ===========================================
+KEYCLOAK:
+  ENABLED: false
+  URL: "https://your-keycloak-server.com/"
+  REALM: "chat-realm"
+  CLIENT_ID: "admin-cli"
+  CLIENT_SECRET: ""
+  ADMIN_USER: "admin"
+  ADMIN_PASSWORD: "your_admin_password"
+  USE_TARGET_REALM: true
+  ADMIN_REALM: "master"
+
+# ===========================================
+# 标签提取调度配置
+# ===========================================
+TAG_EXTRACTION:
+  ENABLED: true
+  INTERVAL_SECONDS: 300
+  BATCH_SIZE: 50
+  HOURS_BACK: 24
+  MIN_MESSAGES: 3
+  MAX_RETRY_ATTEMPTS: 3
+
+# ===========================================
+# 文件上传配置
+# ===========================================
+UPLOAD:
+  MAX_FILE_SIZE: 10485760  # 10MB
+  ALLOWED_EXTENSIONS: ['pdf', 'doc', 'docx', 'txt', 'md', 'xlsx', 'xls']
+  UPLOAD_FOLDER: "uploads"
+  AUDIO_UPLOAD_FOLDER: "audio_uploads"
+
+# ===========================================
+# 缓存配置
+# ===========================================
+CACHE:
+  TTS_CACHE_DIR: "tts_cache"
+  TTS_CACHE_EXPIRE_HOURS: 24
+  ENABLE_TTS_CACHE: true
+
+# ===========================================
+# 管理员配置
+# ===========================================
+ADMIN:
+  DEFAULT_USERNAME: "admin"
+  DEFAULT_PASSWORD: "change_this_password"
+  SESSION_TIMEOUT: 3600

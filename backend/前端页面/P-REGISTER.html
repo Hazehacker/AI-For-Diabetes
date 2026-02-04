@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智糖小助手 - 注册</title>
+    <script src="libs/tailwindcss.js"></script>
+    <script src="libs/fontawesome.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#969FFF',
+                        secondary: '#5147FF', 
+                        accent: '#3E3987',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444'
+                    },
+                    backgroundImage: {
+                        'gradient-primary': 'linear-gradient(135deg, #969FFF 0%, #5147FF 100%)',
+                        'gradient-secondary': 'linear-gradient(135deg, #5147FF 0%, #3E3987 100%)',
+                        'gradient-card': 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+                        'gradient-hero': 'linear-gradient(135deg, #969FFF 0%, #5147FF 50%, #3E3987 100%)'
+                    },
+                    boxShadow: {
+                        'card': '0 4px 20px rgba(150, 159, 255, 0.1)',
+                        'button': '0 4px 15px rgba(150, 159, 255, 0.3)',
+                        'nav': '0 -2px 20px rgba(150, 159, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .form-input-focus:focus {
+            outline: none;
+            border-color: #969FFF;
+            box-shadow: 0 0 0 2px rgba(150, 159, 255, 0.2);
+        }
+        
+        .button-hover:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak { background: #EF4444; width: 33%; }
+        .strength-medium { background: #F59E0B; width: 66%; }
+        .strength-strong { background: #10B981; width: 100%; }
+    </style>
+    <script src="config.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+
+    <!-- 主要内容区域 -->
+    <div id="main-content" class="min-h-screen flex flex-col">
+        <!-- 顶部Logo区域 -->
+        <header id="logo-header" class="flex-1 flex flex-col justify-center items-center px-6 py-12">
+            <!-- App Logo -->
+            <div id="app-logo" class="text-center mb-8">
+                <div class="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-card overflow-hidden bg-white">
+                    <img src="/logo.png" 
+                         alt="智糖小助手 Logo" 
+                         class="w-full h-full object-contain">
+                </div>
+                <h1 id="app-name" class="text-3xl font-bold gradient-text mb-2">智糖小助手</h1>
+                <p id="app-slogan" class="text-gray-600 text-sm">欢迎加入智能糖尿病管理</p>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="register-form-container" class="w-full max-w-sm">
+                <form id="register-form" class="space-y-5">
+                    <!-- 用户名输入框 -->
+                    <div id="username-field" class="space-y-2">
+                        <label for="username" class="block text-sm font-medium text-gray-700">用户名</label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="username" 
+                                   name="username" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500" 
+                                   placeholder="请输入用户名"
+                                   required>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 昵称输入框 -->
+                    <div id="nickname-field" class="space-y-2">
+                        <label for="nickname" class="block text-sm font-medium text-gray-700">昵称（可选）</label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="nickname" 
+                                   name="nickname" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500" 
+                                   placeholder="请输入昵称">
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-id-badge text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 手机号输入框 -->
+                    <div id="phone-field" class="space-y-2">
+                        <label for="phone_number" class="block text-sm font-medium text-gray-700">手机号（可选）</label>
+                        <div class="relative">
+                            <input type="tel" 
+                                   id="phone_number" 
+                                   name="phone_number" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500" 
+                                   placeholder="请输入手机号"
+                                   pattern="[0-9]{11}">
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-mobile-alt text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 邮箱输入框 -->
+                    <div id="email-field" class="space-y-2">
+                        <label for="email" class="block text-sm font-medium text-gray-700">邮箱（可选）</label>
+                        <div class="relative">
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500" 
+                                   placeholder="请输入邮箱">
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 密码输入框 -->
+                    <div id="password-field" class="space-y-2">
+                        <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500 pr-12" 
+                                   placeholder="请输入密码（至少6位）"
+                                   minlength="6"
+                                   required>
+                            <button type="button" 
+                                    id="toggle-password" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- 密码强度指示器 -->
+                        <div class="w-full bg-gray-200 rounded-full h-1 overflow-hidden">
+                            <div id="password-strength-bar" class="password-strength"></div>
+                        </div>
+                        <p id="password-strength-text" class="text-xs text-gray-500"></p>
+                    </div>
+
+                    <!-- 确认密码输入框 -->
+                    <div id="confirm-password-field" class="space-y-2">
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700">确认密码</label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="confirm_password" 
+                                   name="confirm_password" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl form-input-focus bg-white text-gray-800 placeholder-gray-500 pr-12" 
+                                   placeholder="请再次输入密码"
+                                   required>
+                            <button type="button" 
+                                    id="toggle-confirm-password" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 注册按钮 -->
+                    <button type="submit" 
+                            id="register-btn" 
+                            class="w-full bg-gradient-primary text-white py-3 rounded-xl font-medium shadow-button button-hover flex items-center justify-center space-x-2">
+                        <span>注册</span>
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+
+                    <!-- 返回登录链接 -->
+                    <div class="text-center">
+                        <a href="/login" class="text-sm text-primary hover:text-secondary transition-colors">
+                            已有账号？立即登录
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </header>
+
+        <!-- 底部安全区域 -->
+        <div id="bottom-safe-area" class="safe-bottom"></div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 flex flex-col items-center space-y-3">
+            <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-700">正在注册...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // API配置
+            const API_BASE_URL = AppConfig.API.BASE_URL;
+            
+            // 密码显示/隐藏切换
+            document.querySelector('#toggle-password').addEventListener('click', function() {
+                const passwordInput = document.querySelector('#password');
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+
+            document.querySelector('#toggle-confirm-password').addEventListener('click', function() {
+                const confirmPasswordInput = document.querySelector('#confirm_password');
+                const icon = this.querySelector('i');
+                
+                if (confirmPasswordInput.type === 'password') {
+                    confirmPasswordInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    confirmPasswordInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+
+            // 密码强度检测
+            document.querySelector('#password').addEventListener('input', function() {
+                const password = this.value;
+                const strengthBar = document.querySelector('#password-strength-bar');
+                const strengthText = document.querySelector('#password-strength-text');
+                
+                if (password.length === 0) {
+                    strengthBar.className = 'password-strength';
+                    strengthText.textContent = '';
+                    return;
+                }
+                
+                let strength = 0;
+                if (password.length >= 6) strength++;
+                if (password.length >= 10) strength++;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+                if (/[0-9]/.test(password)) strength++;
+                if (/[^a-zA-Z0-9]/.test(password)) strength++;
+                
+                strengthBar.className = 'password-strength';
+                if (strength <= 2) {
+                    strengthBar.classList.add('strength-weak');
+                    strengthText.textContent = '密码强度：弱';
+                    strengthText.className = 'text-xs text-danger';
+                } else if (strength <= 3) {
+                    strengthBar.classList.add('strength-medium');
+                    strengthText.textContent = '密码强度：中';
+                    strengthText.className = 'text-xs text-warning';
+                } else {
+                    strengthBar.classList.add('strength-strong');
+                    strengthText.textContent = '密码强度：强';
+                    strengthText.className = 'text-xs text-success';
+                }
+            });
+
+            // 注册表单提交
+            document.querySelector('#register-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.querySelector('#username').value.trim();
+                const nickname = document.querySelector('#nickname').value.trim();
+                const phone_number = document.querySelector('#phone_number').value.trim();
+                const email = document.querySelector('#email').value.trim();
+                const password = document.querySelector('#password').value.trim();
+                const confirmPassword = document.querySelector('#confirm_password').value.trim();
+                
+                // 验证
+                if (!username) {
+                    alert('请输入用户名');
+                    return;
+                }
+                
+                if (!password) {
+                    alert('请输入密码');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    alert('密码长度至少为6位');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    alert('两次输入的密码不一致');
+                    return;
+                }
+
+                // 验证手机号格式（如果填写了）
+                if (phone_number && !/^1[3-9]\d{9}$/.test(phone_number)) {
+                    alert('请输入正确的手机号格式');
+                    return;
+                }
+
+                // 验证邮箱格式（如果填写了）
+                if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    alert('请输入正确的邮箱格式');
+                    return;
+                }
+                
+                // 显示加载状态
+                document.querySelector('#loading-overlay').classList.remove('hidden');
+                document.querySelector('#register-btn').disabled = true;
+                
+                try {
+                    console.log('📤 发送注册请求...');
+                    console.log('👤 用户名:', username);
+                    
+                    // 构建请求体
+                    const requestBody = {
+                        username: username,
+                        password: password
+                    };
+
+                    // 添加可选字段
+                    if (nickname) requestBody.nickname = nickname;
+                    if (phone_number) requestBody.phone_number = phone_number;
+                    if (email) requestBody.email = email;
+                    
+                    // 调用后端注册API
+                    console.log('🔍 发送请求到:', AppConfig.getApiUrl('/api/register'));
+                    const response = await fetch(`${AppConfig.getApiUrl('/api/register')}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    console.log('🔍 响应状态:', response.status, response.statusText);
+
+                    let data;
+                    try {
+                        const responseText = await response.text();
+                        console.log('🔍 原始响应文本:', responseText);
+                        data = JSON.parse(responseText);
+                        console.log('🔍 解析后的数据:', data);
+                    } catch (parseError) {
+                        console.error('❌ JSON解析失败:', parseError);
+                        throw new Error('响应格式错误');
+                    }
+
+                    if (response.ok && data.success) {
+                        console.log('✅ 注册成功:', data);
+
+                        // 从响应中获取数据
+                        const registerData = data.data || {};
+                        const token = registerData.token;
+
+                        if (token) {
+                            // 保存token到localStorage
+                            AppConfig.setToken(token);
+                            console.log('✅ Token已保存到localStorage');
+                        }
+
+                        // 保存用户信息
+                        if (registerData.user_id) {
+                            localStorage.setItem(AppConfig.STORAGE_KEYS.USER_ID, registerData.user_id);
+                            localStorage.setItem(AppConfig.STORAGE_KEYS.USERNAME, registerData.username || '');
+                            localStorage.setItem('nickname', nickname || registerData.username || '');
+                            console.log('✅ 用户信息已保存到localStorage');
+                        }
+
+                        // 显示成功提示
+                        alert('注册成功！即将跳转到聊天页面...');
+
+                        // 短暂延迟后跳转
+                        setTimeout(function() {
+                            console.log('🚀 跳转到对话页面...');
+                            window.location.href = AppConfig.getPath('/chat');
+                        }, 1000);
+                        
+                    } else {
+                        // 注册失败
+                        console.error('❌ 注册失败:', data.message);
+                        alert(data.message || '注册失败，请重试');
+                        
+                        // 隐藏加载状态
+                        document.querySelector('#loading-overlay').classList.add('hidden');
+                        document.querySelector('#register-btn').disabled = false;
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ 注册请求失败:', error);
+                    
+                    // 检查是否是网络错误
+                    if (error.message === 'Failed to fetch') {
+                        alert('无法连接到服务器，请检查：\n1. 后端服务是否已启动\n2. API地址是否正确\n3. 网络连接是否正常');
+                    } else {
+                        alert('注册失败：' + error.message);
+                    }
+                    
+                    // 隐藏加载状态
+                    document.querySelector('#loading-overlay').classList.add('hidden');
+                    document.querySelector('#register-btn').disabled = false;
+                }
+            });
+
+            // 输入框焦点效果
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('ring-2', 'ring-primary/20');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('ring-2', 'ring-primary/20');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+{
+  "info": {
+    "name": "智糖小助手 - Dify知识库API集合",
+    "description": "智糖小助手知识库管理API接口集合，基于Dify实现",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{user_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8900"
+    },
+    {
+      "key": "dataset_id",
+      "value": "110b7e73-3050-49f4-b424-910951a016d9"
+    }
+  ],
+  "item": [
+    {
+      "name": "应用管理",
+      "item": [
+        {
+          "name": "健康检查",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            },
+            "description": "检查应用运行状态"
+          }
+        }
+      ]
+    },
+    {
+      "name": "文件上传管理",
+      "item": [
+        {
+          "name": "上传文件",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/file-upload",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "file-upload"]
+            },
+            "description": "上传文件到知识库服务器"
+          }
+        },
+        {
+          "name": "创建文件批次",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"files\": [\n    \"{{file_id}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/file-upload/batch",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "file-upload", "batch"]
+            },
+            "description": "创建文件批次用于文档创建"
+          }
+        },
+        {
+          "name": "查询批次状态",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/file-upload/batch/{{batch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "file-upload", "batch", "{{batch_id}}"]
+            },
+            "description": "查询文件批次的处理状态"
+          }
+        }
+      ]
+    },
+    {
+      "name": "文档创建管理",
+      "item": [
+        {
+          "name": "创建文档",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file_batch_id",
+                  "value": "{{batch_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "process_rule",
+                  "value": "{\"separator\": \"###\", \"max_length\": 500}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/document-create",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "document-create"]
+            },
+            "description": "通过文件批次创建文档"
+          }
+        }
+      ]
+    },
+    {
+      "name": "文档查询管理",
+      "item": [
+        {
+          "name": "查询文档列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/documents?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "documents"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "查询知识库中的文档列表"
+          }
+        },
+        {
+          "name": "关键词搜索文档",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/documents?page=1&limit=10&keyword=糖尿病",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "documents"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "keyword",
+                  "value": "糖尿病"
+                }
+              ]
+            },
+            "description": "通过关键词搜索文档"
+          }
+        }
+      ]
+    },
+    {
+      "name": "文档操作管理",
+      "item": [
+        {
+          "name": "删除文档",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "documents", "{{document_id}}"]
+            },
+            "description": "删除指定的文档"
+          }
+        },
+        {
+          "name": "启用文档",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/documents/{{document_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "documents", "{{document_id}}", "status"]
+            },
+            "description": "启用指定的文档"
+          }
+        },
+        {
+          "name": "禁用文档",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/documents/{{document_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "documents", "{{document_id}}", "status"]
+            },
+            "description": "禁用指定的文档"
+          }
+        },
+        {
+          "name": "查询索引状态",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/documents/{{document_id}}/indexing-status",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "documents", "{{document_id}}", "indexing-status"]
+            },
+            "description": "查询文档的索引处理状态"
+          }
+        }
+      ]
+    },
+    {
+      "name": "知识召回测试",
+      "item": [
+        {
+          "name": "知识召回查询",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer dataset-zmX9GhGOx1Vh2KPtMNCVjYdh"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"儿童糖尿病血糖监测应该怎么做\",\n  \"top_k\": 3,\n  \"score_threshold\": 0.5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/dify/knowledge/datasets/{{dataset_id}}/retrieve",
+              "host": ["{{base_url}}"],
+              "path": ["dify", "knowledge", "datasets", "{{dataset_id}}", "retrieve"]
+            },
+            "description": "从知识库中召回相关知识内容"
+          }
+        }
+      ]
+    },
+    {
+      "name": "聊天集成测试",
+      "item": [
+        {
+          "name": "智能对话（集成知识库）",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer test-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"儿童糖尿病血糖监测应该怎么做？\",\n  \"conversation_id\": \"test_conversation_{{$timestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat/stream",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "stream"]
+            },
+            "description": "测试集成知识库的智能对话功能"
+          }
+        }
+      ]
+    }
+  ]
+}
