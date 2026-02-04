@@ -85,6 +85,22 @@
       <text class="card-arrow">→</text>
     </view>
 
+    <!-- 热量板块入口 -->
+    <view class="section-card calories-card" @tap="goToCalories">
+      <view class="card-icon-area">
+        <text class="card-icon">🍱</text>
+      </view>
+      <view class="card-content">
+        <text class="card-title">热量板块</text>
+        <text class="card-desc">记录饮食，智能推荐食谱</text>
+        <view class="preview-tags">
+          <text class="preview-tag">热量记录</text>
+          <text class="preview-tag">食谱推荐</text>
+        </view>
+      </view>
+      <text class="card-arrow">→</text>
+    </view>
+
     <!-- 底部占位 -->
     <view class="bottom-spacer"></view>
   </view>
@@ -163,6 +179,13 @@ const goToCompanion = () => {
 const goToInteraction = () => {
   uni.navigateTo({
     url: '/pages/community/interaction'
+  })
+}
+
+// 跳转到热量板块
+const goToCalories = () => {
+  uni.navigateTo({
+    url: '/pages/calories/index'
   })
 }
 

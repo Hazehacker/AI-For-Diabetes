@@ -85,6 +85,45 @@ export const ttsApi = {
   }
 }
 
+// 热量记录与食谱推荐相关接口
+export const caloriesApi = {
+  /**
+   * 获取某一天的热量统计与饮食记录
+   * GET /calories/daily?date=YYYY-MM-DD
+   */
+  getDailySummary(params) {
+    return request({
+      url: '/calories/daily',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 新增一条饮食记录
+   * POST /calories/records
+   */
+  createRecord(data) {
+    return request({
+      url: '/calories/records',
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取推荐食谱列表
+   * GET /calories/recipes/recommend
+   */
+  getRecipeRecommendations(params) {
+    return request({
+      url: '/calories/recipes/recommend',
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
 // 打卡相关接口
 export const checkinApi = {
   // 提交打卡
