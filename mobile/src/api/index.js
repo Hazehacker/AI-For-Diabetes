@@ -254,6 +254,108 @@ export const caloriesApi = {
   }
 }
 
+// 科普知识相关接口
+export const knowledgeApi = {
+  /**
+   * 获取科普文章列表
+   * GET /knowledge/articles
+   */
+  getArticles(params) {
+    return request({
+      url: '/knowledge/articles',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取科普文章详情
+   * GET /knowledge/articles/{id}
+   */
+  getArticleDetail(id, params) {
+    return request({
+      url: `/knowledge/articles/${id}`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 标记文章已阅读并领取奖励
+   * POST /knowledge/articles/{id}/complete
+   */
+  completeArticle(id, data) {
+    return request({
+      url: `/knowledge/articles/${id}/complete`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取科普学习概览统计（可选）
+   * GET /knowledge/summary
+   */
+  getSummary(params) {
+    return request({
+      url: '/knowledge/summary',
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
+// 视频学习相关接口
+export const videoApi = {
+  /**
+   * 获取视频课程列表
+   * GET /video/lessons
+   */
+  getVideos(params) {
+    return request({
+      url: '/video/lessons',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取单个视频详情
+   * GET /video/lessons/{id}
+   */
+  getVideoDetail(id, params) {
+    return request({
+      url: `/video/lessons/${id}`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 标记视频完成并领取奖励
+   * POST /video/lessons/{id}/complete
+   */
+  completeVideo(id, data) {
+    return request({
+      url: `/video/lessons/${id}/complete`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取视频学习概览统计（可选）
+   * GET /video/summary
+   */
+  getSummary(params) {
+    return request({
+      url: '/video/summary',
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
 // 打卡相关接口
 export const checkinApi = {
   // 提交打卡

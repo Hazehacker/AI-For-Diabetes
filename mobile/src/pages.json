@@ -141,6 +141,38 @@
 			}
 		},
 		{
+			"path": "pages/interaction/knowledge/index",
+			"style": {
+				"navigationBarTitleText": "科普知识",
+				"navigationBarBackgroundColor": "#22c55e",
+				"navigationBarTextStyle": "white"
+			}
+		},
+    {
+      "path": "pages/interaction/knowledge/detail",
+      "style": {
+        "navigationBarTitleText": "科普文章",
+        "navigationBarBackgroundColor": "#22c55e",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/interaction/video/index",
+      "style": {
+        "navigationBarTitleText": "视频学习",
+        "navigationBarBackgroundColor": "#0ea5e9",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/interaction/video/detail",
+      "style": {
+        "navigationBarTitleText": "视频详情",
+        "navigationBarBackgroundColor": "#0ea5e9",
+        "navigationBarTextStyle": "white"
+      }
+    },
+		{
 			"path": "pages/profile/glucose-report",
 			"style": {
 				"navigationBarTitleText": "血糖管理报告",

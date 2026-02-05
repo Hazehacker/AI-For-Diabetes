@@ -75,23 +75,30 @@
         </view>
       </view>
 
-      <view class="feature-card coming-soon">
+      <view class="feature-card knowledge-card" @tap="goToKnowledge">
         <view class="card-content">
           <view class="card-header">
             <text class="card-icon">📚</text>
+            <view class="card-badge">轻松学习</view>
           </view>
           <text class="card-title">科普知识</text>
-          <text class="card-desc">即将上线</text>
+          <text class="card-desc">儿童友好的糖尿病小课堂</text>
+          <view class="card-stats">
+            <text class="stat-text">📖 每篇 2-3 分钟</text>
+          </view>
         </view>
       </view>
 
-      <view class="feature-card coming-soon">
+      <view class="feature-card video-card" @tap="goToVideo">
         <view class="card-content">
           <view class="card-header">
             <text class="card-icon">🎥</text>
           </view>
           <text class="card-title">视频学习</text>
-          <text class="card-desc">即将上线</text>
+          <text class="card-desc">跟着动画视频一起学血糖小知识</text>
+          <view class="card-stats">
+            <text class="stat-text">🎬 每集 2-4 分钟</text>
+          </view>
         </view>
       </view>
     </view>
@@ -192,6 +199,20 @@ const goToGames = () => {
   })
 }
 
+// 跳转到科普知识
+const goToKnowledge = () => {
+  uni.navigateTo({
+    url: '/pages/interaction/knowledge/index'
+  })
+}
+
+// 跳转到视频学习
+const goToVideo = () => {
+  uni.navigateTo({
+    url: '/pages/interaction/video/index'
+  })
+}
+
 onMounted(() => {
   // 生成模拟数据
   if (interactionStore.sessions.length === 0) {
@@ -273,6 +294,32 @@ onMounted(() => {
 .feature-card.games-card {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   min-height: 220rpx;
+}
+
+.feature-card.knowledge-card {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  min-height: 220rpx;
+}
+
+.feature-card.knowledge-card .card-badge {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.feature-card.knowledge-card .card-title,
+.feature-card.knowledge-card .card-desc,
+.feature-card.knowledge-card .stat-text {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.feature-card.video-card {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  min-height: 220rpx;
+}
+
+.feature-card.video-card .card-title,
+.feature-card.video-card .card-desc,
+.feature-card.video-card .stat-text {
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .card-badge.games {
