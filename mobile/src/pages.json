@@ -136,7 +136,7 @@
 			"path": "pages/profile/daily-checkin",
 			"style": {
 				"navigationBarTitleText": "每日签到",
-				"navigationBarBackgroundColor": "#F59E0B",
+				"navigationBarBackgroundColor": "#5147FF",
 				"navigationBarTextStyle": "white"
 			}
 		},

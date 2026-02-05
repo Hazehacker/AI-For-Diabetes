@@ -25,6 +25,73 @@ export const userApi = {
   }
 }
 
+// 积分 / 每日签到相关接口
+export const pointsApi = {
+  /**
+   * 获取签到+积分仪表盘
+   * 返回当日签到状态、连续天数、月历、积分余额等
+   */
+  getCheckinDashboard() {
+    return request({
+      url: '/points/checkin/dashboard',
+      method: 'GET'
+    })
+  },
+
+  /**
+   * 每日签到
+   */
+  submitCheckin() {
+    return request({
+      url: '/points/checkin',
+      method: 'POST'
+    })
+  },
+
+  /**
+   * 获取积分余额
+   */
+  getBalance() {
+    return request({
+      url: '/points/balance',
+      method: 'GET'
+    })
+  },
+
+  /**
+   * 获取积分记录
+   */
+  getRecords(params) {
+    return request({
+      url: '/points/records',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 积分商城商品列表
+   */
+  getRewards(params) {
+    return request({
+      url: '/points/rewards',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 积分兑换
+   */
+  redeemReward(data) {
+    return request({
+      url: '/points/redeem',
+      method: 'POST',
+      data
+    })
+  }
+}
+
 // 对话相关接口
 export const chatApi = {
   // 获取最新会话ID
