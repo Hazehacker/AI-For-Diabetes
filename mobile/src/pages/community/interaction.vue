@@ -60,14 +60,18 @@
         </view>
       </view>
 
-      <!-- 其他功能占位 -->
-      <view class="feature-card coming-soon">
+      <!-- 小游戏 -->
+      <view class="feature-card games-card" @tap="goToGames">
         <view class="card-content">
           <view class="card-header">
             <text class="card-icon">🎮</text>
+            <view class="card-badge games">好玩</view>
           </view>
           <text class="card-title">小游戏</text>
-          <text class="card-desc">即将上线</text>
+          <text class="card-desc">跑酷 / 拼拼乐，赢积分</text>
+          <view class="card-stats">
+            <text class="stat-text">✨ 每局 2-3 分钟</text>
+          </view>
         </view>
       </view>
 
@@ -181,6 +185,13 @@ const goToPet = () => {
   })
 }
 
+// 跳转到小游戏
+const goToGames = () => {
+  uni.navigateTo({
+    url: '/pages/interaction/games/index'
+  })
+}
+
 onMounted(() => {
   // 生成模拟数据
   if (interactionStore.sessions.length === 0) {
@@ -257,6 +268,15 @@ onMounted(() => {
 .feature-card.pet-card {
   background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
   min-height: 240rpx;
+}
+
+.feature-card.games-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  min-height: 220rpx;
+}
+
+.card-badge.games {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .feature-card.pet-card .card-title {

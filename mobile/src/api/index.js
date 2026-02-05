@@ -92,6 +92,69 @@ export const pointsApi = {
   }
 }
 
+// 小游戏相关接口
+export const gamesApi = {
+  /**
+   * 获取小游戏列表
+   * GET /games
+   */
+  getGames(params) {
+    return request({
+      url: '/games',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取游戏配置
+   * GET /games/{game_id}/config
+   */
+  getGameConfig(gameId, params) {
+    return request({
+      url: `/games/${gameId}/config`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 上报成绩
+   * POST /games/{game_id}/result
+   */
+  submitGameResult(gameId, data) {
+    return request({
+      url: `/games/${gameId}/result`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 个人历史
+   * GET /games/{game_id}/history
+   */
+  getGameHistory(gameId, params) {
+    return request({
+      url: `/games/${gameId}/history`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 排行榜
+   * GET /games/{game_id}/leaderboard
+   */
+  getLeaderboard(gameId, params) {
+    return request({
+      url: `/games/${gameId}/leaderboard`,
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
 // 对话相关接口
 export const chatApi = {
   // 获取最新会话ID

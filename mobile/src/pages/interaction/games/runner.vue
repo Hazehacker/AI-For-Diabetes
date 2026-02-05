@@ -1,0 +1,644 @@
+<template>
+  <view class="runner-page">
+    <view class="top-bar">
+      <view class="pill">
+        <text class="pill-label">得分</text>
+        <text class="pill-value">{{ score }}</text>
+      </view>
+      <view class="pill">
+        <text class="pill-label">时间</text>
+        <text class="pill-value">{{ timeLeft }}s</text>
+      </view>
+    </view>
+
+    <view class="gauge-wrap">
+      <text class="gauge-title">糖值稳定条</text>
+      <view class="gauge">
+        <view class="gauge-safe"></view>
+        <view class="gauge-fill" :style="{ width: gauge + '%' }"></view>
+        <view class="gauge-dot" :style="{ left: `calc(${gauge}% - 10rpx)` }"></view>
+      </view>
+      <text class="gauge-tip">{{ gaugeTip }}</text>
+    </view>
+
+    <view class="game-area" @touchstart.stop.prevent="onTap">
+      <view class="sky-hint" v-if="!running && !ended">
+        <text class="hint-title">点击开始</text>
+        <text class="hint-sub">跳起来躲开陷阱，收集健康食物！</text>
+      </view>
+
+      <view class="countdown" v-if="countdown > 0">{{ countdown }}</view>
+
+      <view class="ground"></view>
+
+      <view class="player" :style="{ transform: `translateY(-${playerY}px)` }">
+        <text class="player-emoji">🧒</text>
+      </view>
+
+      <view
+        v-for="it in items"
+        :key="it.id"
+        class="item"
+        :class="it.kind"
+        :style="{ transform: `translate(${it.x}px, -${it.y}px)` }"
+      >
+        <text class="item-emoji">{{ it.emoji }}</text>
+      </view>
+
+      <view class="toast" v-if="toast.text" :class="toast.type">
+        <text class="toast-text">{{ toast.text }}</text>
+      </view>
+    </view>
+
+    <view class="bottom-actions">
+      <view class="btn secondary" @tap="goBack">返回</view>
+      <view class="btn primary" @tap="startOrRestart">{{ running ? '重新开始' : '开始挑战' }}</view>
+    </view>
+
+    <view v-if="ended" class="overlay">
+      <view class="result-card">
+        <text class="result-title">本局结算</text>
+        <view class="result-row">
+          <text class="k">得分</text>
+          <text class="v">{{ score }}</text>
+        </view>
+        <view class="result-row">
+          <text class="k">稳定度</text>
+          <text class="v">{{ Math.round(stability * 100) }}%</text>
+        </view>
+        <view class="result-row">
+          <text class="k">奖励积分</text>
+          <text class="v highlight">+{{ reward.reward_points || 0 }}</text>
+        </view>
+        <text class="result-hint">{{ reward.hint || endHint }}</text>
+        <view class="result-actions">
+          <view class="btn secondary" @tap="goBack">返回列表</view>
+          <view class="btn primary" @tap="startOrRestart">再来一局</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { useGamesStore } from '@/store/games'
+
+const gamesStore = useGamesStore()
+
+// 基础状态
+const running = ref(false)
+const ended = ref(false)
+const countdown = ref(0)
+const timeLeft = ref(90)
+const score = ref(0)
+const gauge = ref(50) // 0-100，越靠近50越稳定
+const stability = ref(1)
+const endHint = ref('做得不错！选择更健康的食物，糖值更稳～')
+const reward = reactive({ reward_points: 0, hint: '', offline: false })
+
+// 玩家物理
+const playerY = ref(0)
+const vy = ref(0)
+const onGround = ref(true)
+const jumpCount = ref(0) // 支持二段跳：0/1/2
+
+// 道具
+const items = ref([])
+const toast = reactive({ text: '', type: 'good' })
+let toastTimer = null
+
+// 运行时
+let loopTimer = null
+let spawnTimer = null
+let secTimer = null
+let width = 360
+let height = 520
+let sessionId = ''
+let stableAccumulator = 0
+let stableTicks = 0
+
+const cfg = ref(null)
+
+const gaugeTip = computed(() => {
+  if (gauge.value < 30) return '有点偏低啦，注意补充能量～'
+  if (gauge.value > 70) return '有点偏高啦，试试更健康的选择～'
+  return '很棒！保持在安全区～'
+})
+
+const showToast = (text, type = 'good') => {
+  toast.text = text
+  toast.type = type
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => {
+    toast.text = ''
+  }, 800)
+}
+
+function resetGame() {
+  running.value = false
+  ended.value = false
+  countdown.value = 0
+  timeLeft.value = 90
+  score.value = 0
+  gauge.value = 50
+  playerY.value = 0
+  vy.value = 0
+  onGround.value = true
+  jumpCount.value = 0
+  items.value = []
+  reward.reward_points = 0
+  reward.hint = ''
+  reward.offline = false
+  sessionId = gamesStore.getNewSessionId()
+  stableAccumulator = 0
+  stableTicks = 0
+  stability.value = 1
+}
+
+function stopTimers() {
+  if (loopTimer) clearInterval(loopTimer)
+  if (spawnTimer) clearInterval(spawnTimer)
+  if (secTimer) clearInterval(secTimer)
+  loopTimer = null
+  spawnTimer = null
+  secTimer = null
+}
+
+function endGame(reasonHint) {
+  if (ended.value) return
+  running.value = false
+  ended.value = true
+  stopTimers()
+
+  endHint.value = reasonHint || endHint.value
+  stability.value = stableTicks > 0 ? stableAccumulator / stableTicks : 1
+
+  const totalCollected = Math.max(1, itemsCollected.good + itemsCollected.bad)
+  const accuracy = itemsCollected.good / totalCollected
+
+  gamesStore
+    .submitResult('runner', {
+      session_id: sessionId,
+      score: score.value,
+      duration: 90 - timeLeft.value,
+      accuracy,
+      events: null
+    })
+    .then((res) => {
+      reward.reward_points = res?.reward_points ?? 0
+      reward.hint = res?.hint || endHint.value
+      reward.offline = !!res?.offline
+    })
+    .catch(() => {})
+}
+
+const itemsCollected = reactive({ good: 0, bad: 0 })
+
+function spawnItem() {
+  const foods = cfg.value?.foods || []
+  if (foods.length === 0) return
+
+  // 降低陷阱出现概率
+  const pool = foods.filter((f) => (f.type === 'trap' ? Math.random() < 0.25 : true))
+  const pick = pool[Math.floor(Math.random() * pool.length)] || foods[0]
+
+  const isFlying = pick.type !== 'trap' && Math.random() < 0.25
+  const item = {
+    id: `${Date.now()}_${Math.random()}`,
+    kind: pick.type,
+    emoji: pick.emoji,
+    score: pick.score,
+    delta: pick.delta,
+    x: width + 40,
+    y: isFlying ? 140 : 40,
+    w: 42,
+    h: 42
+  }
+  items.value.push(item)
+}
+
+function collide(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  )
+}
+
+function gameLoop() {
+  // 玩家物理（跳跃）
+  // 调整重力与跳跃参数：减小重力，让滞空更久，便于躲避低空道具
+  const gravity = 0.6
+  if (!onGround.value) {
+    vy.value -= gravity
+    playerY.value += vy.value
+    if (playerY.value <= 0) {
+      playerY.value = 0
+      vy.value = 0
+      onGround.value = true
+      jumpCount.value = 0
+    }
+  }
+
+  // 道具移动与碰撞
+  const speedBase = 5 * (cfg.value?.difficulty?.speed || 1.0)
+  const playerBox = {
+    x: 42,
+    y: 40 + playerY.value,
+    w: 46,
+    h: 54
+  }
+
+  const next = []
+  for (const it of items.value) {
+    it.x -= speedBase
+    if (it.x < -80) continue
+
+    const itBox = { x: it.x, y: it.y, w: it.w, h: it.h }
+    if (collide(playerBox, itBox)) {
+      if (it.kind === 'trap') {
+        showToast('哎呀！踩到陷阱啦', 'bad')
+        endGame('踩到陷阱啦～下次记得跳起来躲开哦！')
+        return
+      }
+      score.value += it.score
+      gauge.value = Math.max(0, Math.min(100, gauge.value + it.delta))
+      if (it.kind === 'good') {
+        itemsCollected.good++
+        showToast(`+${Math.max(0, it.score)}`, 'good')
+      } else if (it.kind === 'bad') {
+        itemsCollected.bad++
+        showToast(`${it.score}`, 'bad')
+      }
+      continue
+    }
+
+    next.push(it)
+  }
+  items.value = next
+
+  // 稳定度统计：越靠近 50 越稳定
+  const dist = Math.abs(gauge.value - 50)
+  const tickStability = Math.max(0, 1 - dist / 50)
+  stableAccumulator += tickStability
+  stableTicks++
+
+  // 出界判定
+  if (gauge.value < 18) {
+    endGame('有点偏低啦～下一局多收集健康食物，别忘了关注身体感受！')
+  } else if (gauge.value > 82) {
+    endGame('有点偏高啦～试试多收集健康食物，躲开高糖捣蛋鬼！')
+  }
+}
+
+function startTimers() {
+  stopTimers()
+  loopTimer = setInterval(gameLoop, 16)
+  const spawnRate = cfg.value?.difficulty?.spawn_rate || 1.0
+  spawnTimer = setInterval(spawnItem, Math.max(520, 900 / spawnRate))
+  secTimer = setInterval(() => {
+    if (!running.value) return
+    timeLeft.value -= 1
+    if (timeLeft.value <= 0) {
+      endGame('时间到！你已经很棒啦～')
+    }
+  }, 1000)
+}
+
+function startOrRestart() {
+  resetGame()
+  countdown.value = 3
+  itemsCollected.good = 0
+  itemsCollected.bad = 0
+  ended.value = false
+
+  const cd = setInterval(() => {
+    countdown.value -= 1
+    if (countdown.value <= 0) {
+      clearInterval(cd)
+      running.value = true
+      startTimers()
+    }
+  }, 900)
+}
+
+function onTap() {
+  if (!running.value || ended.value) return
+
+  // 一段跳和二段跳使用不同的起跳速度，二段跳高度更低
+  if (jumpCount.value === 0) {
+    onGround.value = false
+    jumpCount.value = 1
+    vy.value = 13 // 一段跳高度
+  } else if (jumpCount.value === 1) {
+    onGround.value = false
+    jumpCount.value = 2
+    vy.value = 10 // 二段跳高度（可按需继续调小/调大）
+    showToast('二段跳！', 'good')
+  }
+}
+
+function goBack() {
+  stopTimers()
+  uni.navigateBack()
+}
+
+onMounted(async () => {
+  const sys = uni.getSystemInfoSync()
+  width = sys.windowWidth
+  height = sys.windowHeight
+
+  gamesStore.initFromCache()
+  cfg.value = await gamesStore.fetchConfig('runner')
+  resetGame()
+})
+
+onBeforeUnmount(() => {
+  stopTimers()
+  if (toastTimer) clearTimeout(toastTimer)
+})
+</script>
+
+<style scoped>
+.runner-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f093fb 0%, #f5576c 20%, #F3F4F6 20%);
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+.top-bar {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 6rpx;
+}
+
+.pill {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18rpx;
+  padding: 18rpx 22rpx;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pill-label {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.pill-value {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: #111827;
+}
+
+.gauge-wrap {
+  margin-top: 18rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24rpx;
+  padding: 22rpx;
+}
+
+.gauge-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 12rpx;
+}
+
+.gauge {
+  position: relative;
+  height: 18rpx;
+  border-radius: 999rpx;
+  background: rgba(17, 24, 39, 0.08);
+  overflow: hidden;
+}
+
+.gauge-safe {
+  position: absolute;
+  left: 30%;
+  width: 40%;
+  height: 100%;
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.gauge-fill {
+  position: absolute;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #fb7185 100%);
+}
+
+.gauge-dot {
+  position: absolute;
+  top: -10rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #111827;
+}
+
+.gauge-tip {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.game-area {
+  margin-top: 18rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 24rpx;
+  height: 720rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120rpx;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.35) 100%);
+}
+
+.player {
+  position: absolute;
+  left: 32rpx;
+  bottom: 120rpx;
+  width: 80rpx;
+  height: 90rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-emoji {
+  font-size: 64rpx;
+}
+
+.item {
+  position: absolute;
+  left: 0;
+  bottom: 120rpx;
+  width: 70rpx;
+  height: 70rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-emoji {
+  font-size: 56rpx;
+}
+
+.toast {
+  position: absolute;
+  top: 20rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(17, 24, 39, 0.85);
+}
+
+.toast.good {
+  background: rgba(16, 185, 129, 0.85);
+}
+.toast.bad {
+  background: rgba(239, 68, 68, 0.85);
+}
+
+.toast-text {
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.countdown {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 92rpx;
+  font-weight: 900;
+  color: rgba(17, 24, 39, 0.8);
+}
+
+.sky-hint {
+  position: absolute;
+  top: 36rpx;
+  left: 36rpx;
+  right: 36rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 20rpx;
+  background: rgba(245, 87, 108, 0.1);
+}
+
+.hint-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #111827;
+}
+.hint-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.bottom-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.btn {
+  flex: 1;
+  text-align: center;
+  padding: 22rpx 0;
+  border-radius: 18rpx;
+  font-weight: 800;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #fff;
+}
+.btn.secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+}
+
+.overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.result-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 26rpx;
+  padding: 28rpx;
+}
+
+.result-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 16rpx;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+}
+
+.k {
+  font-size: 26rpx;
+  color: #6B7280;
+}
+.v {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #111827;
+}
+.v.highlight {
+  color: #f5576c;
+}
+
+.result-hint {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.result-actions {
+  margin-top: 18rpx;
+  display: flex;
+  gap: 16rpx;
+}
+</style>
+
+

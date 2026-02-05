@@ -117,6 +117,30 @@
 			}
 		},
 		{
+			"path": "pages/interaction/games/index",
+			"style": {
+				"navigationBarTitleText": "小游戏",
+				"navigationBarBackgroundColor": "#f093fb",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/interaction/games/runner",
+			"style": {
+				"navigationBarTitleText": "糖值守护跑酷",
+				"navigationBarBackgroundColor": "#f093fb",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/interaction/games/food-match",
+			"style": {
+				"navigationBarTitleText": "食物拼拼乐",
+				"navigationBarBackgroundColor": "#f093fb",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
 			"path": "pages/profile/glucose-report",
 			"style": {
 				"navigationBarTitleText": "血糖管理报告",
