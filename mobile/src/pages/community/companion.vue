@@ -29,10 +29,11 @@
               v-for="cat in categories" 
               :key="cat.id"
               class="category-item"
+              :class="{ selected: selectedCategory === cat.id }"
               @tap="goToCategory(cat.id)"
             >
               <view class="category-icon" :style="{ background: cat.color }">
-                <text class="icon-text">{{ cat.icon }}</text>
+                <image class="icon-img" :src="cat.icon" mode="aspectFit"></image>
               </view>
               <text class="category-name">{{ cat.name }}</text>
             </view>
@@ -46,6 +47,7 @@
           v-for="post in sortedPosts" 
           :key="post.id"
           class="post-card"
+          @tap="goToPostDetail(post.id)"
         >
           <!-- 作者信息 -->
           <view class="post-header">
@@ -108,7 +110,7 @@
 
       <!-- 发布按钮 -->
       <view class="fab" @tap="showPublishDialog">
-        <text class="fab-icon">✏️</text>
+        <image class="fab-icon" src="/static/ch/ch_fr_pencil.png" mode="aspectFit"></image>
       </view>
     </view>
 
@@ -149,7 +151,7 @@ import { useCompanionStore } from '@/store/companion'
 import { storeToRefs } from 'pinia'
 
 const companionStore = useCompanionStore()
-const { currentTab, sortedPosts, friends, categories, unreadCount } = storeToRefs(companionStore)
+const { currentTab, sortedPosts, friends, categories, unreadCount, selectedCategory } = storeToRefs(companionStore)
 
 // 切换Tab
 const switchTab = (tab) => {
@@ -183,18 +185,35 @@ const likePost = (postId) => {
   companionStore.likePost(postId)
 }
 
-// 跳转到分类页面
+// 跳转到分类页面（实现分类筛选）
 const goToCategory = (categoryId) => {
-  uni.showToast({
-    title: '分类功能开发中',
-    icon: 'none'
+  if (companionStore.selectedCategory === categoryId) {
+    // 如果点击的是当前选中的分类，则取消筛选
+    companionStore.clearCategoryFilter()
+  } else {
+    // 否则设置新的分类筛选
+    companionStore.setSelectedCategory(categoryId)
+  }
+}
+
+// 跳转到发布页面
+const showPublishDialog = () => {
+  uni.navigateTo({
+    url: '/pages/community/publish'
   })
 }
 
-// 显示发布对话框
-const showPublishDialog = () => {
+// 跳转到帖子详情
+const goToPostDetail = (postId) => {
+  uni.navigateTo({
+    url: `/pages/community/post-detail?postId=${postId}`
+  })
+}
+
+// 分享帖子
+const sharePost = (postId) => {
   uni.showToast({
-    title: '发布功能开发中',
+    title: '分享功能开发中',
     icon: 'none'
   })
 }
@@ -217,17 +236,18 @@ onMounted(() => {
 <style scoped>
 .companion-page {
   min-height: 100vh;
-  background: #F3F4F6;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
 }
 
 /* Tab栏 */
 .tab-bar {
   display: flex;
-  background: white;
-  border-bottom: 1rpx solid #E5E7EB;
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
 }
 
 .tab-item {
@@ -240,7 +260,7 @@ onMounted(() => {
 }
 
 .tab-item.active {
-  color: #667eea;
+  color: #CB8E54;
 }
 
 .tab-item.active::after {
@@ -251,7 +271,7 @@ onMounted(() => {
   transform: translateX(-50%);
   width: 60rpx;
   height: 4rpx;
-  background: #667eea;
+  background: #CB8E54;
   border-radius: 2rpx;
 }
 
@@ -283,9 +303,10 @@ onMounted(() => {
 
 /* 分类入口 */
 .categories-section {
-  background: white;
+  background: #FFFEF7;
   padding: 24rpx 0;
   margin-bottom: 16rpx;
+  border-bottom: 1rpx solid #E3C7A4;
 }
 
 .categories-scroll {
@@ -294,8 +315,10 @@ onMounted(() => {
 
 .categories-list {
   display: inline-flex;
-  padding: 0 20rpx;
-  gap: 32rpx;
+  padding: 0 24rpx;
+  gap: 28rpx;
+  justify-content: space-between;
+  width: calc(100% - 48rpx);
 }
 
 .category-item {
@@ -303,6 +326,17 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 12rpx;
+  position: relative;
+}
+
+.category-item.selected .category-icon {
+  transform: scale(1.1);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
+}
+
+.category-item.selected .category-name {
+  color: #CB8E54;
+  font-weight: 600;
 }
 
 .category-icon {
@@ -312,15 +346,24 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
-.icon-text {
-  font-size: 48rpx;
+.icon-img {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+/* 减肥成绩单图标特殊尺寸 */
+.category-item:nth-child(2) .icon-img {
+  width: 75rpx;
+  height: 75rpx;
 }
 
 .category-name {
   font-size: 24rpx;
   color: #6B7280;
+  transition: all 0.3s ease;
 }
 
 /* 动态列表 */
@@ -329,10 +372,12 @@ onMounted(() => {
 }
 
 .post-card {
-  background: white;
-  border-radius: 16rpx;
+  background: #FFFEF7;
+  border-radius: 20rpx;
   padding: 24rpx;
   margin-bottom: 16rpx;
+  border: 2rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 16rpx rgba(203, 142, 84, 0.08);
 }
 
 .post-header {
@@ -416,7 +461,7 @@ onMounted(() => {
 
 .category-tag {
   font-size: 24rpx;
-  color: #667eea;
+  color: #CB8E54;
 }
 
 .post-actions {
@@ -456,9 +501,11 @@ onMounted(() => {
 }
 
 .friends-list {
-  background: white;
-  border-radius: 16rpx;
+  background: #FFFEF7;
+  border-radius: 20rpx;
   overflow: hidden;
+  border: 2rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 16rpx rgba(203, 142, 84, 0.08);
 }
 
 .friend-item {
@@ -466,7 +513,7 @@ onMounted(() => {
   align-items: center;
   gap: 20rpx;
   padding: 24rpx;
-  border-bottom: 1rpx solid #F3F4F6;
+  border-bottom: 1rpx solid #E3C7A4;
   position: relative;
 }
 
@@ -541,16 +588,22 @@ onMounted(() => {
   right: 40rpx;
   width: 120rpx;
   height: 120rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgba(246, 211, 135, 0.8);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.4);
+  box-shadow: 
+    0 8rpx 32rpx rgba(203, 142, 84, 0.2),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.4);
   z-index: 100;
 }
 
 .fab-icon {
-  font-size: 56rpx;
+  width: 56rpx;
+  height: 56rpx;
 }
 </style>

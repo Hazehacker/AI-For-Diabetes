@@ -1,5 +1,12 @@
 <template>
   <view class="chat-page">
+    <!-- 自定义导航栏 -->
+    <view class="custom-nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack" @error="onImageError"></image>
+      <text class="nav-title">{{ friendName }}</text>
+      <view class="nav-placeholder"></view>
+    </view>
+    
     <!-- 消息列表 -->
     <scroll-view 
       class="messages-container" 
@@ -38,9 +45,9 @@
         confirm-type="send"
         @confirm="sendMessage"
       />
-      <button class="send-btn" @tap="sendMessage" :disabled="!inputText.trim()">
-        发送
-      </button>
+      <view class="send-btn" @tap="sendMessage">
+        <text class="send-text">发送</text>
+      </view>
     </view>
   </view>
 </template>
@@ -69,6 +76,16 @@ const formatTime = (date) => {
   const hours = time.getHours().toString().padStart(2, '0')
   const minutes = time.getMinutes().toString().padStart(2, '0')
   return `${hours}:${minutes}`
+}
+
+// 返回
+const goBack = () => {
+  uni.navigateBack()
+}
+
+// 图片加载错误处理
+const onImageError = (e) => {
+  console.log('Image load error:', e)
 }
 
 // 发送消息
@@ -134,13 +151,41 @@ onLoad((options) => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #F3F4F6;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+}
+
+/* 自定义导航栏 */
+.custom-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+}
+
+.nav-back-icon {
+  width: 80rpx;
+  height: 80rpx;
+  display: block;
+}
+
+.nav-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.nav-placeholder {
+  width: 80rpx;
 }
 
 .messages-container {
   flex: 1;
   padding: 20rpx;
   overflow-y: auto;
+  max-height: calc(100vh - 280rpx);
 }
 
 .message-item {
@@ -169,12 +214,13 @@ onLoad((options) => {
 }
 
 .bubble-white {
-  background: white;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  background: #FFFEF7;
+  border: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
 }
 
 .bubble-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #F6D387 0%, #CB8E54 100%);
   color: white;
 }
 
@@ -205,8 +251,9 @@ onLoad((options) => {
   display: flex;
   gap: 16rpx;
   padding: 20rpx;
-  background: white;
-  border-top: 1rpx solid #E5E7EB;
+  background: #FFFEF7;
+  border-top: 1rpx solid #E3C7A4;
+  box-shadow: 0 -2rpx 8rpx rgba(203, 142, 84, 0.1);
 }
 
 .message-input {
@@ -219,20 +266,25 @@ onLoad((options) => {
 }
 
 .send-btn {
-  width: 140rpx;
-  height: 72rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 36rpx;
-  font-size: 28rpx;
-  border: none;
+  min-width: 120rpx;
+  height: 60rpx;
+  padding: 0 24rpx;
+  background: rgba(246, 211, 135, 0.8);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  border-radius: 30rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 
+    0 8rpx 32rpx rgba(203, 142, 84, 0.2),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.4);
 }
 
-.send-btn:disabled {
-  background: #D1D5DB;
-  color: #9CA3AF;
+.send-text {
+  font-size: 28rpx;
+  color: #602F27;
+  font-weight: 500;
 }
 </style>

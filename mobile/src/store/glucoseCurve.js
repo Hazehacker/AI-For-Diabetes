@@ -3,6 +3,7 @@
  * 功能编号：监测-1.3
  */
 import { defineStore } from 'pinia'
+import { useDashboardStore } from './dashboard'
 
 export const useGlucoseCurveStore = defineStore('glucoseCurve', {
   state: () => ({
@@ -309,6 +310,26 @@ export const useGlucoseCurveStore = defineStore('glucoseCurve', {
       }
       
       this.addBatchRecords(records)
+    },
+    
+    /**
+     * 从dashboard store同步数据
+     */
+    syncFromDashboard() {
+      const dashboardStore = useDashboardStore()
+      
+      if (dashboardStore.historyData && dashboardStore.historyData.length > 0) {
+        // 转换dashboard数据格式为glucoseCurve格式
+        const records = dashboardStore.historyData.map(item => ({
+          glucose_value: item.value,
+          measure_time: new Date(item.timestamp),
+          source: item.type || 'cgm',
+          is_out_of_range: item.value < this.referenceRange.min || item.value > this.referenceRange.max
+        }))
+        
+        this.glucoseRecords = records
+        this.updateStatistics()
+      }
     }
   }
 })

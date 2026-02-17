@@ -1,5 +1,111 @@
 <template>
-  <view class="interaction-page">
+  <!-- 儿童模式：奶酪仓鼠风格 -->
+  <view v-if="userRole === 'child_under_12'" class="child-interaction">
+    <!-- 顶部区域 -->
+    <view class="child-inter-header">
+      <view class="header-deco">
+        <text class="deco-item">🎮</text>
+        <text class="header-title">游乐园</text>
+        <text class="deco-item">🎪</text>
+      </view>
+      <view class="points-badge">
+        <text class="points-icon">⭐</text>
+        <text class="points-num">{{ totalPoints }}</text>
+      </view>
+    </view>
+
+    <!-- 吉祥物欢迎 -->
+    <view class="mascot-welcome">
+      <view class="mascot-avatar-inter">
+        <text class="mascot-emoji-inter">🐹</text>
+      </view>
+      <view class="welcome-bubble">
+        <text class="welcome-text">欢迎来到游乐园！选一个好玩的吧~</text>
+      </view>
+    </view>
+
+    <!-- 游戏入口网格 -->
+    <view class="games-grid">
+      <view class="game-card breathing-game" @tap="goToBreathing">
+        <view class="game-icon-wrap rainbow">
+          <text class="game-icon">🌈</text>
+        </view>
+        <text class="game-name">吹云朵</text>
+        <text class="game-desc">深呼吸放松</text>
+        <view class="game-badge">
+          <text>🔥 {{ sortedSessions.length }}次</text>
+        </view>
+      </view>
+
+      <view class="game-card pet-game" @tap="goToPet">
+        <view class="game-icon-wrap pet">
+          <text class="game-icon">{{ currentPetStage.emoji }}</text>
+        </view>
+        <text class="game-name">糖小怪</text>
+        <text class="game-desc">我的小伙伴</text>
+        <view class="game-badge pet">
+          <text>💕 {{ pet.streak_days }}天</text>
+        </view>
+      </view>
+
+      <view class="game-card mini-game">
+        <view class="game-icon-wrap mini">
+          <text class="game-icon">🎯</text>
+        </view>
+        <text class="game-name">小游戏</text>
+        <text class="game-desc">即将开放</text>
+        <view class="coming-tag">敬请期待</view>
+      </view>
+
+      <view class="game-card learn-game">
+        <view class="game-icon-wrap learn">
+          <text class="game-icon">📚</text>
+        </view>
+        <text class="game-name">小知识</text>
+        <text class="game-desc">即将开放</text>
+        <view class="coming-tag">敬请期待</view>
+      </view>
+    </view>
+
+    <!-- 我的奖章 -->
+    <view v-if="unlockedBadges.length > 0" class="badges-card-inter">
+      <view class="badges-header-inter">
+        <text class="badges-title-inter">🏅 我的奖章</text>
+        <text class="badges-count">{{ unlockedBadges.length }}枚</text>
+      </view>
+      <view class="badges-scroll">
+        <view v-for="badge in unlockedBadges" :key="badge.id" class="badge-item-inter">
+          <text class="badge-emoji-inter">{{ badge.icon }}</text>
+          <text class="badge-name-inter">{{ badge.name }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 最近记录 -->
+    <view v-if="sortedSessions.length > 0" class="recent-card">
+      <view class="recent-header">
+        <text class="recent-title">📝 最近玩的</text>
+      </view>
+      <view class="recent-list">
+        <view v-for="session in sortedSessions.slice(0, 3)" :key="session.id" class="recent-item">
+          <text class="recent-icon">🌈</text>
+          <text class="recent-name">吹云朵</text>
+          <text class="recent-time">{{ formatDate(session.completed_at) }}</text>
+          <text class="recent-star">⭐+{{ session.reward_points }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部装饰 -->
+    <view class="child-inter-footer">
+      <text class="footer-item">🧀</text>
+      <text class="footer-item">🎈</text>
+      <text class="footer-item">🧀</text>
+    </view>
+  </view>
+
+  <!-- 成人/青少年模式 -->
+  <view v-else class="interaction-page">
     <!-- 顶部统计 -->
     <view class="stats-header">
       <view class="stat-item">
@@ -136,9 +242,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useInteractionStore } from '@/store/interaction'
+import { useDashboardStore } from '@/store/dashboard'
 import { storeToRefs } from 'pinia'
 
 const interactionStore = useInteractionStore()
+const dashboardStore = useDashboardStore()
+const { userRole } = storeToRefs(dashboardStore)
 const { 
   totalPoints, 
   weeklySessionCount, 
@@ -503,5 +612,343 @@ onMounted(() => {
 
 .card-badge.pet {
   background: rgba(255, 255, 255, 0.4);
+}
+
+/* ========== 儿童模式 - 奶酪仓鼠风格 ========== */
+.child-interaction {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 24rpx;
+  padding-bottom: 120rpx;
+}
+
+.child-inter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.header-deco {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.header-deco .deco-item {
+  font-size: 36rpx;
+}
+
+.header-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.points-badge {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
+  padding: 12rpx 20rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(203, 142, 84, 0.3);
+}
+
+.points-icon {
+  font-size: 28rpx;
+}
+
+.points-num {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: white;
+}
+
+/* 吉祥物欢迎 */
+.mascot-welcome {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.1);
+  border: 3rpx solid #E3C7A4;
+}
+
+.mascot-avatar-inter {
+  flex-shrink: 0;
+}
+
+.mascot-emoji-inter {
+  font-size: 64rpx;
+  display: block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10rpx); }
+}
+
+.welcome-bubble {
+  flex: 1;
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border: 2rpx solid #E3C7A4;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  position: relative;
+}
+
+.welcome-bubble::before {
+  content: '';
+  position: absolute;
+  left: -12rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-right: 12rpx solid #E3C7A4;
+}
+
+.welcome-text {
+  font-size: 26rpx;
+  color: #602F27;
+  line-height: 1.5;
+}
+
+/* 游戏网格 */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.game-card {
+  background: white;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  text-align: center;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+  transition: transform 0.2s;
+}
+
+.game-card:active {
+  transform: scale(0.96);
+}
+
+.game-icon-wrap {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16rpx;
+}
+
+.game-icon-wrap.rainbow {
+  background: linear-gradient(135deg, #E3C7A4 0%, #D5A874 50%, #CB8E54 100%);
+}
+
+.game-icon-wrap.pet {
+  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
+}
+
+.game-icon-wrap.mini {
+  background: linear-gradient(135deg, #CB8E54 0%, #C07240 100%);
+}
+
+.game-icon-wrap.learn {
+  background: linear-gradient(135deg, #8E422F 0%, #A85835 100%);
+}
+
+.game-icon {
+  font-size: 56rpx;
+}
+
+.game-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+  margin-bottom: 8rpx;
+}
+
+.game-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #A85835;
+  margin-bottom: 12rpx;
+}
+
+.game-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #F2E5D3 0%, #D5A874 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  color: #602F27;
+}
+
+.game-badge.pet {
+  background: linear-gradient(135deg, #E3C7A4 0%, #D5A874 100%);
+}
+
+.coming-tag {
+  display: inline-block;
+  background: #E5E7EB;
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  color: #9CA3AF;
+}
+
+.mini-game, .learn-game {
+  opacity: 0.6;
+}
+
+/* 奖章卡片 */
+.badges-card-inter {
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+}
+
+.badges-header-inter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.badges-title-inter {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.badges-count {
+  font-size: 26rpx;
+  color: #A85835;
+}
+
+.badges-scroll {
+  display: flex;
+  gap: 16rpx;
+  overflow-x: auto;
+  padding-bottom: 8rpx;
+}
+
+.badge-item-inter {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border-radius: 16rpx;
+  border: 2rpx solid #D5A874;
+}
+
+.badge-emoji-inter {
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+}
+
+.badge-name-inter {
+  font-size: 22rpx;
+  color: #8E422F;
+  white-space: nowrap;
+}
+
+/* 最近记录 */
+.recent-card {
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+}
+
+.recent-header {
+  margin-bottom: 16rpx;
+}
+
+.recent-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx;
+  background: #FAF6F0;
+  border-radius: 16rpx;
+}
+
+.recent-icon {
+  font-size: 32rpx;
+}
+
+.recent-name {
+  font-size: 26rpx;
+  color: #602F27;
+  flex: 1;
+}
+
+.recent-time {
+  font-size: 22rpx;
+  color: #A85835;
+}
+
+.recent-star {
+  font-size: 24rpx;
+  color: #CB8E54;
+  font-weight: bold;
+}
+
+/* 底部装饰 */
+.child-inter-footer {
+  display: flex;
+  justify-content: center;
+  gap: 48rpx;
+  padding: 20rpx 0;
+  opacity: 0.5;
+}
+
+.footer-item {
+  font-size: 48rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+.footer-item:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.footer-item:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16rpx); }
 }
 </style>

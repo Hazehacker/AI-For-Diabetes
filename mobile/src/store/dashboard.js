@@ -36,7 +36,7 @@ export const useDashboardStore = defineStore('dashboard', {
     alerts: [],
     
     // 用户角色
-    userRole: 'teen_above_12', // child_under_12, teen_above_12, guardian
+    userRole: 'child_under_12', // child_under_12, teen_above_12, guardian
     
     // 数据连接状态
     dataConnection: {
@@ -220,6 +220,105 @@ export const useDashboardStore = defineStore('dashboard', {
           this.dataConnection.isConnected = false
           this.currentGlucose.status = 'data_loss'
         }
+      }
+    },
+    
+    // 生成模拟数据（用于演示）
+    generateMockData() {
+      const now = new Date()
+      const historyData = []
+      
+      // 生成今天的24小时血糖数据
+      for (let i = 0; i < 24; i++) {
+        const timestamp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 0, 0)
+        
+        // 模拟血糖波动：早餐后、午餐后、晚餐后会升高
+        let baseValue = 5.5
+        const hour = i
+        
+        // 早餐后 (7-10点)
+        if (hour >= 7 && hour <= 10) {
+          baseValue = 7.0 + Math.random() * 2
+        }
+        // 午餐后 (12-15点)
+        else if (hour >= 12 && hour <= 15) {
+          baseValue = 7.5 + Math.random() * 2.5
+        }
+        // 晚餐后 (18-21点)
+        else if (hour >= 18 && hour <= 21) {
+          baseValue = 7.2 + Math.random() * 2
+        }
+        // 夜间 (0-6点)
+        else if (hour >= 0 && hour <= 6) {
+          baseValue = 5.0 + Math.random() * 1.5
+        }
+        // 其他时间
+        else {
+          baseValue = 5.5 + Math.random() * 1.5
+        }
+        
+        historyData.push({
+          value: parseFloat(baseValue.toFixed(1)),
+          timestamp: timestamp.toISOString(),
+          type: 'cgm' // 持续血糖监测
+        })
+      }
+      
+      this.historyData = historyData
+      
+      // 设置当前血糖值为最新的数据
+      const currentHour = now.getHours()
+      const latestData = historyData.find(d => new Date(d.timestamp).getHours() === currentHour)
+      
+      if (latestData) {
+        this.updateGlucose({
+          value: latestData.value,
+          timestamp: now,
+          trend: this.calculateTrend(historyData, currentHour),
+          trendRate: 'normal'
+        })
+      }
+      
+      // 计算统计数据
+      this.calculateStats()
+    },
+    
+    // 计算趋势
+    calculateTrend(data, currentHour) {
+      const current = data.find(d => new Date(d.timestamp).getHours() === currentHour)
+      const previous = data.find(d => new Date(d.timestamp).getHours() === currentHour - 1)
+      
+      if (!current || !previous) return 'stable'
+      
+      const diff = current.value - previous.value
+      if (diff > 0.5) return 'up'
+      if (diff < -0.5) return 'down'
+      return 'stable'
+    },
+    
+    // 计算统计数据
+    calculateStats() {
+      if (this.historyData.length === 0) {
+        this.stats = {
+          avgGlucose: '-',
+          timeInRange: 0,
+          measureCount: 0
+        }
+        return
+      }
+      
+      const values = this.historyData.map(d => d.value)
+      const sum = values.reduce((a, b) => a + b, 0)
+      const avg = sum / values.length
+      
+      // 计算在目标范围内的时间占比
+      const inRange = values.filter(v => v >= this.targetRange.min && v <= this.targetRange.max)
+      const tir = Math.round((inRange.length / values.length) * 100)
+      
+      this.stats = {
+        avgGlucose: avg.toFixed(1),
+        timeInRange: tir,
+        measureCount: values.length
       }
     }
   }

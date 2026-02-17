@@ -1,5 +1,110 @@
 <template>
-  <view class="calories-page">
+  <!-- 儿童模式：奶酪仓鼠风格 -->
+  <view v-if="userRole === 'child_under_12'" class="child-calories">
+    <!-- 顶部区域 -->
+    <view class="child-cal-header">
+      <view class="header-title-area">
+        <text class="header-emoji">🍎</text>
+        <text class="header-title">今天吃什么</text>
+      </view>
+      <view class="date-badge">
+        <text class="date-text-child">{{ displayDate }}</text>
+      </view>
+    </view>
+
+    <!-- 吉祥物卡片 -->
+    <view class="mascot-food-card">
+      <view class="mascot-area">
+        <text class="mascot-emoji-food">🐹</text>
+      </view>
+      <view class="food-summary">
+        <view class="summary-bubble">
+          <text class="bubble-text">{{ foodMessage }}</text>
+        </view>
+        <view class="energy-info">
+          <text class="energy-label-child">今天吃了</text>
+          <view class="energy-value-row">
+            <text class="energy-num">{{ summary.total_calories || 0 }}</text>
+            <text class="energy-unit-child">能量</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快速记录 -->
+    <view class="quick-record-child">
+      <view class="record-header-child">
+        <text class="record-title-child">📝 记录一下</text>
+      </view>
+      <view class="meal-buttons">
+        <view 
+          v-for="meal in childMeals" 
+          :key="meal.value"
+          class="meal-btn"
+          :class="{ active: selectedMealType.value === meal.value }"
+          @tap="selectMeal(meal)"
+        >
+          <text class="meal-icon">{{ meal.icon }}</text>
+          <text class="meal-name">{{ meal.label }}</text>
+        </view>
+      </view>
+      <view class="food-input-area">
+        <input
+          v-model="foodName"
+          class="food-input-child"
+          placeholder="吃了什么呀？"
+        />
+        <view class="add-btn-child" @tap="quickAddFood">
+          <text class="add-icon">➕</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日记录 -->
+    <view class="today-food-card">
+      <view class="food-card-header">
+        <text class="food-card-title">🍽️ 今天吃的</text>
+        <text class="food-count">{{ records.length }}样</text>
+      </view>
+      <view v-if="records.length === 0" class="empty-food">
+        <text class="empty-emoji-food">🍴</text>
+        <text class="empty-text-food">还没记录呢，吃了什么告诉小仓鼠吧~</text>
+      </view>
+      <view v-else class="food-list-child">
+        <view v-for="item in records" :key="item.id" class="food-item-child">
+          <text class="food-meal-icon">{{ getMealIcon(item.meal_type) }}</text>
+          <text class="food-name-child">{{ item.food_name }}</text>
+          <text class="food-cal-child">{{ item.calories }}能量</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 推荐食物 -->
+    <view class="recommend-card-child">
+      <view class="recommend-header">
+        <text class="recommend-title">🥗 小仓鼠推荐</text>
+      </view>
+      <view class="recommend-list">
+        <view v-for="food in childFoodTips" :key="food.name" class="recommend-item">
+          <text class="recommend-icon">{{ food.icon }}</text>
+          <view class="recommend-info">
+            <text class="recommend-name">{{ food.name }}</text>
+            <text class="recommend-tip">{{ food.tip }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部装饰 -->
+    <view class="child-cal-footer">
+      <text class="footer-deco">🧀</text>
+      <text class="footer-deco">🍎</text>
+      <text class="footer-deco">🧀</text>
+    </view>
+  </view>
+
+  <!-- 成人/青少年模式 -->
+  <view v-else class="calories-page">
     <!-- 顶部日期与总览 -->
     <view class="summary-card">
       <view class="summary-header">
@@ -243,8 +348,11 @@
 import { computed, ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCaloriesStore } from '@/store'
+import { useDashboardStore } from '@/store/dashboard'
 
 const caloriesStore = useCaloriesStore()
+const dashboardStore = useDashboardStore()
+const { userRole } = storeToRefs(dashboardStore)
 const {
   currentTab,
   selectedDate,
@@ -256,6 +364,52 @@ const {
   loadingRecipes,
   isOverTarget
 } = storeToRefs(caloriesStore)
+
+// ========== 儿童模式相关 ==========
+const childMeals = [
+  { value: 'breakfast', label: '早餐', icon: '🌅' },
+  { value: 'lunch', label: '午餐', icon: '☀️' },
+  { value: 'dinner', label: '晚餐', icon: '🌙' },
+  { value: 'snack', label: '零食', icon: '🍪' }
+]
+
+const childFoodTips = [
+  { name: '多吃蔬菜', icon: '🥦', tip: '蔬菜让你更健康' },
+  { name: '喝牛奶', icon: '🥛', tip: '帮助长高高' },
+  { name: '吃水果', icon: '🍎', tip: '补充维生素' }
+]
+
+const foodMessage = computed(() => {
+  const cal = summary.value.total_calories || 0
+  if (cal === 0) return '今天还没吃东西呢，记得按时吃饭哦~'
+  if (cal < 500) return '吃得有点少，要多吃点哦！'
+  if (cal < 1200) return '吃得不错，继续保持！'
+  return '今天吃得很丰盛呢！'
+})
+
+const selectMeal = (meal) => {
+  selectedMealType.value = meal
+}
+
+const getMealIcon = (mealType) => {
+  const icons = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍪' }
+  return icons[mealType] || '🍽️'
+}
+
+const quickAddFood = async () => {
+  if (!foodName.value) {
+    uni.showToast({ title: '请输入食物名称', icon: 'none' })
+    return
+  }
+  await caloriesStore.addRecord({
+    meal_type: selectedMealType.value.value,
+    food_name: foodName.value,
+    calories: 200, // 儿童模式简化，默认200卡
+    scene: 'home'
+  })
+  foodName.value = ''
+  uni.showToast({ title: '记录成功！⭐', icon: 'none' })
+}
 
 // 快速添加表单
 const mealTypeOptions = [
@@ -785,6 +939,380 @@ onMounted(() => {
   background: #ecfdf5;
   border-radius: 12rpx;
   padding: 8rpx 12rpx;
+}
+
+/* ========== 儿童模式 - 奶酪仓鼠风格 ========== */
+.child-calories {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 24rpx;
+  padding-bottom: 120rpx;
+}
+
+.child-cal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.header-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.header-emoji {
+  font-size: 40rpx;
+}
+
+.header-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.date-badge {
+  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+.date-text-child {
+  font-size: 26rpx;
+  color: white;
+  font-weight: 500;
+}
+
+/* 吉祥物卡片 */
+.mascot-food-card {
+  display: flex;
+  gap: 20rpx;
+  background: white;
+  border-radius: 32rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+  border: 3rpx solid #E3C7A4;
+}
+
+.mascot-area {
+  flex-shrink: 0;
+}
+
+.mascot-emoji-food {
+  font-size: 80rpx;
+  display: block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+.food-summary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.summary-bubble {
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border: 2rpx solid #E3C7A4;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  position: relative;
+}
+
+.summary-bubble::before {
+  content: '';
+  position: absolute;
+  left: -12rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-right: 12rpx solid #E3C7A4;
+}
+
+.bubble-text {
+  font-size: 26rpx;
+  color: #602F27;
+  line-height: 1.5;
+}
+
+.energy-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.energy-label-child {
+  font-size: 26rpx;
+  color: #74362C;
+}
+
+.energy-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6rpx;
+}
+
+.energy-num {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #C07240;
+}
+
+.energy-unit-child {
+  font-size: 24rpx;
+  color: #A85835;
+}
+
+/* 快速记录 */
+.quick-record-child {
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+}
+
+.record-header-child {
+  margin-bottom: 20rpx;
+}
+
+.record-title-child {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.meal-buttons {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.meal-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 16rpx 12rpx;
+  background: #FAF6F0;
+  border-radius: 16rpx;
+  border: 2rpx solid #E3C7A4;
+  transition: all 0.3s ease;
+}
+
+.meal-btn.active {
+  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
+  border-color: #CB8E54;
+}
+
+.meal-icon {
+  font-size: 32rpx;
+}
+
+.meal-name {
+  font-size: 24rpx;
+  color: #602F27;
+}
+
+.meal-btn.active .meal-name {
+  color: white;
+}
+
+.food-input-area {
+  display: flex;
+  gap: 12rpx;
+}
+
+.food-input-child {
+  flex: 1;
+  height: 80rpx;
+  background: #FAF6F0;
+  border: 2rpx solid #E3C7A4;
+  border-radius: 20rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  color: #602F27;
+}
+
+.add-btn-child {
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-icon {
+  font-size: 36rpx;
+}
+
+/* 今日记录 */
+.today-food-card {
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+}
+
+.food-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.food-card-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.food-count {
+  font-size: 26rpx;
+  color: #A85835;
+}
+
+.empty-food {
+  text-align: center;
+  padding: 40rpx 20rpx;
+}
+
+.empty-emoji-food {
+  font-size: 60rpx;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.empty-text-food {
+  font-size: 26rpx;
+  color: #74362C;
+}
+
+.food-list-child {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.food-item-child {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx;
+  background: #FAF6F0;
+  border-radius: 16rpx;
+}
+
+.food-meal-icon {
+  font-size: 32rpx;
+}
+
+.food-name-child {
+  flex: 1;
+  font-size: 28rpx;
+  color: #602F27;
+}
+
+.food-cal-child {
+  font-size: 24rpx;
+  color: #C07240;
+  font-weight: 500;
+}
+
+/* 推荐卡片 */
+.recommend-card-child {
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  border: 3rpx solid #D5A874;
+}
+
+.recommend-header {
+  margin-bottom: 20rpx;
+}
+
+.recommend-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.recommend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.recommend-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx;
+  background: white;
+  border-radius: 16rpx;
+}
+
+.recommend-icon {
+  font-size: 40rpx;
+}
+
+.recommend-info {
+  flex: 1;
+}
+
+.recommend-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #74362C;
+}
+
+.recommend-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #8E422F;
+}
+
+/* 底部装饰 */
+.child-cal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 48rpx;
+  padding: 20rpx 0;
+  opacity: 0.5;
+}
+
+.footer-deco {
+  font-size: 48rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+.footer-deco:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.footer-deco:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16rpx); }
 }
 </style>
 

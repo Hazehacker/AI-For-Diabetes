@@ -45,6 +45,7 @@
     <!-- 图表容器 -->
     <view class="chart-container">
       <canvas 
+        :id="canvasId"
         :canvas-id="canvasId" 
         class="curve-canvas"
         @touchstart="handleTouchStart"
@@ -192,54 +193,72 @@ const switchView = (type) => {
 // 初始化 Canvas
 const initCanvas = () => {
   return new Promise((resolve) => {
-    const query = uni.createSelectorQuery()
-    query.select(`#${props.canvasId}`).boundingClientRect()
-    query.exec((res) => {
-      if (res[0]) {
-        canvasWidth = res[0].width
-        canvasHeight = res[0].height || props.height
-        
-        // 尝试使用新版 Canvas API
-        query.select(`#${props.canvasId}`)
-          .fields({ node: true, size: true })
-          .exec((res2) => {
-            if (res2[0] && res2[0].node) {
-              const canvas = res2[0].node
-              ctx = canvas.getContext('2d')
-              const dpr = uni.getSystemInfoSync().pixelRatio
-              canvas.width = canvasWidth * dpr
-              canvas.height = canvasHeight * dpr
-              ctx.scale(dpr, dpr)
+    setTimeout(() => {
+      const query = uni.createSelectorQuery()
+      query.select(`#${props.canvasId}`).boundingClientRect()
+      query.exec((res) => {
+        console.log('Canvas boundingClientRect:', res)
+        if (res && res[0]) {
+          canvasWidth = res[0].width
+          canvasHeight = res[0].height || props.height
+          
+          console.log('Canvas size:', canvasWidth, 'x', canvasHeight)
+          
+          // 使用旧版 API（更兼容）
+          try {
+            ctx = uni.createCanvasContext(props.canvasId)
+            console.log('Canvas context created:', !!ctx)
+            
+            if (ctx) {
+              console.log('Canvas initialization successful')
+              resolve()
             } else {
-              // 使用旧版 API
-              ctx = uni.createCanvasContext(props.canvasId)
+              console.error('Canvas context is null')
+              resolve()
             }
+          } catch (error) {
+            console.error('Error creating canvas context:', error)
             resolve()
-          })
-      } else {
-        resolve()
-      }
-    })
+          }
+        } else {
+          console.error('Canvas element not found with ID:', props.canvasId)
+          console.log('Query result:', res)
+          resolve()
+        }
+      })
+    }, 500)
   })
 }
 
 // 绘制图表
 const drawChart = () => {
-  if (!ctx || chartData.value.length === 0) return
+  console.log('drawChart called, ctx:', !!ctx, 'data length:', chartData.value.length)
+  
+  if (!ctx) {
+    console.error('Canvas context not initialized')
+    return
+  }
+  
+  if (chartData.value.length === 0) {
+    console.warn('No chart data available')
+    return
+  }
   
   // 清空画布
-  if (ctx.clearRect) {
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-  }
+  ctx.clearRect && ctx.clearRect(0, 0, canvasWidth, canvasHeight)
   
   const chartWidth = canvasWidth - padding.left - padding.right
   const chartHeight = canvasHeight - padding.top - padding.bottom
+  
+  console.log('Chart dimensions:', chartWidth, chartHeight)
   
   // 计算数据范围
   const values = chartData.value.map(d => d.glucose_value)
   const minValue = Math.min(...values, referenceRange.value.min - 1)
   const maxValue = Math.max(...values, referenceRange.value.max + 1)
   const valueRange = maxValue - minValue
+  
+  console.log('Value range:', minValue, maxValue)
   
   // 绘制参考范围背景
   drawReferenceZone(chartWidth, chartHeight, minValue, valueRange)
@@ -440,15 +459,24 @@ const handleTouch = (e) => {
 }
 
 // 监听数据变化
-watch(() => chartData.value, () => {
-  nextTick(() => {
-    drawChart()
-  })
+watch(() => chartData.value, (newData) => {
+  console.log('Chart data changed, length:', newData.length)
+  if (ctx) {
+    nextTick(() => {
+      drawChart()
+    })
+  } else {
+    console.warn('Canvas context not ready yet')
+  }
 }, { deep: true })
 
 onMounted(async () => {
+  console.log('Component mounted, initializing canvas...')
   await initCanvas()
-  drawChart()
+  console.log('Canvas initialized, drawing chart...')
+  nextTick(() => {
+    drawChart()
+  })
 })
 </script>
 
@@ -458,6 +486,12 @@ onMounted(async () => {
   border-radius: 16rpx;
   padding: 32rpx;
   margin-bottom: 20rpx;
+}
+
+.glucose-curve-chart.compact {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 0;
 }
 
 .chart-header {

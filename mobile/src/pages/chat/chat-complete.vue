@@ -1,4 +1,5 @@
 <template>
+  <view class="page-container">
   <view class="chat-page">
     <!-- 顶部导航栏 -->
     <view class="chat-header">
@@ -280,6 +281,10 @@
       </view>
     </view>
   </view>
+  
+  <!-- 自定义 TabBar -->
+  <CustomTabBar :current="1" />
+  </view>
 </template>
 
 <script setup>
@@ -291,6 +296,7 @@ import { chatApi, checkinApi, ttsApi } from '@/api'
 import ProfileDrawer from '@/components/ProfileDrawer.vue'
 import RobotSelector from '@/components/RobotSelector.vue'
 import CheckinCalendar from '@/components/CheckinCalendar.vue'
+import CustomTabBar from '@/components/CustomTabBar.vue'
 import CheckinForm from '@/components/CheckinForm.vue'
 
 const userStore = useUserStore()
@@ -1217,10 +1223,11 @@ const loadTodayCheckinCount = async () => {
 
 /* 专科场景快捷入口 */
 .specialist-shortcuts {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
   border-radius: 24rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
+  border: 2rpx solid #E3C7A4;
 }
 
 .shortcuts-title {
@@ -1243,15 +1250,16 @@ const loadTodayCheckinCount = async () => {
   align-items: center;
   gap: 8rpx;
   padding: 16rpx 8rpx;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 254, 247, 0.9);
   backdrop-filter: blur(10rpx);
   border-radius: 16rpx;
   transition: all 0.3s;
+  border: 1rpx solid rgba(227, 199, 164, 0.5);
 }
 
 .shortcut-item:active {
   transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 254, 247, 1);
 }
 
 .shortcut-icon {
@@ -1260,17 +1268,19 @@ const loadTodayCheckinCount = async () => {
 
 .shortcut-name {
   font-size: 22rpx;
-  color: white;
+  color: #602F27;
   text-align: center;
+  font-weight: 500;
 }
 
 /* 糖糖问答卡片 */
 .daily-question-card {
-  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  background: linear-gradient(135deg, #FFF8E7 0%, #F5E6D3 100%);
   border-radius: 32rpx;
   padding: 40rpx 32rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 8rpx 32rpx rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8rpx 32rpx rgba(203, 142, 84, 0.15);
+  border: 2rpx solid #E3C7A4;
 }
 
 .question-header {
@@ -1287,7 +1297,7 @@ const loadTodayCheckinCount = async () => {
 .question-title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #1E40AF;
+  color: #8B4513;
   display: block;
   margin-bottom: 8rpx;
 }
@@ -1295,25 +1305,27 @@ const loadTodayCheckinCount = async () => {
 .question-badge {
   display: inline-block;
   padding: 8rpx 20rpx;
-  background: rgba(255, 255, 255, 0.8);
-  color: #1E40AF;
+  background: rgba(246, 211, 135, 0.8);
+  color: #602F27;
   font-size: 24rpx;
   border-radius: 16rpx;
   font-weight: 600;
+  border: 1rpx solid #E3C7A4;
 }
 
 .question-text {
   display: block;
   font-size: 32rpx;
-  color: #1F2937;
+  color: #602F27;
   line-height: 1.8;
   margin-bottom: 32rpx;
   padding: 32rpx;
-  background: white;
+  background: #FFFEF7;
   border-radius: 24rpx;
   text-align: center;
   font-weight: 500;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4rpx 16rpx rgba(203, 142, 84, 0.1);
+  border: 1rpx solid #E3C7A4;
 }
 
 .answer-buttons {
@@ -1340,12 +1352,12 @@ const loadTodayCheckinCount = async () => {
 }
 
 .true-btn {
-  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #30BF78 0%, #22A366 100%);
   color: white;
 }
 
 .false-btn {
-  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+  background: linear-gradient(135deg, #F6D387 0%, #D2691E 100%);
   color: white;
 }
 
@@ -1517,10 +1529,10 @@ const loadTodayCheckinCount = async () => {
 }
 
 .message-user .message-bubble {
-  background: linear-gradient(135deg, #969fff 0%, #5147ff 100%);
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
   color: #ffffff;
   margin-left: auto;
-  border-radius: 36rpx 36rpx 8rpx 36rpx; /* 对齐H5：18px 18px 4px 18px */
+  border-radius: 36rpx 36rpx 8rpx 36rpx;
 }
 
 .message-text {
@@ -1638,8 +1650,7 @@ const loadTodayCheckinCount = async () => {
   max-width: 340rpx;
   height: 66rpx;
   border-radius: 999rpx;
-  /* 与 H5: bg-gradient-primary 一致 */
-  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1647,8 +1658,7 @@ const loadTodayCheckinCount = async () => {
   color: #ffffff;
   font-size: 28rpx;
   font-weight: 500;
-  /* 参考 H5 shadow-button：0 4px 15px rgba(150, 159, 255, 0.3) */
-  box-shadow: 0 8rpx 30rpx rgba(150, 159, 255, 0.3);
+  box-shadow: 0 8rpx 30rpx rgba(203, 142, 84, 0.3);
 }
 
 .btn-icon {
@@ -1690,8 +1700,7 @@ const loadTodayCheckinCount = async () => {
 }
 
 .tts-btn.active {
-  /* 打开时使用主色渐变，与 H5 bg-gradient-primary 一致 */
-  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
 }
 
 /* TTS 默认关闭态：略深的灰色，接近 H5 的 bg-gray-300 效果 */
@@ -1732,8 +1741,7 @@ const loadTodayCheckinCount = async () => {
   width: 56rpx;
   height: 56rpx;
   border-radius: 28rpx;
-  /* 发送按钮使用与 H5 一致的主色渐变 */
-  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
   display: flex;
   align-items: center;
   justify-content: center;

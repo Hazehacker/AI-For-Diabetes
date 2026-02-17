@@ -6,58 +6,114 @@
       <text class="page-subtitle">AI 助力，科学管理</text>
     </view>
 
-    <!-- 角色视图切换 -->
-    <view v-if="userRole === 'child_under_12'" class="child-view">
-      <!-- 儿童游戏化视图 -->
-      <view class="game-header">
-        <view class="level-badge">
-          <text class="level-icon">🏆</text>
-          <text class="level-text">Lv.{{ gamifiedView.level }}</text>
+    <!-- 儿童模式：奶酪仓鼠风格 -->
+    <view v-if="userRole === 'child_under_12'" class="child-plan-view">
+      <!-- 顶部装饰 -->
+      <view class="child-plan-header">
+        <view class="header-deco">
+          <text class="deco-star">✨</text>
+          <text class="deco-star s2">⭐</text>
         </view>
-        <view class="progress-info">
-          <text class="progress-text">今日进度</text>
-          <text class="progress-value">{{ gamifiedView.progress }}/{{ gamifiedView.total }}</text>
+        <view class="header-title-area">
+          <text class="header-icon">📋</text>
+          <text class="header-title">我的小任务</text>
+        </view>
+        <view class="level-badge-child">
+          <text class="badge-icon">🏆</text>
+          <text class="badge-text">Lv.{{ gamifiedView.level }}</text>
         </view>
       </view>
 
-      <view class="progress-bar-container">
-        <view class="progress-bar">
-          <view class="progress-fill" :style="{ width: todayCompletionRate + '%' }"></view>
+      <!-- 吉祥物鼓励卡片 -->
+      <view class="mascot-encourage-card">
+        <view class="mascot-left">
+          <text class="mascot-face">🐹</text>
         </view>
-        <text class="progress-label">{{ todayCompletionRate }}%</text>
+        <view class="mascot-right">
+          <view class="speech-box">
+            <text class="speech-content">{{ encourageMessage }}</text>
+          </view>
+          <view class="progress-area">
+            <text class="progress-label-child">今日进度</text>
+            <view class="progress-bar-child">
+              <view class="progress-fill-child" :style="{ width: todayCompletionRate + '%' }"></view>
+            </view>
+            <text class="progress-text-child">{{ todayCompletionRate }}%</text>
+          </view>
+        </view>
       </view>
 
       <!-- 勋章展示 -->
-      <view v-if="gamifiedView.badges.length > 0" class="badges-section">
-        <text class="section-title">我的勋章</text>
-        <view class="badges-list">
-          <view v-for="badge in gamifiedView.badges" :key="badge.name" class="badge-item">
-            <text class="badge-icon">{{ badge.icon }}</text>
-            <text class="badge-name">{{ badge.name }}</text>
+      <view v-if="gamifiedView.badges.length > 0" class="badges-card-child">
+        <view class="badges-header">
+          <text class="badges-title">🎖️ 我的勋章</text>
+        </view>
+        <view class="badges-grid">
+          <view v-for="badge in gamifiedView.badges" :key="badge.name" class="badge-item-child">
+            <text class="badge-emoji">{{ badge.icon }}</text>
+            <text class="badge-name-child">{{ badge.name }}</text>
           </view>
         </view>
       </view>
 
-      <!-- 今日任务（游戏化） -->
-      <view class="tasks-section">
-        <text class="section-title">今日挑战</text>
-        <view class="task-cards">
+      <!-- 今日任务列表 -->
+      <view class="tasks-card-child">
+        <view class="tasks-header-child">
+          <text class="tasks-title-child">🎯 今日小挑战</text>
+          <text class="tasks-count-child">{{ gamifiedView.progress }}/{{ gamifiedView.total }}</text>
+        </view>
+        <view class="tasks-list-child">
           <view 
             v-for="task in todayPendingTasks" 
             :key="task.id"
-            class="task-card child-mode"
+            class="task-item-child"
             @tap="completeChildTask(task)"
           >
-            <view class="task-icon">{{ getTaskEmoji(task.content) }}</view>
-            <view class="task-info">
-              <text class="task-content">{{ simplifyTaskContent(task.content) }}</text>
-              <text class="task-time">{{ formatTime(task.scheduled_time) }}</text>
+            <view class="task-emoji-wrap">
+              <text class="task-emoji-child">{{ getTaskEmoji(task.content) }}</text>
             </view>
-            <view class="task-action">
-              <text class="action-btn">✓</text>
+            <view class="task-info-child">
+              <text class="task-name-child">{{ simplifyTaskContent(task.content) }}</text>
+              <text class="task-time-child">{{ formatTime(task.scheduled_time) }}</text>
+            </view>
+            <view class="task-action-child">
+              <text class="action-icon">👆</text>
+              <text class="action-text-child">完成</text>
+            </view>
+          </view>
+          
+          <!-- 已完成任务 -->
+          <view 
+            v-for="task in todayCompletedTasks" 
+            :key="task.id"
+            class="task-item-child done"
+          >
+            <view class="task-emoji-wrap done">
+              <text class="task-emoji-child">✅</text>
+            </view>
+            <view class="task-info-child">
+              <text class="task-name-child done">{{ simplifyTaskContent(task.content) }}</text>
+              <text class="task-time-child">{{ formatTime(task.scheduled_time) }}</text>
+            </view>
+            <view class="task-reward-child">
+              <text class="reward-star">⭐</text>
             </view>
           </view>
         </view>
+        
+        <!-- 空状态 -->
+        <view v-if="todayTasks.length === 0" class="empty-child">
+          <text class="empty-emoji">🎉</text>
+          <text class="empty-text-child">今天没有任务啦</text>
+          <text class="empty-hint-child">好好休息吧~</text>
+        </view>
+      </view>
+
+      <!-- 底部装饰 -->
+      <view class="child-footer">
+        <text class="footer-cheese">🧀</text>
+        <text class="footer-cheese">🧀</text>
+        <text class="footer-cheese">🧀</text>
       </view>
     </view>
 
@@ -204,6 +260,16 @@ const {
   canCreatePlan,
   gamifiedView
 } = storeToRefs(healthPlanStore)
+
+// 鼓励消息
+const encourageMessage = computed(() => {
+  const rate = todayCompletionRate.value
+  if (rate === 100) return '太棒了！今天的任务全部完成啦！🎉'
+  if (rate >= 80) return '就快完成了，加油！你是最棒的！💪'
+  if (rate >= 50) return '已经完成一半啦，继续努力哦~'
+  if (rate > 0) return '开始做任务啦，小仓鼠为你加油！'
+  return '新的一天开始了，一起完成小任务吧！'
+})
 
 // 今日日期
 const todayDate = computed(() => {
@@ -875,5 +941,411 @@ onMounted(() => {
   font-size: 60rpx;
   color: white;
   font-weight: bold;
+}
+
+/* ========== 儿童模式 - 奶酪仓鼠风格 ========== */
+.child-plan-view {
+  padding: 0 20rpx;
+}
+
+.health-plan-page:has(.child-plan-view) {
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+}
+
+.health-plan-page:has(.child-plan-view) .page-header {
+  background: transparent;
+}
+
+.health-plan-page:has(.child-plan-view) .page-title {
+  color: #602F27;
+}
+
+.health-plan-page:has(.child-plan-view) .page-subtitle {
+  color: #A85835;
+}
+
+.child-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.header-deco {
+  display: flex;
+  gap: 8rpx;
+}
+
+.deco-star {
+  font-size: 32rpx;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+.deco-star.s2 {
+  animation-delay: 1s;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.header-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.header-icon {
+  font-size: 40rpx;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.level-badge-child {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
+  padding: 12rpx 20rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(203, 142, 84, 0.3);
+}
+
+.level-badge-child .badge-icon {
+  font-size: 28rpx;
+}
+
+.level-badge-child .badge-text {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: white;
+}
+
+/* 吉祥物鼓励卡片 */
+.mascot-encourage-card {
+  display: flex;
+  gap: 20rpx;
+  background: white;
+  border-radius: 32rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+  border: 3rpx solid #E3C7A4;
+}
+
+.mascot-left {
+  flex-shrink: 0;
+}
+
+.mascot-face {
+  font-size: 80rpx;
+  display: block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+.mascot-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.speech-box {
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border: 2rpx solid #E3C7A4;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  position: relative;
+}
+
+.speech-box::before {
+  content: '';
+  position: absolute;
+  left: -16rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 12rpx solid transparent;
+  border-bottom: 12rpx solid transparent;
+  border-right: 16rpx solid #E3C7A4;
+}
+
+.speech-content {
+  font-size: 26rpx;
+  color: #602F27;
+  line-height: 1.5;
+}
+
+.progress-area {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.progress-label-child {
+  font-size: 24rpx;
+  color: #74362C;
+  flex-shrink: 0;
+}
+
+.progress-bar-child {
+  flex: 1;
+  height: 24rpx;
+  background: #E3C7A4;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.progress-fill-child {
+  height: 100%;
+  background: linear-gradient(90deg, #4ADE80 0%, #22C55E 100%);
+  border-radius: 12rpx;
+  transition: width 0.5s ease;
+}
+
+.progress-text-child {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #22C55E;
+  flex-shrink: 0;
+}
+
+/* 勋章卡片 */
+.badges-card-child {
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+}
+
+.badges-header {
+  margin-bottom: 20rpx;
+}
+
+.badges-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.badges-grid {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.badge-item-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border-radius: 16rpx;
+  border: 2rpx solid #D5A874;
+}
+
+.badge-emoji {
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+}
+
+.badge-name-child {
+  font-size: 22rpx;
+  color: #8E422F;
+}
+
+/* 任务卡片 */
+.tasks-card-child {
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  border: 3rpx solid #E3C7A4;
+}
+
+.tasks-header-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.tasks-title-child {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.tasks-count-child {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #A85835;
+}
+
+.tasks-list-child {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.task-item-child {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx;
+  background: #FAF6F0;
+  border-radius: 20rpx;
+  border: 2rpx solid #E3C7A4;
+  transition: all 0.3s ease;
+}
+
+.task-item-child:active {
+  transform: scale(0.98);
+  background: #F2E5D3;
+}
+
+.task-item-child.done {
+  background: linear-gradient(135deg, #F0FFF0 0%, #E8FFE8 100%);
+  border-color: #90EE90;
+}
+
+.task-emoji-wrap {
+  width: 64rpx;
+  height: 64rpx;
+  background: linear-gradient(135deg, #E3C7A4 0%, #D5A874 100%);
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-emoji-wrap.done {
+  background: linear-gradient(135deg, #90EE90 0%, #4ADE80 100%);
+}
+
+.task-emoji-child {
+  font-size: 36rpx;
+}
+
+.task-info-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.task-name-child {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #602F27;
+}
+
+.task-name-child.done {
+  color: #22C55E;
+  text-decoration: line-through;
+}
+
+.task-time-child {
+  font-size: 24rpx;
+  color: #A85835;
+}
+
+.task-action-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 16rpx;
+  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
+  border-radius: 16rpx;
+}
+
+.action-icon {
+  font-size: 28rpx;
+}
+
+.action-text-child {
+  font-size: 22rpx;
+  color: white;
+  font-weight: 500;
+}
+
+.task-reward-child {
+  padding: 12rpx;
+}
+
+.reward-star {
+  font-size: 40rpx;
+  animation: starPop 0.5s ease;
+}
+
+@keyframes starPop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* 空状态 */
+.empty-child {
+  text-align: center;
+  padding: 60rpx 20rpx;
+}
+
+.empty-emoji {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.empty-text-child {
+  display: block;
+  font-size: 30rpx;
+  color: #602F27;
+  margin-bottom: 8rpx;
+}
+
+.empty-hint-child {
+  display: block;
+  font-size: 26rpx;
+  color: #A85835;
+}
+
+/* 底部装饰 */
+.child-footer {
+  display: flex;
+  justify-content: center;
+  gap: 48rpx;
+  padding: 20rpx 0;
+  opacity: 0.5;
+}
+
+.footer-cheese {
+  font-size: 48rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+.footer-cheese:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.footer-cheese:nth-child(3) {
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16rpx); }
 }
 </style>

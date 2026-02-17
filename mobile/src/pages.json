@@ -26,8 +26,7 @@
 			"path": "pages/profile/profile",
 			"style": {
 				"navigationBarTitleText": "个人中心",
-				"navigationBarBackgroundColor": "#969FFF",
-				"navigationBarTextStyle": "white"
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -88,8 +87,7 @@
 			"path": "pages/community/companion",
 			"style": {
 				"navigationBarTitleText": "同伴板块",
-				"navigationBarBackgroundColor": "#667eea",
-				"navigationBarTextStyle": "white"
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -104,8 +102,21 @@
 			"path": "pages/community/chat",
 			"style": {
 				"navigationBarTitleText": "聊天",
-				"navigationBarBackgroundColor": "#667eea",
-				"navigationBarTextStyle": "white"
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/community/publish",
+			"style": {
+				"navigationBarTitleText": "发布动态",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/community/post-detail",
+			"style": {
+				"navigationBarTitleText": "帖子详情",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -151,9 +162,10 @@
 	],
 	"tabBar": {
 		"color": "#7A7E83",
-		"selectedColor": "#3B82F6",
+		"selectedColor": "#CB8E54",
 		"borderStyle": "black",
-		"backgroundColor": "#ffffff",
+		"backgroundColor": "#D5A874",
+		"height": "60px",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
