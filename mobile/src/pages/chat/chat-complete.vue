@@ -1,6 +1,6 @@
 <template>
   <view class="page-container">
-  <view class="chat-page">
+  <view class="chat-page" :class="{ 'child-mode': isChildMode }">
     <!-- 顶部导航栏 -->
     <view class="chat-header">
       <view class="header-left" @tap="toggleProfileDrawer">
@@ -23,7 +23,7 @@
       
       <view class="header-right" @tap="showCheckinCalendar">
         <view class="calendar-btn">
-          <text class="calendar-icon">📅</text>
+          <image class="calendar-icon" src="/static/ch/ch_index_finish.png" mode="aspectFit"></image>
         </view>
         <view v-if="todayCheckinCount > 0" class="checkin-badge">
           {{ todayCheckinCount }}
@@ -40,25 +40,48 @@
       :show-scrollbar="false"
       @scrolltoupper="loadMoreHistory"
     >
-      <!-- 专科场景快捷入口 -->
-      <view class="specialist-shortcuts">
+      <!-- 快捷入口按钮 - 儿童模式 -->
+      <view v-if="isChildMode" class="shortcuts-bar">
+        <view class="shortcut-item" @tap="goToSpecialistScene('report')">
+          <image class="shortcut-icon" src="/static/ch/ch_que_report.png" mode="aspectFit"></image>
+          <text class="shortcut-name">报告解读</text>
+        </view>
+        <view class="shortcut-divider"></view>
+        <view class="shortcut-item" @tap="goToSpecialistScene('drug')">
+          <image class="shortcut-icon" src="/static/ch/ch_que_med.png" mode="aspectFit"></image>
+          <text class="shortcut-name">药品管理</text>
+        </view>
+        <view class="shortcut-divider"></view>
+        <view class="shortcut-item" @tap="goToSpecialistScene('diary')">
+          <image class="shortcut-icon" src="/static/ch/ch_que_log.png" mode="aspectFit"></image>
+          <text class="shortcut-name">健康日志</text>
+        </view>
+        <view class="shortcut-divider"></view>
+        <view class="shortcut-item" @tap="goToSpecialistScene('knowledge')">
+          <image class="shortcut-icon" src="/static/ch/ch_que_kn.png" mode="aspectFit"></image>
+          <text class="shortcut-name">知识问答</text>
+        </view>
+      </view>
+      
+      <!-- 快捷入口按钮 - 青少年/家长模式 -->
+      <view v-else class="specialist-shortcuts">
         <text class="shortcuts-title">🏥 AI专科对话</text>
         <view class="shortcuts-grid">
-          <view class="shortcut-item" @tap="goToSpecialistScene('report')">
-            <text class="shortcut-icon">📊</text>
-            <text class="shortcut-name">报告解读</text>
+          <view class="shortcut-item-default" @tap="goToSpecialistScene('report')">
+            <text class="shortcut-icon-emoji">📊</text>
+            <text class="shortcut-name-default">报告解读</text>
           </view>
-          <view class="shortcut-item" @tap="goToSpecialistScene('drug')">
-            <text class="shortcut-icon">💊</text>
-            <text class="shortcut-name">药品管理</text>
+          <view class="shortcut-item-default" @tap="goToSpecialistScene('drug')">
+            <text class="shortcut-icon-emoji">💊</text>
+            <text class="shortcut-name-default">药品管理</text>
           </view>
-          <view class="shortcut-item" @tap="goToSpecialistScene('diary')">
-            <text class="shortcut-icon">📝</text>
-            <text class="shortcut-name">健康日志</text>
+          <view class="shortcut-item-default" @tap="goToSpecialistScene('diary')">
+            <text class="shortcut-icon-emoji">📝</text>
+            <text class="shortcut-name-default">健康日志</text>
           </view>
-          <view class="shortcut-item" @tap="goToSpecialistScene('knowledge')">
-            <text class="shortcut-icon">💡</text>
-            <text class="shortcut-name">知识问答</text>
+          <view class="shortcut-item-default" @tap="goToSpecialistScene('knowledge')">
+            <text class="shortcut-icon-emoji">💡</text>
+            <text class="shortcut-name-default">知识问答</text>
           </view>
         </view>
       </view>
@@ -292,6 +315,7 @@ import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user'
 import { useChatStore } from '@/store/chat'
+import { useDashboardStore } from '@/store/dashboard'
 import { chatApi, checkinApi, ttsApi } from '@/api'
 import ProfileDrawer from '@/components/ProfileDrawer.vue'
 import RobotSelector from '@/components/RobotSelector.vue'
@@ -301,6 +325,10 @@ import CheckinForm from '@/components/CheckinForm.vue'
 
 const userStore = useUserStore()
 const chatStore = useChatStore()
+const dashboardStore = useDashboardStore()
+
+// 用户角色检测
+const isChildMode = computed(() => dashboardStore.userRole === 'child_under_12')
 
 // 顶部与状态
 const showProfile = ref(false)
@@ -330,28 +358,59 @@ const submitAnswer = (choice) => {
   chatStore.submitAnswer(choice)
 }
 
-// 统一用户头像（使用提供的插画图片）
-const USER_AVATAR_URL = 'https://s.coze.cn/image/es6fUICmNgw/'
-const userAvatar = computed(() => USER_AVATAR_URL)
-
-// 机器人配置（参考 smart-sugar-assistant-main，实现男女小助手区分头像）
-const robots = ref([
-  {
-    id: 'xiaojing',
-    name: '小助手1',
-    voiceId: '601012',
-    avatar: '/static/nvsheng.png',
-    description: '温柔可爱的女生好朋友'
-  },
-  {
-    id: 'zhimeng',
-    name: '小助手2',
-    voiceId: '101015',
-    avatar: '/static/nansheng.png',
-    description: '聪明理性的男生好朋友'
+// 用户头像（根据角色选择不同头像）
+const userAvatar = computed(() => {
+  if (isChildMode.value) {
+    return '/static/ch/ch_home_avatar.png'
   }
-])
-const currentRobot = ref(robots.value[0])
+  return 'https://s.coze.cn/image/es6fUICmNgw/'
+})
+
+// 机器人配置（根据角色选择不同头像）
+const robots = computed(() => {
+  if (isChildMode.value) {
+    return [
+      {
+        id: 'xiaojing',
+        name: '小助手1',
+        voiceId: '601012',
+        avatar: '/static/ch/ch_que_fe.png',
+        description: '温柔可爱的女生好朋友'
+      },
+      {
+        id: 'zhimeng',
+        name: '小助手2',
+        voiceId: '101015',
+        avatar: '/static/ch/ch_que_ma.png',
+        description: '聪明理性的男生好朋友'
+      }
+    ]
+  }
+  return [
+    {
+      id: 'xiaojing',
+      name: '小助手1',
+      voiceId: '601012',
+      avatar: '/static/nvsheng.png',
+      description: '温柔可爱的女生好朋友'
+    },
+    {
+      id: 'zhimeng',
+      name: '小助手2',
+      voiceId: '101015',
+      avatar: '/static/nansheng.png',
+      description: '聪明理性的男生好朋友'
+    }
+  ]
+})
+const currentRobot = ref(null)
+
+// 初始化当前机器人
+watch(robots, (newRobots) => {
+  if (newRobots.length > 0 && !currentRobot.value) {
+    currentRobot.value = newRobots[0]
+  }
+}, { immediate: true })
 
 // 录音 & 播放
 const recordingTimer = ref(null)
@@ -1091,10 +1150,14 @@ const loadTodayCheckinCount = async () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  /* 背景对齐 H5：bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 */
+  /* 默认背景 - 青少年/家长模式 */
   background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 50%, #faf5ff 100%);
-  /* 为固定头部预留空间：safe-area + 头部高度 */
   padding-top: calc(env(safe-area-inset-top) + 120rpx);
+}
+
+/* 儿童模式背景 */
+.chat-page.child-mode {
+  background: linear-gradient(180deg, #FFF8E1 0%, #FFFEF7 30%, #FFF5E6 100%);
 }
 
 .chat-header {
@@ -1102,6 +1165,7 @@ const loadTodayCheckinCount = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 32rpx;
+  /* 默认样式 - 青少年/家长模式 */
   background: #ffffff;
   box-shadow: 0 4rpx 20rpx rgba(150, 159, 255, 0.1);
   position: fixed;
@@ -1109,6 +1173,14 @@ const loadTodayCheckinCount = async () => {
   left: 0;
   right: 0;
   z-index: 100;
+}
+
+/* 儿童模式头部 */
+.child-mode .chat-header {
+  padding: 16rpx 32rpx;
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
 }
 
 .header-left .user-avatar {
@@ -1186,15 +1258,16 @@ const loadTodayCheckinCount = async () => {
   width: 80rpx;
   height: 80rpx;
   border-radius: 40rpx;
-  background: #f3f4f6;
+  background: rgba(246, 211, 135, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 16rpx rgba(148, 163, 184, 0.5);
+  box-shadow: 0 4rpx 16rpx rgba(203, 142, 84, 0.2);
 }
 
 .calendar-icon {
-  font-size: 40rpx;
+  width: 50rpx;
+  height: 50rpx;
 }
 
 .checkin-badge {
@@ -1221,13 +1294,55 @@ const loadTodayCheckinCount = async () => {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 专科场景快捷入口 */
+/* 快捷入口按钮 */
+.shortcuts-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 24rpx 16rpx;
+  margin-bottom: 16rpx;
+  background: transparent;
+}
+
+.shortcut-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  padding: 8rpx;
+  background: transparent;
+  transition: all 0.3s;
+}
+
+.shortcut-item:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.shortcut-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: #D2691E;
+}
+
+.shortcut-icon {
+  width: 64rpx;
+  height: 64rpx;
+}
+
+.shortcut-name {
+  font-size: 22rpx;
+  color: #602F27;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* 青少年/家长模式 - 专科场景快捷入口 */
 .specialist-shortcuts {
-  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 24rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
-  border: 2rpx solid #E3C7A4;
 }
 
 .shortcuts-title {
@@ -1244,41 +1359,45 @@ const loadTodayCheckinCount = async () => {
   gap: 16rpx;
 }
 
-.shortcut-item {
+.shortcut-item-default {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
   padding: 16rpx 8rpx;
-  background: rgba(255, 254, 247, 0.9);
+  background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10rpx);
   border-radius: 16rpx;
   transition: all 0.3s;
-  border: 1rpx solid rgba(227, 199, 164, 0.5);
 }
 
-.shortcut-item:active {
+.shortcut-item-default:active {
   transform: scale(0.95);
-  background: rgba(255, 254, 247, 1);
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.shortcut-icon {
+.shortcut-icon-emoji {
   font-size: 48rpx;
 }
 
-.shortcut-name {
+.shortcut-name-default {
   font-size: 22rpx;
-  color: #602F27;
+  color: white;
   text-align: center;
-  font-weight: 500;
 }
 
-/* 糖糖问答卡片 */
+/* 糖糖问答卡片 - 默认样式（青少年/家长模式） */
 .daily-question-card {
-  background: linear-gradient(135deg, #FFF8E7 0%, #F5E6D3 100%);
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
   border-radius: 32rpx;
   padding: 40rpx 32rpx;
   margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(59, 130, 246, 0.15);
+}
+
+/* 儿童模式糖糖问答卡片 */
+.child-mode .daily-question-card {
+  background: linear-gradient(135deg, #FFF8E7 0%, #F5E6D3 100%);
   box-shadow: 0 8rpx 32rpx rgba(203, 142, 84, 0.15);
   border: 2rpx solid #E3C7A4;
 }
@@ -1294,10 +1413,11 @@ const loadTodayCheckinCount = async () => {
   margin-bottom: 12rpx;
 }
 
+/* 默认样式 - 青少年/家长模式 */
 .question-title {
   font-size: 36rpx;
   font-weight: bold;
-  color: #8B4513;
+  color: #1E40AF;
   display: block;
   margin-bottom: 8rpx;
 }
@@ -1305,25 +1425,41 @@ const loadTodayCheckinCount = async () => {
 .question-badge {
   display: inline-block;
   padding: 8rpx 20rpx;
-  background: rgba(246, 211, 135, 0.8);
-  color: #602F27;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1E40AF;
   font-size: 24rpx;
   border-radius: 16rpx;
   font-weight: 600;
-  border: 1rpx solid #E3C7A4;
 }
 
 .question-text {
   display: block;
   font-size: 32rpx;
-  color: #602F27;
+  color: #1F2937;
   line-height: 1.8;
   margin-bottom: 32rpx;
   padding: 32rpx;
-  background: #FFFEF7;
+  background: white;
   border-radius: 24rpx;
   text-align: center;
   font-weight: 500;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 儿童模式样式 */
+.child-mode .question-title {
+  color: #8B4513;
+}
+
+.child-mode .question-badge {
+  background: rgba(246, 211, 135, 0.8);
+  color: #602F27;
+  border: 1rpx solid #E3C7A4;
+}
+
+.child-mode .question-text {
+  color: #602F27;
+  background: #FFFEF7;
   box-shadow: 0 4rpx 16rpx rgba(203, 142, 84, 0.1);
   border: 1rpx solid #E3C7A4;
 }
@@ -1351,14 +1487,24 @@ const loadTodayCheckinCount = async () => {
   transform: scale(0.97);
 }
 
+/* 默认按钮样式 - 青少年/家长模式 */
 .true-btn {
-  background: linear-gradient(135deg, #30BF78 0%, #22A366 100%);
+  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
   color: white;
 }
 
 .false-btn {
-  background: linear-gradient(135deg, #F6D387 0%, #D2691E 100%);
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
   color: white;
+}
+
+/* 儿童模式按钮样式 */
+.child-mode .true-btn {
+  background: linear-gradient(135deg, #30BF78 0%, #22A366 100%);
+}
+
+.child-mode .false-btn {
+  background: linear-gradient(135deg, #F6D387 0%, #D2691E 100%);
 }
 
 .answer-result {
@@ -1528,11 +1674,17 @@ const loadTodayCheckinCount = async () => {
   gap: 16rpx;
 }
 
+/* 默认用户消息气泡 - 青少年/家长模式 */
 .message-user .message-bubble {
-  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+  background: linear-gradient(135deg, #969fff 0%, #5147ff 100%);
   color: #ffffff;
   margin-left: auto;
   border-radius: 36rpx 36rpx 8rpx 36rpx;
+}
+
+/* 儿童模式用户消息气泡 */
+.child-mode .message-user .message-bubble {
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
 }
 
 .message-text {
@@ -1629,9 +1781,9 @@ const loadTodayCheckinCount = async () => {
 }
 
 .input-area {
-  /* 固定在底部，模拟 H5 的 safe-bottom 效果 */
+  /* 固定在底部，为 TabBar 留出空间 */
   position: fixed;
-  bottom: 0;
+  bottom: 90rpx;
   left: 0;
   right: 0;
   margin-top: 10px;
@@ -1645,12 +1797,13 @@ const loadTodayCheckinCount = async () => {
   justify-content: flex-start;
 }
 
+/* 默认快捷打卡按钮 - 青少年/家长模式 */
 .quick-checkin-btn {
   min-width: 220rpx;
   max-width: 340rpx;
   height: 66rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1658,6 +1811,12 @@ const loadTodayCheckinCount = async () => {
   color: #ffffff;
   font-size: 28rpx;
   font-weight: 500;
+  box-shadow: 0 8rpx 30rpx rgba(150, 159, 255, 0.3);
+}
+
+/* 儿童模式快捷打卡按钮 */
+.child-mode .quick-checkin-btn {
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
   box-shadow: 0 8rpx 30rpx rgba(203, 142, 84, 0.3);
 }
 
@@ -1671,9 +1830,10 @@ const loadTodayCheckinCount = async () => {
   align-items: center;
   gap: 15rpx;
   margin-top: 4rpx;
-  padding: 15rpx 35rpx 15rpx 15rpx;
+  padding: 15rpx 24rpx;
   background-color: #ffffff;
-
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input-icons {
@@ -1699,7 +1859,13 @@ const loadTodayCheckinCount = async () => {
   background: #fee2e2;
 }
 
+/* 默认TTS激活状态 - 青少年/家长模式 */
 .tts-btn.active {
+  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+}
+
+/* 儿童模式TTS激活状态 */
+.child-mode .tts-btn.active {
   background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
 }
 
@@ -1723,16 +1889,18 @@ const loadTodayCheckinCount = async () => {
 }
 
 .text-input {
-  flex: 1;
+  width: 100%;
   min-height: 50rpx;
   max-height: 140rpx;
   font-size: 28rpx;
-  padding: 15rpx 0rpx 15rpx 15rpx;
+  padding: 15rpx 60rpx 15rpx 20rpx;
   background-color: #f9fafb;
-  border-radius:24rpx;
+  border-radius: 24rpx;
   border: 1rpx solid #e5e7eb;
+  box-sizing: border-box;
 }
 
+/* 默认发送按钮 - 青少年/家长模式 */
 .send-btn {
   position: absolute;
   right: 12rpx;
@@ -1741,10 +1909,15 @@ const loadTodayCheckinCount = async () => {
   width: 56rpx;
   height: 56rpx;
   border-radius: 28rpx;
-  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 儿童模式发送按钮 */
+.child-mode .send-btn {
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
 }
 
 .send-btn.disabled {
