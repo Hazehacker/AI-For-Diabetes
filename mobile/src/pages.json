@@ -128,6 +128,62 @@
 			}
 		},
 		{
+			"path": "pages/interaction/games/index",
+			"style": {
+				"navigationBarTitleText": "小游戏",
+				"navigationBarBackgroundColor": "#f093fb",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/interaction/games/runner",
+			"style": {
+				"navigationBarTitleText": "糖值守护跑酷",
+				"navigationBarBackgroundColor": "#f093fb",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/interaction/games/food-match",
+			"style": {
+				"navigationBarTitleText": "食物拼拼乐",
+				"navigationBarBackgroundColor": "#f093fb",
+				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/interaction/knowledge/index",
+			"style": {
+				"navigationBarTitleText": "科普知识",
+				"navigationBarBackgroundColor": "#22c55e",
+				"navigationBarTextStyle": "white"
+			}
+		},
+    {
+      "path": "pages/interaction/knowledge/detail",
+      "style": {
+        "navigationBarTitleText": "科普文章",
+        "navigationBarBackgroundColor": "#22c55e",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/interaction/video/index",
+      "style": {
+        "navigationBarTitleText": "视频学习",
+        "navigationBarBackgroundColor": "#0ea5e9",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/interaction/video/detail",
+      "style": {
+        "navigationBarTitleText": "视频详情",
+        "navigationBarBackgroundColor": "#0ea5e9",
+        "navigationBarTextStyle": "white"
+      }
+    },
+		{
 			"path": "pages/profile/glucose-report",
 			"style": {
 				"navigationBarTitleText": "血糖管理报告",
@@ -147,7 +203,7 @@
 			"path": "pages/profile/daily-checkin",
 			"style": {
 				"navigationBarTitleText": "每日签到",
-				"navigationBarBackgroundColor": "#F59E0B",
+				"navigationBarBackgroundColor": "#5147FF",
 				"navigationBarTextStyle": "white"
 			}
 		},

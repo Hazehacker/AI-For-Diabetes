@@ -25,6 +25,136 @@ export const userApi = {
   }
 }
 
+// 积分 / 每日签到相关接口
+export const pointsApi = {
+  /**
+   * 获取签到+积分仪表盘
+   * 返回当日签到状态、连续天数、月历、积分余额等
+   */
+  getCheckinDashboard() {
+    return request({
+      url: '/points/checkin/dashboard',
+      method: 'GET'
+    })
+  },
+
+  /**
+   * 每日签到
+   */
+  submitCheckin() {
+    return request({
+      url: '/points/checkin',
+      method: 'POST'
+    })
+  },
+
+  /**
+   * 获取积分余额
+   */
+  getBalance() {
+    return request({
+      url: '/points/balance',
+      method: 'GET'
+    })
+  },
+
+  /**
+   * 获取积分记录
+   */
+  getRecords(params) {
+    return request({
+      url: '/points/records',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 积分商城商品列表
+   */
+  getRewards(params) {
+    return request({
+      url: '/points/rewards',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 积分兑换
+   */
+  redeemReward(data) {
+    return request({
+      url: '/points/redeem',
+      method: 'POST',
+      data
+    })
+  }
+}
+
+// 小游戏相关接口
+export const gamesApi = {
+  /**
+   * 获取小游戏列表
+   * GET /games
+   */
+  getGames(params) {
+    return request({
+      url: '/games',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取游戏配置
+   * GET /games/{game_id}/config
+   */
+  getGameConfig(gameId, params) {
+    return request({
+      url: `/games/${gameId}/config`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 上报成绩
+   * POST /games/{game_id}/result
+   */
+  submitGameResult(gameId, data) {
+    return request({
+      url: `/games/${gameId}/result`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 个人历史
+   * GET /games/{game_id}/history
+   */
+  getGameHistory(gameId, params) {
+    return request({
+      url: `/games/${gameId}/history`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 排行榜
+   * GET /games/{game_id}/leaderboard
+   */
+  getLeaderboard(gameId, params) {
+    return request({
+      url: `/games/${gameId}/leaderboard`,
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
 // 对话相关接口
 export const chatApi = {
   // 获取最新会话ID
@@ -118,6 +248,108 @@ export const caloriesApi = {
   getRecipeRecommendations(params) {
     return request({
       url: '/calories/recipes/recommend',
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
+// 科普知识相关接口
+export const knowledgeApi = {
+  /**
+   * 获取科普文章列表
+   * GET /knowledge/articles
+   */
+  getArticles(params) {
+    return request({
+      url: '/knowledge/articles',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取科普文章详情
+   * GET /knowledge/articles/{id}
+   */
+  getArticleDetail(id, params) {
+    return request({
+      url: `/knowledge/articles/${id}`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 标记文章已阅读并领取奖励
+   * POST /knowledge/articles/{id}/complete
+   */
+  completeArticle(id, data) {
+    return request({
+      url: `/knowledge/articles/${id}/complete`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取科普学习概览统计（可选）
+   * GET /knowledge/summary
+   */
+  getSummary(params) {
+    return request({
+      url: '/knowledge/summary',
+      method: 'GET',
+      data: params
+    })
+  }
+}
+
+// 视频学习相关接口
+export const videoApi = {
+  /**
+   * 获取视频课程列表
+   * GET /video/lessons
+   */
+  getVideos(params) {
+    return request({
+      url: '/video/lessons',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取单个视频详情
+   * GET /video/lessons/{id}
+   */
+  getVideoDetail(id, params) {
+    return request({
+      url: `/video/lessons/${id}`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 标记视频完成并领取奖励
+   * POST /video/lessons/{id}/complete
+   */
+  completeVideo(id, data) {
+    return request({
+      url: `/video/lessons/${id}/complete`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取视频学习概览统计（可选）
+   * GET /video/summary
+   */
+  getSummary(params) {
+    return request({
+      url: '/video/summary',
       method: 'GET',
       data: params
     })
