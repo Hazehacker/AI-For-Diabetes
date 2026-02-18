@@ -86,8 +86,8 @@
         </view>
       </view>
 
-      <!-- 糖糖问答每日判断题 -->
-      <view v-if="dailyQuestion" class="daily-question-card">
+      <!-- 糖糖问答每日判断题 - 青少年/家长模式（内嵌卡片） -->
+      <view v-if="dailyQuestion && !isChildMode" class="daily-question-card">
         <view class="question-header">
           <text class="question-icon">🍬</text>
           <text class="question-title">糖糖问答</text>
@@ -205,7 +205,7 @@
       <!-- 快捷打卡 -->
       <view class="quick-actions">
         <button class="quick-checkin-btn" @tap="quickCheckin" style="margin-left: 15px;">
-          <text class="fa-solid fa-check-circle btn-icon"></text>
+          <image class="checkin-icon" src="/static/ch/ch_index_finish.png" mode="aspectFit"></image>
           <text class="btn-text">今日打卡</text>
         </button>
       </view>
@@ -285,6 +285,28 @@
       @submit="submitCheckin"
     />
 
+    <!-- 儿童模式 - 糖糖问答弹窗 -->
+    <view v-if="showDailyQuestionPopup && isChildMode" class="question-popup-overlay" @tap="closeDailyQuestionPopup">
+      <view class="question-popup-modal" @tap.stop>
+        <view class="question-header">
+          <text class="question-icon">🍬</text>
+          <text class="question-title">糖糖问答</text>
+          <text class="question-badge">每日一题</text>
+        </view>
+
+        <text class="question-text">{{ dailyQuestion?.question }}</text>
+
+        <view class="answer-buttons">
+          <view class="answer-btn true-btn" @tap="submitAnswerAndClose(true)">
+            <text class="btn-text">✓ 真的</text>
+          </view>
+          <view class="answer-btn false-btn" @tap="submitAnswerAndClose(false)">
+            <text class="btn-text">✗ 假的</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 录音状态 -->
     <view v-if="isRecording" class="recording-overlay">
       <view class="recording-modal">
@@ -335,6 +357,7 @@ const showProfile = ref(false)
 const showRobotModal = ref(false)
 const showCalendar = ref(false)
 const showCheckinForm = ref(false)
+const showDailyQuestionPopup = ref(false)
 const todayCheckinCount = ref(0)
 
 // 聊天相关
@@ -356,6 +379,28 @@ const answerStats = computed(() => chatStore.getAnswerStats())
 
 const submitAnswer = (choice) => {
   chatStore.submitAnswer(choice)
+}
+
+// 儿童模式 - 弹窗提交答案并关闭
+const submitAnswerAndClose = (choice) => {
+  chatStore.submitAnswer(choice)
+  showDailyQuestionPopup.value = false
+  uni.showToast({
+    title: choice === chatStore.dailyQuestion?.correctAnswer ? '回答正确！' : '回答错误',
+    icon: choice === chatStore.dailyQuestion?.correctAnswer ? 'success' : 'none'
+  })
+}
+
+// 关闭每日问答弹窗
+const closeDailyQuestionPopup = () => {
+  showDailyQuestionPopup.value = false
+}
+
+// 检查是否需要显示每日问答弹窗（儿童模式且今天未答题）
+const checkDailyQuestionPopup = () => {
+  if (isChildMode.value && dailyQuestion.value && !hasAnswered.value) {
+    showDailyQuestionPopup.value = true
+  }
 }
 
 // 用户头像（根据角色选择不同头像）
@@ -544,6 +589,11 @@ onShow(() => {
   setTimeout(() => {
     scrollToBottom()
   }, 300)
+  
+  // 儿童模式：检查是否需要显示每日问答弹窗
+  setTimeout(() => {
+    checkDailyQuestionPopup()
+  }, 500)
 })
 
 onUnmounted(() => {
@@ -1047,9 +1097,18 @@ const showCheckinCalendar = async () => {
 }
 
 const goToSpecialistScene = (sceneId) => {
-  uni.navigateTo({
-    url: '/pages/chat/specialist-scenes'
-  })
+  // 直接跳转到对应功能页面
+  const routes = {
+    report: '/pages/chat/report-analysis',        // 报告解读 -> 拍照上传分析
+    drug: '/pages/chat/medicine-box',             // 药品管理 -> OCR识别药盒
+    diary: '/pages/chat/health-diary',            // 健康日志 -> 语音/文字记录
+    knowledge: '/pages/chat/quiz-history'         // 知识问答 -> 糖糖问答记录
+  }
+  
+  const url = routes[sceneId]
+  if (url) {
+    uni.navigateTo({ url })
+  }
 }
 
 const hideCheckinCalendar = () => {
@@ -1464,6 +1523,132 @@ const loadTodayCheckinCount = async () => {
   border: 1rpx solid #E3C7A4;
 }
 
+/* 儿童模式 - 每日问答弹窗 */
+.question-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.question-popup-modal {
+  width: 85%;
+  max-width: 600rpx;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F5E6D3 100%);
+  border-radius: 32rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 16rpx 48rpx rgba(203, 142, 84, 0.3);
+  border: 2rpx solid #E3C7A4;
+}
+
+.question-popup-modal .question-header {
+  text-align: center;
+  margin-bottom: 32rpx;
+}
+
+.question-popup-modal .question-icon {
+  font-size: 64rpx;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.question-popup-modal .question-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8B4513;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.question-popup-modal .question-badge {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  background: rgba(246, 211, 135, 0.8);
+  color: #602F27;
+  font-size: 24rpx;
+  border-radius: 16rpx;
+  font-weight: 600;
+  border: 1rpx solid #E3C7A4;
+}
+
+.question-popup-modal .question-text {
+  display: block;
+  font-size: 32rpx;
+  color: #602F27;
+  line-height: 1.8;
+  margin-bottom: 32rpx;
+  padding: 32rpx;
+  background: #FFFEF7;
+  border-radius: 24rpx;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 4rpx 16rpx rgba(203, 142, 84, 0.1);
+  border: 1rpx solid #E3C7A4;
+}
+
+.question-popup-modal .answer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.answer-btn {
+  height: 88rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.1);
+}
+
+.true-btn {
+  background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+  color: white;
+}
+
+.false-btn {
+  background: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
+  color: white;
+}
+
+/* 儿童模式答题按钮 */
+.child-mode .answer-btn {
+  border-radius: 30rpx;
+  height: 88rpx;
+  box-shadow: none;
+  font-size: 32rpx;
+  font-weight: bold;
+  transform: scale(1);
+  transition: transform 0.2s;
+}
+
+.child-mode .answer-btn:active {
+  transform: scale(0.98);
+}
+
+.child-mode .true-btn {
+  background: #AED581;
+  color: #FFFFFF;
+  border: 2rpx solid #8BC34A;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.child-mode .false-btn {
+  background: #F5D76E;
+  color: #8A6D3B;
+  border: none;
+}
+
 .answer-buttons {
   display: flex;
   flex-direction: column;
@@ -1682,9 +1867,29 @@ const loadTodayCheckinCount = async () => {
   border-radius: 36rpx 36rpx 8rpx 36rpx;
 }
 
-/* 儿童模式用户消息气泡 */
+/* 儿童模式用户消息 */
+.child-mode .message-user {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+}
+
 .child-mode .message-user .message-bubble {
-  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+  background: #F6CD75;
+  color: #602F27;
+  border: 3rpx solid #E5BC64;
+  border-radius: 28rpx 28rpx 8rpx 28rpx;
+  box-shadow: 0 4rpx 0 #D4AB53;
+  padding: 24rpx 28rpx;
+}
+
+.child-mode .message-user .message-text {
+  color: #602F27;
+  font-weight: 500;
+}
+
+.child-mode .message-user .message-time {
+  color: #8B5A3C;
 }
 
 .message-text {
@@ -1816,13 +2021,21 @@ const loadTodayCheckinCount = async () => {
 
 /* 儿童模式快捷打卡按钮 */
 .child-mode .quick-checkin-btn {
-  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
-  box-shadow: 0 8rpx 30rpx rgba(203, 142, 84, 0.3);
+  background: #F6D387;
+  color: #602F27;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
 }
 
 .btn-icon {
   font-size: 32rpx;
   margin-right: 4rpx;
+}
+
+.checkin-icon {
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 8rpx;
 }
 
 .input-container {

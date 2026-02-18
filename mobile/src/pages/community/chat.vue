@@ -146,12 +146,21 @@ onLoad((options) => {
 })
 </script>
 
+<style>
+/* 覆盖页面级样式 */
+page {
+  height: 100%;
+  overflow: hidden;
+}
+</style>
+
 <style scoped>
 .chat-page {
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  box-sizing: border-box;
 }
 
 /* 自定义导航栏 */
@@ -184,18 +193,20 @@ onLoad((options) => {
 .messages-container {
   flex: 1;
   padding: 20rpx;
+  padding-bottom: 140rpx;
   overflow-y: auto;
-  max-height: calc(100vh - 280rpx);
+  box-sizing: border-box;
 }
 
 .message-item {
   display: flex;
   gap: 16rpx;
   margin-bottom: 24rpx;
+  align-items: flex-end;
 }
 
 .message-item.message-right {
-  flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 
 .message-avatar {
@@ -207,21 +218,25 @@ onLoad((options) => {
 }
 
 .message-bubble {
-  max-width: 500rpx;
-  padding: 20rpx 24rpx;
-  border-radius: 16rpx;
+  max-width: 480rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 20rpx;
   position: relative;
+  word-wrap: break-word;
+  box-sizing: border-box;
 }
 
 .bubble-white {
   background: #FFFEF7;
-  border: 1rpx solid #E3C7A4;
-  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 12rpx rgba(203, 142, 84, 0.15);
 }
 
 .bubble-primary {
-  background: linear-gradient(135deg, #F6D387 0%, #CB8E54 100%);
-  color: white;
+  background: #F6D387;
+  border: 3rpx solid #E5BC64;
+  color: #602F27;
+  box-shadow: 0 4rpx 12rpx rgba(246, 211, 135, 0.3);
 }
 
 .message-text {
@@ -229,31 +244,41 @@ onLoad((options) => {
   font-size: 28rpx;
   line-height: 1.5;
   word-wrap: break-word;
+  word-break: break-word;
   margin-bottom: 8rpx;
+  color: #602F27;
 }
 
 .bubble-primary .message-text {
-  color: white;
+  color: #602F27;
+  font-weight: 500;
 }
 
 .message-time {
   display: block;
   font-size: 20rpx;
-  color: #9CA3AF;
+  color: #A85835;
   text-align: right;
 }
 
 .bubble-primary .message-time {
-  color: rgba(255, 255, 255, 0.8);
+  color: #8E422F;
 }
 
 .input-area {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   gap: 16rpx;
   padding: 20rpx;
+  padding-bottom: calc(20rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: #FFFEF7;
   border-top: 1rpx solid #E3C7A4;
   box-shadow: 0 -2rpx 8rpx rgba(203, 142, 84, 0.1);
+  z-index: 100;
 }
 
 .message-input {

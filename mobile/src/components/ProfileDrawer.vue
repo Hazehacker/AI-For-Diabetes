@@ -1,6 +1,6 @@
 <template>
-  <view v-if="visible" class="drawer-overlay" @tap="handleClose">
-    <view class="drawer-content" @tap.stop :class="{ 'show': visible }">
+  <view v-if="visible" class="drawer-overlay" :class="{ 'child-mode': isChildMode }" @tap="handleClose">
+    <view class="drawer-content" @tap.stop :class="{ 'show': visible, 'child-mode': isChildMode }">
       <!-- 头部 -->
       <view class="drawer-header">
         <view class="header-top">
@@ -53,29 +53,13 @@
         </view>
 
         <button class="save-btn" @tap="handleSave">
-          <text class="icon">💾</text>
           <text>保存修改</text>
         </button>
-      </view>
-
-      <!-- 快速功能 -->
-      <view class="function-section">
-        <view class="section-header">
-          <text class="icon">⚡</text>
-          <text class="title">快速功能</text>
-        </view>
-        
-        <view class="function-item" @tap="goToCheckin">
-          <text class="icon">📅</text>
-          <text class="text">打卡记录</text>
-          <text class="arrow">›</text>
-        </view>
       </view>
 
       <!-- 退出登录 -->
       <view class="logout-section">
         <button class="logout-btn" @tap="handleLogout">
-          <text class="icon">🚪</text>
           <text>退出登录</text>
         </button>
       </view>
@@ -86,10 +70,14 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useUserStore } from '@/store/user'
+import { useDashboardStore } from '@/store/dashboard'
 
 const props = defineProps({
   visible: Boolean
 })
+
+const dashboardStore = useDashboardStore()
+const isChildMode = computed(() => dashboardStore.userRole === 'child_under_12')
 
 const emit = defineEmits(['close', 'logout', 'checkin'])
 
@@ -100,8 +88,13 @@ const editForm = ref({
   birthday: ''
 })
 
-// 个人中心头像与聊天页保持一致
-const userAvatar = computed(() => 'https://s.coze.cn/image/es6fUICmNgw/')
+// 个人中心头像 - 儿童模式使用本地头像
+const userAvatar = computed(() => {
+  if (isChildMode.value) {
+    return '/static/ch/ch_home_avatar.png'
+  }
+  return 'https://s.coze.cn/image/es6fUICmNgw/'
+})
 const nickname = computed(() => userStore.nickname)
 const username = computed(() => userStore.userInfo?.username || 'user')
 const phone = computed(() => userStore.userInfo?.phone || userStore.userInfo?.username)
@@ -178,6 +171,9 @@ const handleLogout = () => {
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   overflow-y: auto;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(120rpx + constant(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 .drawer-content.show {
@@ -249,6 +245,8 @@ const handleLogout = () => {
 .info-section,
 .function-section {
   padding: 32rpx;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .section-header {
@@ -286,6 +284,7 @@ const handleLogout = () => {
   border: 2rpx solid #e5e7eb;
   border-radius: 16rpx;
   font-size: 28rpx;
+  box-sizing: border-box;
 }
 
 .value {
@@ -295,6 +294,8 @@ const handleLogout = () => {
   border-radius: 16rpx;
   font-size: 28rpx;
   color: #9ca3af;
+  word-break: break-all;
+  box-sizing: border-box;
 }
 
 .save-btn {
@@ -353,5 +354,84 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   gap: 12rpx;
+}
+
+/* ========== 儿童模式样式 - 奶酪仓鼠风格 ========== */
+.drawer-content.child-mode {
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+}
+
+.drawer-content.child-mode .drawer-header {
+  background: linear-gradient(135deg, #F6CD75 0%, #E5BC64 100%);
+  border-bottom: 4rpx solid #D4AB53;
+}
+
+.drawer-content.child-mode .header-title {
+  color: #602F27;
+}
+
+.drawer-content.child-mode .close-btn {
+  background: rgba(96, 47, 39, 0.15);
+}
+
+.drawer-content.child-mode .close-btn .icon {
+  color: #602F27;
+}
+
+.drawer-content.child-mode .nickname {
+  color: #602F27;
+}
+
+.drawer-content.child-mode .username {
+  color: #A85835;
+}
+
+.drawer-content.child-mode .avatar {
+  border-color: #E3C7A4;
+}
+
+.drawer-content.child-mode .section-header .title {
+  color: #602F27;
+}
+
+.drawer-content.child-mode .label {
+  color: #A85835;
+}
+
+.drawer-content.child-mode .input {
+  background: #FFFEF7;
+  border-color: #E3C7A4;
+  color: #602F27;
+}
+
+.drawer-content.child-mode .value {
+  background: #FFF8E7;
+  color: #CB8E54;
+}
+
+.drawer-content.child-mode .save-btn {
+  background: linear-gradient(135deg, #F6CD75 0%, #E5BC64 100%);
+  color: #602F27;
+  border: 3rpx solid #D4AB53;
+  box-shadow: 0 4rpx 0 #C49A42;
+}
+
+.drawer-content.child-mode .function-item {
+  background: #FFFEF7;
+  border: 2rpx solid #E3C7A4;
+}
+
+.drawer-content.child-mode .function-item .text {
+  color: #602F27;
+}
+
+.drawer-content.child-mode .function-item .arrow {
+  color: #CB8E54;
+}
+
+.drawer-content.child-mode .logout-btn {
+  background: #FFF5E6;
+  color: #A85835;
+  border: 2rpx solid #E3C7A4;
 }
 </style>

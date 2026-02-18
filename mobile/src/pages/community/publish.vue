@@ -53,7 +53,7 @@
           :class="{ selected: selectedCategory === cat.id }"
           @tap="selectCategory(cat.id)"
         >
-          <text class="category-icon">{{ cat.icon }}</text>
+          <image class="category-icon" :src="cat.icon" mode="aspectFit"></image>
           <text class="category-name">{{ cat.name }}</text>
         </view>
       </view>
@@ -91,11 +91,11 @@ const topic = ref('')
 
 // 分类列表
 const categories = ref([
-  { id: 1, name: '每日打卡', icon: '📅' },
-  { id: 2, name: '减肥成绩单', icon: '💪' },
-  { id: 3, name: '减肥求助', icon: '🤝' },
-  { id: 4, name: 'GLP减重', icon: '💉' },
-  { id: 5, name: '减肥杂谈', icon: '💊' }
+  { id: 1, name: '每日打卡', icon: '/static/ch/ch_fr_beat.png' },
+  { id: 2, name: '减肥成绩单', icon: '/static/ch/ch_fr_report.png' },
+  { id: 3, name: '减肥求助', icon: '/static/ch/ch_fr_que.png' },
+  { id: 4, name: 'GLP减重', icon: '/static/ch/ch_fr_GLP.png' },
+  { id: 5, name: '减肥杂谈', icon: '/static/ch/ch_fr_other.png' }
 ])
 
 // 返回
@@ -399,7 +399,8 @@ const publishPost = () => {
 }
 
 .category-icon {
-  font-size: 32rpx;
+  width: 48rpx;
+  height: 48rpx;
 }
 
 .category-name {

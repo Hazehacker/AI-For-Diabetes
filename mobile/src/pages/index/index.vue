@@ -195,7 +195,7 @@
         <view class="menu-icon-wrap game">
           <image class="menu-icon-img" src="/static/ch/ch_index_play.png" mode="aspectFit"></image>
         </view>
-        <text class="menu-name">小游戏</text>
+        <text class="menu-name">游乐园</text>
       </view>
       <view class="child-menu-item" @tap="goToCalories">
         <view class="menu-icon-wrap food">

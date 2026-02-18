@@ -1,123 +1,20 @@
 <template>
-  <view class="health-plan-page">
-    <!-- 顶部导航 -->
-    <view class="page-header">
+  <view class="health-plan-page" :class="{ 'child-mode-page': isChildMode }">
+    <!-- 儿童模式自定义导航栏 -->
+    <view v-if="isChildMode" class="child-nav-bar">
+      <image class="child-nav-back" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="child-nav-title">健康计划工坊</text>
+      <view class="child-nav-placeholder"></view>
+    </view>
+
+    <!-- 顶部导航（非儿童模式） -->
+    <view v-if="!isChildMode" class="page-header">
       <text class="page-title">健康计划工坊</text>
       <text class="page-subtitle">AI 助力，科学管理</text>
     </view>
 
-    <!-- 儿童模式：奶酪仓鼠风格 -->
-    <view v-if="userRole === 'child_under_12'" class="child-plan-view">
-      <!-- 顶部装饰 -->
-      <view class="child-plan-header">
-        <view class="header-deco">
-          <text class="deco-star">✨</text>
-          <text class="deco-star s2">⭐</text>
-        </view>
-        <view class="header-title-area">
-          <text class="header-icon">📋</text>
-          <text class="header-title">我的小任务</text>
-        </view>
-        <view class="level-badge-child">
-          <text class="badge-icon">🏆</text>
-          <text class="badge-text">Lv.{{ gamifiedView.level }}</text>
-        </view>
-      </view>
-
-      <!-- 吉祥物鼓励卡片 -->
-      <view class="mascot-encourage-card">
-        <view class="mascot-left">
-          <text class="mascot-face">🐹</text>
-        </view>
-        <view class="mascot-right">
-          <view class="speech-box">
-            <text class="speech-content">{{ encourageMessage }}</text>
-          </view>
-          <view class="progress-area">
-            <text class="progress-label-child">今日进度</text>
-            <view class="progress-bar-child">
-              <view class="progress-fill-child" :style="{ width: todayCompletionRate + '%' }"></view>
-            </view>
-            <text class="progress-text-child">{{ todayCompletionRate }}%</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 勋章展示 -->
-      <view v-if="gamifiedView.badges.length > 0" class="badges-card-child">
-        <view class="badges-header">
-          <text class="badges-title">🎖️ 我的勋章</text>
-        </view>
-        <view class="badges-grid">
-          <view v-for="badge in gamifiedView.badges" :key="badge.name" class="badge-item-child">
-            <text class="badge-emoji">{{ badge.icon }}</text>
-            <text class="badge-name-child">{{ badge.name }}</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- 今日任务列表 -->
-      <view class="tasks-card-child">
-        <view class="tasks-header-child">
-          <text class="tasks-title-child">🎯 今日小挑战</text>
-          <text class="tasks-count-child">{{ gamifiedView.progress }}/{{ gamifiedView.total }}</text>
-        </view>
-        <view class="tasks-list-child">
-          <view 
-            v-for="task in todayPendingTasks" 
-            :key="task.id"
-            class="task-item-child"
-            @tap="completeChildTask(task)"
-          >
-            <view class="task-emoji-wrap">
-              <text class="task-emoji-child">{{ getTaskEmoji(task.content) }}</text>
-            </view>
-            <view class="task-info-child">
-              <text class="task-name-child">{{ simplifyTaskContent(task.content) }}</text>
-              <text class="task-time-child">{{ formatTime(task.scheduled_time) }}</text>
-            </view>
-            <view class="task-action-child">
-              <text class="action-icon">👆</text>
-              <text class="action-text-child">完成</text>
-            </view>
-          </view>
-          
-          <!-- 已完成任务 -->
-          <view 
-            v-for="task in todayCompletedTasks" 
-            :key="task.id"
-            class="task-item-child done"
-          >
-            <view class="task-emoji-wrap done">
-              <text class="task-emoji-child">✅</text>
-            </view>
-            <view class="task-info-child">
-              <text class="task-name-child done">{{ simplifyTaskContent(task.content) }}</text>
-              <text class="task-time-child">{{ formatTime(task.scheduled_time) }}</text>
-            </view>
-            <view class="task-reward-child">
-              <text class="reward-star">⭐</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 空状态 -->
-        <view v-if="todayTasks.length === 0" class="empty-child">
-          <text class="empty-emoji">🎉</text>
-          <text class="empty-text-child">今天没有任务啦</text>
-          <text class="empty-hint-child">好好休息吧~</text>
-        </view>
-      </view>
-
-      <!-- 底部装饰 -->
-      <view class="child-footer">
-        <text class="footer-cheese">🧀</text>
-        <text class="footer-cheese">🧀</text>
-        <text class="footer-cheese">🧀</text>
-      </view>
-    </view>
-
-    <view v-else class="normal-view">
+    <!-- 主内容区域（所有模式共用，样式根据模式不同） -->
+    <view class="main-content" :class="{ 'child-content': isChildMode }">
       <!-- 青少年/家属视图 -->
       
       <!-- 快速统计 -->
@@ -237,20 +134,68 @@
     </view>
 
     <!-- 创建计划按钮（浮动） -->
-    <view v-if="canCreatePlan && userRole !== 'child_under_12'" class="fab" @tap="goToCreate">
+    <view v-if="canCreatePlan" class="fab" :class="{ 'child-fab': isChildMode }" @tap="goToCreate">
       <text class="fab-icon">+</text>
+    </view>
+
+    <!-- 儿童模式自定义弹窗 - 记录血糖值 -->
+    <view v-if="isChildMode && showGlucoseModal" class="child-modal-overlay" @tap="closeGlucoseModal">
+      <view class="child-modal" @tap.stop>
+        <view class="child-modal-header">
+          <text class="child-modal-title">记录血糖值</text>
+        </view>
+        <view class="child-modal-body">
+          <input 
+            class="child-modal-input" 
+            type="digit" 
+            v-model="glucoseValue" 
+            placeholder="请输入血糖值"
+          />
+        </view>
+        <view class="child-modal-footer">
+          <view class="child-modal-btn cancel" @tap="closeGlucoseModal">取消</view>
+          <view class="child-modal-btn confirm" @tap="confirmGlucose">确定</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 儿童模式自定义弹窗 - 任务反馈 -->
+    <view v-if="isChildMode && showFeedbackModal" class="child-modal-overlay" @tap="closeFeedbackModal">
+      <view class="child-modal" @tap.stop>
+        <view class="child-modal-header">
+          <text class="child-modal-title">任务反馈</text>
+        </view>
+        <view class="child-modal-body">
+          <text class="child-modal-text">这个任务对你来说太难了吗？我们会调整难度。</text>
+        </view>
+        <view class="child-modal-footer">
+          <view class="child-modal-btn cancel" @tap="closeFeedbackModal">取消</view>
+          <view class="child-modal-btn confirm" @tap="confirmFeedback">是的</view>
+        </view>
+      </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useHealthPlanStore } from '@/store/healthPlan'
+import { useDashboardStore } from '@/store/dashboard'
 import { storeToRefs } from 'pinia'
 
 const healthPlanStore = useHealthPlanStore()
+const dashboardStore = useDashboardStore()
+
+// 从 dashboardStore 获取实际的用户角色
+const { userRole } = storeToRefs(dashboardStore)
+const isChildMode = computed(() => userRole.value === 'child_under_12')
+
+// 监听 userRole 变化，同步到 healthPlanStore
+watch(userRole, (newRole) => {
+  healthPlanStore.setUserRole(newRole)
+}, { immediate: true })
+
 const {
-  userRole,
   todayTasks,
   activePlans,
   pendingPlans,
@@ -260,6 +205,12 @@ const {
   canCreatePlan,
   gamifiedView
 } = storeToRefs(healthPlanStore)
+
+// 儿童模式弹窗状态
+const showGlucoseModal = ref(false)
+const showFeedbackModal = ref(false)
+const glucoseValue = ref('')
+const currentTaskForModal = ref(null)
 
 // 鼓励消息
 const encourageMessage = computed(() => {
@@ -337,21 +288,26 @@ const calculatePlanProgress = (plan) => {
 const completeTask = (task) => {
   // 如果任务需要输入数据（如血糖值）
   if (task.content.includes('监测血糖') || task.content.includes('测血糖')) {
-    uni.showModal({
-      title: '记录血糖值',
-      editable: true,
-      placeholderText: '请输入血糖值',
-      success: (res) => {
-        if (res.confirm && res.content) {
-          healthPlanStore.completeTask(task.id, {
-            glucose_value: parseFloat(res.content)
-          })
-          
-          // 撒花特效
-          showCelebration()
+    // 儿童模式使用自定义弹窗
+    if (isChildMode.value) {
+      currentTaskForModal.value = task
+      glucoseValue.value = ''
+      showGlucoseModal.value = true
+    } else {
+      uni.showModal({
+        title: '记录血糖值',
+        editable: true,
+        placeholderText: '请输入血糖值',
+        success: (res) => {
+          if (res.confirm && res.content) {
+            healthPlanStore.completeTask(task.id, {
+              glucose_value: parseFloat(res.content)
+            })
+            showCelebration()
+          }
         }
-      }
-    })
+      })
+    }
   } else {
     healthPlanStore.completeTask(task.id)
     showCelebration()
@@ -377,22 +333,60 @@ const completeChildTask = (task) => {
 
 // 标记任务太难
 const markDifficult = (task) => {
-  uni.showModal({
-    title: '任务反馈',
-    content: '这个任务对你来说太难了吗？我们会调整难度。',
-    confirmText: '是的',
-    cancelText: '取消',
-    success: (res) => {
-      if (res.confirm) {
-        healthPlanStore.feedbackTaskDifficulty(task.id, 2)
-        
-        uni.showToast({
-          title: '已记录反馈，下次会调整',
-          icon: 'none'
-        })
+  // 儿童模式使用自定义弹窗
+  if (isChildMode.value) {
+    currentTaskForModal.value = task
+    showFeedbackModal.value = true
+  } else {
+    uni.showModal({
+      title: '任务反馈',
+      content: '这个任务对你来说太难了吗？我们会调整难度。',
+      confirmText: '是的',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          healthPlanStore.feedbackTaskDifficulty(task.id, 2)
+          uni.showToast({
+            title: '已记录反馈，下次会调整',
+            icon: 'none'
+          })
+        }
       }
-    }
-  })
+    })
+  }
+}
+
+// 儿童模式弹窗方法
+const closeGlucoseModal = () => {
+  showGlucoseModal.value = false
+  glucoseValue.value = ''
+  currentTaskForModal.value = null
+}
+
+const confirmGlucose = () => {
+  if (glucoseValue.value && currentTaskForModal.value) {
+    healthPlanStore.completeTask(currentTaskForModal.value.id, {
+      glucose_value: parseFloat(glucoseValue.value)
+    })
+    showCelebration()
+  }
+  closeGlucoseModal()
+}
+
+const closeFeedbackModal = () => {
+  showFeedbackModal.value = false
+  currentTaskForModal.value = null
+}
+
+const confirmFeedback = () => {
+  if (currentTaskForModal.value) {
+    healthPlanStore.feedbackTaskDifficulty(currentTaskForModal.value.id, 2)
+    uni.showToast({
+      title: '已记录反馈，下次会调整',
+      icon: 'none'
+    })
+  }
+  closeFeedbackModal()
 }
 
 // 撒花特效
@@ -452,6 +446,16 @@ const reviewPlan = (plan) => {
   })
 }
 
+// 返回
+const goBack = () => {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+}
+
 onMounted(() => {
   // 生成模拟数据
   if (healthPlanStore.plans.length === 0) {
@@ -466,6 +470,45 @@ onMounted(() => {
   background: #F3F4F6;
   padding: 20rpx;
   padding-bottom: 120rpx;
+}
+
+/* 儿童模式页面背景 */
+.health-plan-page.child-mode-page {
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 0;
+  padding-bottom: 120rpx;
+}
+
+/* 儿童模式导航栏 */
+.child-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+}
+
+.child-nav-back {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  padding: 10rpx;
+  cursor: pointer;
+  z-index: 100;
+  position: relative;
+}
+
+.child-nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.child-nav-placeholder {
+  width: 64rpx;
 }
 
 /* 页面头部 */
@@ -943,409 +986,290 @@ onMounted(() => {
   font-weight: bold;
 }
 
-/* ========== 儿童模式 - 奶酪仓鼠风格 ========== */
-.child-plan-view {
-  padding: 0 20rpx;
+/* ========== 儿童模式样式覆盖 ========== */
+.child-content {
+  padding: 20rpx 24rpx;
 }
 
-.health-plan-page:has(.child-plan-view) {
-  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+/* 儿童模式统计卡片 */
+.child-content .stat-card {
+  background: white;
+  border: 3rpx solid #E3C7A4;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 0 #D5A874;
 }
 
-.health-plan-page:has(.child-plan-view) .page-header {
-  background: transparent;
-}
-
-.health-plan-page:has(.child-plan-view) .page-title {
+.child-content .stat-value {
   color: #602F27;
 }
 
-.health-plan-page:has(.child-plan-view) .page-subtitle {
+.child-content .stat-label {
   color: #A85835;
 }
 
-.child-plan-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24rpx;
+.child-content .stat-card.highlight {
+  background: #FFF8E7;
+  border-color: #E3C7A4;
 }
 
-.header-deco {
-  display: flex;
-  gap: 8rpx;
-}
-
-.deco-star {
-  font-size: 32rpx;
-  animation: twinkle 2s ease-in-out infinite;
-}
-
-.deco-star.s2 {
-  animation-delay: 1s;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-.header-title-area {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.header-icon {
-  font-size: 40rpx;
-}
-
-.header-title {
-  font-size: 36rpx;
-  font-weight: bold;
+/* 儿童模式区块标题 */
+.child-content .section-title {
   color: #602F27;
 }
 
-.level-badge-child {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
-  padding: 12rpx 20rpx;
+.child-content .section-date {
+  color: #A85835;
+}
+
+.child-content .create-link {
+  color: #CB8E54;
+  font-weight: 600;
+}
+
+/* 儿童模式时间轴 */
+.child-content .timeline {
+  background: white;
+  border: 3rpx solid #E3C7A4;
   border-radius: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(203, 142, 84, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(96, 47, 39, 0.08);
 }
 
-.level-badge-child .badge-icon {
-  font-size: 28rpx;
+.child-content .timeline-dot {
+  background: #F6CD75;
+  box-shadow: 0 0 0 2rpx #E5BC64;
 }
 
-.level-badge-child .badge-text {
-  font-size: 26rpx;
-  font-weight: bold;
+.child-content .timeline-dot.checked {
+  background: #90C67C;
+  box-shadow: 0 0 0 2rpx #7AB368;
+}
+
+.child-content .timeline-content {
+  background: #FFF8E7;
+  border: 2rpx solid #E3C7A4;
+  border-radius: 20rpx;
+}
+
+.child-content .task-time {
+  color: #602F27;
+}
+
+.child-content .task-level {
+  border-radius: 16rpx;
+}
+
+.child-content .task-level.level-1 {
+  background: #E3C7A4;
+  color: #602F27;
+}
+
+.child-content .task-level.level-2 {
+  background: #F6CD75;
+  color: #602F27;
+}
+
+.child-content .task-level.level-3 {
+  background: #CB8E54;
   color: white;
 }
 
-/* 吉祥物鼓励卡片 */
-.mascot-encourage-card {
-  display: flex;
-  gap: 20rpx;
-  background: white;
-  border-radius: 32rpx;
-  padding: 28rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
-  border: 3rpx solid #E3C7A4;
-}
-
-.mascot-left {
-  flex-shrink: 0;
-}
-
-.mascot-face {
-  font-size: 80rpx;
-  display: block;
-  animation: bounce 2s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12rpx); }
-}
-
-.mascot-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.speech-box {
-  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
-  border: 2rpx solid #E3C7A4;
-  border-radius: 16rpx;
-  padding: 16rpx 20rpx;
-  position: relative;
-}
-
-.speech-box::before {
-  content: '';
-  position: absolute;
-  left: -16rpx;
-  top: 50%;
-  transform: translateY(-50%);
-  border-top: 12rpx solid transparent;
-  border-bottom: 12rpx solid transparent;
-  border-right: 16rpx solid #E3C7A4;
-}
-
-.speech-content {
-  font-size: 26rpx;
+.child-content .task-content {
   color: #602F27;
-  line-height: 1.5;
 }
 
-.progress-area {
+.child-content .btn-complete {
+  background: #F6CD75;
+  color: #602F27;
+  border: 3rpx solid #E5BC64;
+  box-shadow: 0 4rpx 0 #D4AB53;
+  border-radius: 20rpx;
+  font-weight: 600;
+}
+
+.child-content .btn-difficult {
+  background: white;
+  color: #A85835;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5C4B0;
+  border-radius: 20rpx;
+  font-weight: 600;
+}
+
+.child-content .completed-tag {
+  color: #7AB368;
+  font-weight: 600;
+}
+
+/* 儿童模式计划卡片 */
+.child-content .plan-card {
+  background: white;
+  border: 3rpx solid #E3C7A4;
+  border-radius: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(96, 47, 39, 0.08);
+}
+
+.child-content .plan-card.pending {
+  border-left: 8rpx solid #F6CD75;
+}
+
+.child-content .plan-card.active {
+  border-left: 8rpx solid #90C67C;
+}
+
+.child-content .plan-title {
+  color: #602F27;
+}
+
+.child-content .plan-badge {
+  border-radius: 16rpx;
+  font-weight: 600;
+}
+
+.child-content .plan-badge.pending {
+  background: #F6CD75;
+  color: #602F27;
+}
+
+.child-content .plan-badge.active {
+  background: #90C67C;
+  color: white;
+}
+
+.child-content .plan-type {
+  color: #A85835;
+}
+
+.child-content .plan-date {
+  color: #CB8E54;
+}
+
+.child-content .progress-text {
+  color: #A85835;
+}
+
+.child-content .progress-value {
+  color: #602F27;
+}
+
+/* 儿童模式空状态 */
+.child-content .empty-state {
+  background: white;
+  border: 3rpx solid #E3C7A4;
+  border-radius: 24rpx;
+  margin: 20rpx 0;
+}
+
+.child-content .empty-text {
+  color: #602F27;
+}
+
+.child-content .empty-hint {
+  color: #A85835;
+}
+
+/* 儿童模式浮动按钮 */
+.fab.child-fab {
+  background: #F6CD75;
+  border: 4rpx solid #E5BC64;
+  box-shadow: 0 6rpx 0 #D4AB53;
+}
+
+.fab.child-fab .fab-icon {
+  color: #602F27;
+}
+
+/* 儿童模式自定义弹窗 */
+.child-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  justify-content: center;
+  z-index: 2000;
+  padding: 40rpx;
 }
 
-.progress-label-child {
-  font-size: 24rpx;
-  color: #74362C;
-  flex-shrink: 0;
-}
-
-.progress-bar-child {
-  flex: 1;
-  height: 24rpx;
-  background: #E3C7A4;
-  border-radius: 12rpx;
+.child-modal {
+  width: 100%;
+  max-width: 560rpx;
+  background: white;
+  border-radius: 32rpx;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 8rpx 0 #D5A874;
   overflow: hidden;
 }
 
-.progress-fill-child {
-  height: 100%;
-  background: linear-gradient(90deg, #4ADE80 0%, #22C55E 100%);
-  border-radius: 12rpx;
-  transition: width 0.5s ease;
-}
-
-.progress-text-child {
-  font-size: 26rpx;
-  font-weight: bold;
-  color: #22C55E;
-  flex-shrink: 0;
-}
-
-/* 勋章卡片 */
-.badges-card-child {
-  background: white;
-  border-radius: 28rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
-  border: 3rpx solid #E3C7A4;
-}
-
-.badges-header {
-  margin-bottom: 20rpx;
-}
-
-.badges-title {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #602F27;
-}
-
-.badges-grid {
-  display: flex;
-  gap: 16rpx;
-  flex-wrap: wrap;
-}
-
-.badge-item-child {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16rpx 20rpx;
-  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
-  border-radius: 16rpx;
-  border: 2rpx solid #D5A874;
-}
-
-.badge-emoji {
-  font-size: 48rpx;
-  margin-bottom: 8rpx;
-}
-
-.badge-name-child {
-  font-size: 22rpx;
-  color: #8E422F;
-}
-
-/* 任务卡片 */
-.tasks-card-child {
-  background: white;
-  border-radius: 28rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
-  border: 3rpx solid #E3C7A4;
-}
-
-.tasks-header-child {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.tasks-title-child {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #602F27;
-}
-
-.tasks-count-child {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #A85835;
-}
-
-.tasks-list-child {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.task-item-child {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 20rpx;
-  background: #FAF6F0;
-  border-radius: 20rpx;
-  border: 2rpx solid #E3C7A4;
-  transition: all 0.3s ease;
-}
-
-.task-item-child:active {
-  transform: scale(0.98);
-  background: #F2E5D3;
-}
-
-.task-item-child.done {
-  background: linear-gradient(135deg, #F0FFF0 0%, #E8FFE8 100%);
-  border-color: #90EE90;
-}
-
-.task-emoji-wrap {
-  width: 64rpx;
-  height: 64rpx;
-  background: linear-gradient(135deg, #E3C7A4 0%, #D5A874 100%);
-  border-radius: 16rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.task-emoji-wrap.done {
-  background: linear-gradient(135deg, #90EE90 0%, #4ADE80 100%);
-}
-
-.task-emoji-child {
-  font-size: 36rpx;
-}
-
-.task-info-child {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.task-name-child {
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #602F27;
-}
-
-.task-name-child.done {
-  color: #22C55E;
-  text-decoration: line-through;
-}
-
-.task-time-child {
-  font-size: 24rpx;
-  color: #A85835;
-}
-
-.task-action-child {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4rpx;
-  padding: 12rpx 16rpx;
-  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
-  border-radius: 16rpx;
-}
-
-.action-icon {
-  font-size: 28rpx;
-}
-
-.action-text-child {
-  font-size: 22rpx;
-  color: white;
-  font-weight: 500;
-}
-
-.task-reward-child {
-  padding: 12rpx;
-}
-
-.reward-star {
-  font-size: 40rpx;
-  animation: starPop 0.5s ease;
-}
-
-@keyframes starPop {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-
-/* 空状态 */
-.empty-child {
+.child-modal-header {
+  padding: 32rpx;
   text-align: center;
-  padding: 60rpx 20rpx;
+  border-bottom: 2rpx solid #F2E5D3;
 }
 
-.empty-emoji {
-  font-size: 80rpx;
-  display: block;
-  margin-bottom: 16rpx;
+.child-modal-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #602F27;
 }
 
-.empty-text-child {
-  display: block;
+.child-modal-body {
+  padding: 32rpx;
+}
+
+.child-modal-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #FFF8E7;
+  border: 3rpx solid #E3C7A4;
+  border-radius: 20rpx;
   font-size: 30rpx;
   color: #602F27;
-  margin-bottom: 8rpx;
+  box-sizing: border-box;
 }
 
-.empty-hint-child {
+.child-modal-input::placeholder {
+  color: #CB8E54;
+}
+
+.child-modal-text {
   display: block;
-  font-size: 26rpx;
-  color: #A85835;
+  font-size: 28rpx;
+  color: #602F27;
+  line-height: 1.6;
+  text-align: center;
 }
 
-/* 底部装饰 */
-.child-footer {
+.child-modal-footer {
   display: flex;
+  border-top: 2rpx solid #F2E5D3;
+}
+
+.child-modal-btn {
+  flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 48rpx;
-  padding: 20rpx 0;
-  opacity: 0.5;
+  font-size: 32rpx;
+  font-weight: 600;
 }
 
-.footer-cheese {
-  font-size: 48rpx;
-  animation: float 3s ease-in-out infinite;
+.child-modal-btn.cancel {
+  color: #A85835;
+  background: white;
+  border-right: 2rpx solid #F2E5D3;
 }
 
-.footer-cheese:nth-child(2) {
-  animation-delay: 1s;
+.child-modal-btn.confirm {
+  color: #602F27;
+  background: #F6CD75;
 }
 
-.footer-cheese:nth-child(3) {
-  animation-delay: 2s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-16rpx); }
+.child-modal-btn:active {
+  opacity: 0.8;
 }
 </style>

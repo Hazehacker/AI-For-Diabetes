@@ -1,5 +1,12 @@
 <template>
   <view class="detail-page">
+    <!-- 顶部导航 -->
+    <view class="nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">视频学习</text>
+      <view class="nav-placeholder"></view>
+    </view>
+    
     <view class="video-wrapper">
       <!-- 这里使用原生 video 组件；实际 src 由后端返回 -->
       <video
@@ -180,6 +187,10 @@ const onEnded = () => {
   // 可以在视频播放结束时自动触发完成逻辑（当前仍需用户点击按钮以与其他内容保持一致）
 }
 
+const goBack = () => {
+  uni.navigateBack()
+}
+
 onLoad((options) => {
   videoId.value = options?.id || null
 })
@@ -192,9 +203,43 @@ onMounted(() => {
 <style scoped>
 .detail-page {
   min-height: 100vh;
-  background: #f3f4f6;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding-bottom: 120rpx;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+}
+
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  padding: 10rpx;
+  cursor: pointer;
+  z-index: 100;
+  position: relative;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.nav-placeholder {
+  width: 64rpx;
 }
 
 .video-wrapper {
@@ -210,7 +255,10 @@ onMounted(() => {
 
 .content-scroll {
   flex: 1;
-  padding: 24rpx 24rpx 140rpx;
+  padding: 18rpx;
+  padding-bottom: 160rpx;
+  width: calc(100% - 36rpx);
+  box-sizing: border-box;
 }
 
 .video-header {
@@ -221,8 +269,8 @@ onMounted(() => {
   display: inline-flex;
   padding: 4rpx 12rpx;
   border-radius: 999rpx;
-  background: #e0f2fe;
-  color: #0369a1;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  color: #CB8E54;
   font-size: 22rpx;
   margin-bottom: 10rpx;
 }
@@ -231,7 +279,7 @@ onMounted(() => {
   display: block;
   font-size: 40rpx;
   font-weight: 800;
-  color: #111827;
+  color: #602F27;
   line-height: 1.4;
 }
 
@@ -244,21 +292,25 @@ onMounted(() => {
 
 .meta-text {
   font-size: 24rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .key-points {
   margin-bottom: 24rpx;
-  padding: 20rpx 18rpx;
-  background: #eff6ff;
-  border-radius: 18rpx;
+  padding: 20rpx;
+  background: white;
+  border-radius: 28rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .section-title {
   display: block;
   font-size: 28rpx;
   font-weight: 700;
-  color: #1f2937;
+  color: #602F27;
   margin-bottom: 10rpx;
 }
 
@@ -271,28 +323,31 @@ onMounted(() => {
 
 .point-bullet {
   font-size: 26rpx;
-  color: #3b82f6;
+  color: #CB8E54;
   line-height: 1.6;
 }
 
 .point-text {
   flex: 1;
   font-size: 24rpx;
-  color: #374151;
+  color: #A85835;
   line-height: 1.6;
 }
 
 .desc-card {
-  padding: 20rpx 18rpx;
-  background: #ffffff;
-  border-radius: 18rpx;
-  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.05);
+  padding: 20rpx;
+  background: white;
+  border-radius: 28rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .desc-text {
   display: block;
   font-size: 24rpx;
-  color: #111827;
+  color: #602F27;
   line-height: 1.7;
 }
 
@@ -302,8 +357,8 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   padding: 12rpx 24rpx 32rpx;
-  background: linear-gradient(180deg, rgba(243, 244, 246, 0.9), #f3f4f6);
-  box-shadow: 0 -4rpx 16rpx rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 248, 231, 0.9), #FFFEF7);
+  box-shadow: 0 -4rpx 16rpx rgba(203, 142, 84, 0.15);
 }
 
 .progress-hint {
@@ -312,30 +367,38 @@ onMounted(() => {
 
 .progress-text {
   font-size: 22rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .progress-text.done {
-  color: #16a34a;
+  color: #CB8E54;
 }
 
 .action-btn {
   width: 100%;
   height: 92rpx;
-  border-radius: 18rpx;
-  background: linear-gradient(135deg, #0ea5e9, #22c55e);
-  color: #ffffff;
+  border-radius: 46rpx;
+  background: #F6D387;
+  color: #602F27;
   font-size: 30rpx;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
+}
+
+.action-btn:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
 }
 
 .action-btn.disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
+  background: #E5E7EB;
+  color: #9CA3AF;
+  border-color: #D1D5DB;
+  box-shadow: 0 6rpx 0 #D1D5DB;
 }
 </style>
 

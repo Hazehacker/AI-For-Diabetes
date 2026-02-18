@@ -1,5 +1,12 @@
 <template>
-  <view class="runner-page">
+  <view class="runner-page" :class="{ 'child-mode-page': isChildMode }">
+    <!-- 儿童模式自定义导航栏 -->
+    <view v-if="isChildMode" class="child-nav-bar">
+      <image class="child-nav-back" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="child-nav-title">糖值守护跑酷</text>
+      <view class="child-nav-placeholder"></view>
+    </view>
+    
     <view class="top-bar">
       <view class="pill">
         <text class="pill-label">得分</text>
@@ -12,13 +19,15 @@
     </view>
 
     <view class="gauge-wrap">
-      <text class="gauge-title">糖值稳定条</text>
-      <view class="gauge">
-        <view class="gauge-safe"></view>
-        <view class="gauge-fill" :style="{ width: gauge + '%' }"></view>
-        <view class="gauge-dot" :style="{ left: `calc(${gauge}% - 10rpx)` }"></view>
+      <image class="gauge-mascot" src="/static/ch/ch_index_welcome.png" mode="aspectFit"></image>
+      <view class="gauge-info">
+        <text class="gauge-title">糖值稳定条</text>
+        <view class="gauge">
+          <view class="gauge-safe"></view>
+          <view class="gauge-fill" :style="{ width: gauge + '%' }"></view>
+        </view>
+        <text class="gauge-tip">{{ gaugeTip }}</text>
       </view>
-      <text class="gauge-tip">{{ gaugeTip }}</text>
     </view>
 
     <view class="game-area" @touchstart.stop.prevent="onTap">
@@ -32,7 +41,7 @@
       <view class="ground"></view>
 
       <view class="player" :style="{ transform: `translateY(-${playerY}px)` }">
-        <text class="player-emoji">🧒</text>
+        <image class="player-img" src="/static/ch/ch_play_avatar.png" mode="aspectFit"></image>
       </view>
 
       <view
@@ -83,8 +92,13 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useGamesStore } from '@/store/games'
+import { useDashboardStore } from '@/store/dashboard'
+import { storeToRefs } from 'pinia'
 
 const gamesStore = useGamesStore()
+const dashboardStore = useDashboardStore()
+const { userRole } = storeToRefs(dashboardStore)
+const isChildMode = computed(() => userRole.value === 'child_under_12')
 
 // 基础状态
 const running = ref(false)
@@ -342,7 +356,12 @@ function onTap() {
 
 function goBack() {
   stopTimers()
-  uni.navigateBack()
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.navigateTo({ url: '/pages/interaction/games/index' })
+  }
 }
 
 onMounted(async () => {
@@ -364,7 +383,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .runner-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f093fb 0%, #f5576c 20%, #F3F4F6 20%);
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
   padding: 20rpx;
   padding-bottom: 120rpx;
 }
@@ -377,46 +396,65 @@ onBeforeUnmount(() => {
 
 .pill {
   flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 18rpx;
+  background: white;
+  border-radius: 20rpx;
   padding: 18rpx 22rpx;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
 }
 
 .pill-label {
   font-size: 24rpx;
-  color: #6B7280;
+  color: #A85835;
 }
 
 .pill-value {
   font-size: 34rpx;
   font-weight: 800;
-  color: #111827;
+  color: #602F27;
 }
 
 .gauge-wrap {
   margin-top: 18rpx;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 24rpx;
-  padding: 22rpx;
+  background: white;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.gauge-mascot {
+  width: 100rpx;
+  height: 100rpx;
+  flex-shrink: 0;
+}
+
+.gauge-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .gauge-title {
   display: block;
   font-size: 26rpx;
   font-weight: 800;
-  color: #111827;
+  color: #602F27;
   margin-bottom: 12rpx;
 }
 
 .gauge {
   position: relative;
-  height: 18rpx;
+  height: 28rpx;
   border-radius: 999rpx;
-  background: rgba(17, 24, 39, 0.08);
+  background: #D0D5DD;
   overflow: hidden;
+  border: 2rpx solid #B8C0CC;
 }
 
 .gauge-safe {
@@ -424,40 +462,47 @@ onBeforeUnmount(() => {
   left: 30%;
   width: 40%;
   height: 100%;
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(76, 175, 80, 0.2);
 }
 
 .gauge-fill {
   position: absolute;
   left: 0;
   height: 100%;
-  background: linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #fb7185 100%);
+  background: #5BB5E0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 6px,
+    rgba(255, 255, 255, 0.3) 6px,
+    rgba(255, 255, 255, 0.3) 12px
+  );
+  border-radius: 999rpx;
+  animation: stripe-move 1s linear infinite;
 }
 
-.gauge-dot {
-  position: absolute;
-  top: -10rpx;
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  background: #111827;
+@keyframes stripe-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 24px 0; }
 }
 
 .gauge-tip {
   display: block;
   margin-top: 10rpx;
   font-size: 24rpx;
-  color: #6B7280;
+  color: #A85835;
+  font-weight: 600;
 }
 
 .game-area {
   margin-top: 18rpx;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 24rpx;
+  background: white;
+  border-radius: 28rpx;
   height: 720rpx;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.1);
 }
 
 .ground {
@@ -466,7 +511,25 @@ onBeforeUnmount(() => {
   right: 0;
   bottom: 0;
   height: 120rpx;
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.35) 100%);
+  background: #90EE90;
+  border-top: 4rpx solid #228B22;
+}
+
+.ground::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20rpx;
+  background: repeating-linear-gradient(
+    90deg,
+    #228B22 0px,
+    #228B22 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  opacity: 0.6;
 }
 
 .player {
@@ -482,6 +545,11 @@ onBeforeUnmount(() => {
 
 .player-emoji {
   font-size: 64rpx;
+}
+
+.player-img {
+  width: 80rpx;
+  height: 80rpx;
 }
 
 .item {
@@ -537,22 +605,34 @@ onBeforeUnmount(() => {
   top: 36rpx;
   left: 36rpx;
   right: 36rpx;
-  padding: 18rpx 20rpx;
-  border-radius: 20rpx;
-  background: rgba(245, 87, 108, 0.1);
+  padding: 24rpx 28rpx;
+  border-radius: 24rpx;
+  background: white;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874, 0 8rpx 20rpx rgba(96, 47, 39, 0.15);
+  text-align: center;
 }
 
 .hint-title {
-  display: block;
-  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34rpx;
   font-weight: 800;
-  color: #111827;
+  color: #602F27;
+  margin-bottom: 8rpx;
 }
+
+.hint-title::before {
+  content: '🎮';
+  margin-right: 10rpx;
+}
+
 .hint-sub {
   display: block;
-  margin-top: 6rpx;
-  font-size: 24rpx;
-  color: #6B7280;
+  font-size: 26rpx;
+  color: #A85835;
+  line-height: 1.5;
 }
 
 .bottom-actions {
@@ -565,17 +645,33 @@ onBeforeUnmount(() => {
   flex: 1;
   text-align: center;
   padding: 22rpx 0;
-  border-radius: 18rpx;
+  border-radius: 44rpx;
   font-weight: 800;
+  font-size: 28rpx;
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: #fff;
+  background: #F6D387;
+  color: #602F27;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
 }
+
+.btn.primary:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
+}
+
 .btn.secondary {
-  background: rgba(255, 255, 255, 0.9);
-  color: #111827;
+  background: white;
+  color: #602F27;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
+}
+
+.btn.secondary:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
 }
 
 .overlay {
@@ -593,16 +689,17 @@ onBeforeUnmount(() => {
 
 .result-card {
   width: 100%;
-  background: #fff;
-  border-radius: 26rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 28rpx;
+  border: 3rpx solid #E3C7A4;
 }
 
 .result-title {
   display: block;
   font-size: 34rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
   margin-bottom: 16rpx;
 }
 
@@ -615,22 +712,22 @@ onBeforeUnmount(() => {
 
 .k {
   font-size: 26rpx;
-  color: #6B7280;
+  color: #A85835;
 }
 .v {
   font-size: 28rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
 }
 .v.highlight {
-  color: #f5576c;
+  color: #CB8E54;
 }
 
 .result-hint {
   display: block;
   margin-top: 14rpx;
   font-size: 24rpx;
-  color: #374151;
+  color: #A85835;
   line-height: 1.6;
 }
 
@@ -638,6 +735,39 @@ onBeforeUnmount(() => {
   margin-top: 18rpx;
   display: flex;
   gap: 16rpx;
+}
+
+/* 儿童模式导航栏样式 */
+.child-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+  margin: -20rpx -20rpx 20rpx -20rpx;
+}
+
+.child-nav-back {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  padding: 10rpx;
+  cursor: pointer;
+  z-index: 100;
+  position: relative;
+}
+
+.child-nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.child-nav-placeholder {
+  width: 64rpx;
 }
 </style>
 

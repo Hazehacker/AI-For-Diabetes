@@ -1,8 +1,11 @@
 <template>
   <view v-if="visible" class="modal-overlay" @tap="handleClose">
-    <view class="modal-content" @tap.stop>
-      <view class="modal-header">
-        <text class="title">✅ 今日打卡</text>
+    <view class="modal-content" :class="{ 'child-modal': isChildMode }" @tap.stop>
+      <view class="modal-header" :class="{ 'child-header': isChildMode }">
+        <view class="title-wrap">
+          <image class="title-icon" src="/static/ch/ch_index_finish.png" mode="aspectFit"></image>
+          <text class="title" :class="{ 'child-title': isChildMode }">今日打卡</text>
+        </view>
         <view class="close-btn" @tap="handleClose">
           <text class="icon">✕</text>
         </view>
@@ -16,11 +19,11 @@
               v-for="status in statusOptions" 
               :key="status.value"
               class="status-btn"
-              :class="{ 'active': selectedStatus === status.value }"
+              :class="{ 'active': selectedStatus === status.value, 'child-status-btn': isChildMode, 'child-active': isChildMode && selectedStatus === status.value }"
               @tap="selectStatus(status.value)"
             >
               <text class="status-icon">{{ status.icon }}</text>
-              <text class="status-text">{{ status.label }}</text>
+              <text class="status-text" :class="{ 'child-status-text': isChildMode }">{{ status.label }}</text>
             </view>
           </view>
         </view>
@@ -38,10 +41,11 @@
 
         <button 
           class="submit-btn" 
+          :class="{ 'child-submit-btn': isChildMode }"
           :disabled="!selectedStatus || submitting"
           @tap="handleSubmit"
         >
-          <text v-if="!submitting">确认打卡 📤</text>
+          <text v-if="!submitting">确认打卡</text>
           <text v-else>提交中...</text>
         </button>
       </view>
@@ -50,7 +54,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed, inject } from 'vue'
+import { useDashboardStore } from '@/store/dashboard'
+
+const dashboardStore = useDashboardStore()
+const isChildMode = computed(() => dashboardStore.userRole === 'child_under_12')
 
 const props = defineProps({
   visible: Boolean
@@ -138,6 +146,17 @@ const handleSubmit = async () => {
   border-bottom: 2rpx solid #f3f4f6;
 }
 
+.title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.title-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
 .title {
   font-size: 32rpx;
   font-weight: 600;
@@ -217,6 +236,7 @@ const handleSubmit = async () => {
   border-radius: 20rpx;
   font-size: 28rpx;
   line-height: 1.6;
+  box-sizing: border-box;
 }
 
 .char-count {
@@ -240,5 +260,68 @@ const handleSubmit = async () => {
 
 .submit-btn:disabled {
   opacity: 0.6;
+}
+
+/* 儿童模式样式 */
+.child-modal {
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 8rpx 24rpx rgba(203, 142, 84, 0.2);
+}
+
+.child-header {
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  border-bottom: 3rpx solid #E3C7A4;
+}
+
+.child-title {
+  color: #602F27;
+  font-weight: 800;
+}
+
+.child-status-btn {
+  background: #FFFBF0;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
+}
+
+.child-status-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
+}
+
+.child-active {
+  background: #F6D387 !important;
+  border-color: #D5A874 !important;
+  box-shadow: 0 4rpx 0 #CB8E54 !important;
+}
+
+.child-status-text {
+  color: #602F27;
+  font-weight: 600;
+}
+
+.child-active .child-status-text {
+  color: #602F27 !important;
+  font-weight: 700;
+}
+
+.child-submit-btn {
+  background: #F6D387 !important;
+  color: #602F27 !important;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
+  font-weight: 700;
+}
+
+.child-submit-btn:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
+}
+
+.child-submit-btn:disabled {
+  background: #E5E7EB !important;
+  color: #9CA3AF !important;
+  border-color: #D1D5DB !important;
+  box-shadow: 0 6rpx 0 #D1D5DB !important;
 }
 </style>

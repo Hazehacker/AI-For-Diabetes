@@ -1,5 +1,5 @@
 <template>
-  <view class="page-container">
+  <view class="page-container" :class="{ 'child-mode': userRole === 'child_under_12' }">
   <!-- 儿童模式：奶酪仓鼠风格 -->
   <view v-if="userRole === 'child_under_12'" class="child-profile">
     <!-- 顶部装饰已移除 -->
@@ -845,5 +845,81 @@ const handleLogout = () => {
   100% {
     transform: translateX(0) scaleX(1);
   }
+}
+
+/* ========== 儿童模式样式覆盖（成人布局） ========== */
+.page-container.child-mode {
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+}
+
+.child-mode .profile-header {
+  background: #FFFEF7 !important;
+  border: 4rpx solid #E3C7A4 !important;
+  box-shadow: 0 6rpx 0 #D5A874 !important;
+}
+
+.child-mode .avatar {
+  border-color: #E3C7A4 !important;
+}
+
+.child-mode .nickname {
+  color: #602F27 !important;
+}
+
+.child-mode .username {
+  color: #A85835 !important;
+}
+
+.child-mode .info-section,
+.child-mode .function-section {
+  background: #FFFEF7 !important;
+  border: 3rpx solid #E3C7A4 !important;
+  box-shadow: 0 4rpx 0 #D5A874 !important;
+}
+
+.child-mode .section-title .title-text {
+  color: #602F27 !important;
+}
+
+.child-mode .info-item {
+  border-bottom-color: #F2E5D3 !important;
+}
+
+.child-mode .info-label {
+  color: #A85835 !important;
+}
+
+.child-mode .info-input {
+  color: #602F27 !important;
+}
+
+.child-mode .info-value {
+  color: #CB8E54 !important;
+}
+
+.child-mode .save-btn {
+  background: #F6CD75 !important;
+  color: #602F27 !important;
+  border: 4rpx solid #E5BC64 !important;
+  box-shadow: 0 6rpx 0 #D4AB53 !important;
+}
+
+.child-mode .function-item {
+  border-bottom-color: #F2E5D3 !important;
+}
+
+.child-mode .function-text {
+  color: #602F27 !important;
+}
+
+.child-mode .function-arrow {
+  color: #CB8E54 !important;
+}
+
+.child-mode .logout-btn {
+  background: #FFFEF7 !important;
+  color: #A85835 !important;
+  border: 3rpx solid #E3C7A4 !important;
+  box-shadow: 0 4rpx 0 #D5C4B0 !important;
 }
 </style>

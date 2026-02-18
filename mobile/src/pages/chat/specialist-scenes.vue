@@ -44,12 +44,12 @@ const { scenes } = storeToRefs(specialistStore)
 const enterScene = (sceneId) => {
   specialistStore.enterScene(sceneId)
   
-  // 跳转到对应场景页面
+  // 直接跳转到对应功能页面
   const routes = {
-    report: '/pages/chat/report-lab',
-    drug: '/pages/chat/medicine-box',
-    diary: '/pages/chat/health-diary',
-    knowledge: '/pages/chat/knowledge-qa'
+    report: '/pages/chat/report-analysis',        // 报告解读 -> 拍照上传分析
+    drug: '/pages/chat/medicine-box',             // 药品管理 -> OCR识别药盒
+    diary: '/pages/chat/health-diary',            // 健康日志 -> 语音/文字记录
+    knowledge: '/pages/chat/quiz-history'         // 知识问答 -> 糖糖问答记录
   }
   
   const url = routes[sceneId]

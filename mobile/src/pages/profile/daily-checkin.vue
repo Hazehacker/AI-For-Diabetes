@@ -1,5 +1,149 @@
 <template>
-  <view class="checkin-page">
+  <!-- 儿童模式 -->
+  <view v-if="userRole === 'child_under_12'" class="child-checkin-page">
+    <!-- 导航栏 -->
+    <view class="nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">健康计划工坊</text>
+      <view class="nav-placeholder"></view>
+    </view>
+
+    <!-- 积分显示卡片 -->
+    <view class="points-card">
+      <image class="mascot-img" src="/static/ch/ch_index_welcome.png" mode="aspectFit"></image>
+      <view class="points-info">
+        <view class="points-bubble">
+          <text class="bubble-text">你有 {{ dashboard.pointsBalance }} 个积分哦！</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签到状态卡片 -->
+    <view class="status-card">
+      <view class="status-header">
+        <view class="status-title-wrap">
+          <image class="status-icon" src="/static/ch/ch_index_finish.png" mode="aspectFit"></image>
+          <text class="status-title">今日签到</text>
+        </view>
+      </view>
+      <view class="status-grid">
+        <view class="status-item">
+          <text class="status-label">今日签到</text>
+          <view class="status-value">
+            <text class="value-text">{{ dashboard.todaySigned ? '已签到' : '未签到' }}</text>
+            <text class="value-badge" :class="dashboard.todaySigned ? 'badge-success' : 'badge-warning'">
+              {{ dashboard.todaySigned ? '✓' : '!' }}
+            </text>
+          </view>
+          <text class="status-desc">奖励 {{ dashboard.todayPoints }} 积分</text>
+        </view>
+
+        <view class="status-item">
+          <text class="status-label">连续签到</text>
+          <text class="status-value big">{{ dashboard.continuousDays }} 天</text>
+          <text class="status-desc">累计 {{ dashboard.totalDays }} 天</text>
+        </view>
+
+        <view class="status-item">
+          <text class="status-label">会员特权</text>
+          <text class="status-value big">{{ dashboard.vipMultiplier }}x</text>
+          <text class="status-desc">积分加成</text>
+        </view>
+      </view>
+
+      <view
+        class="checkin-btn-child"
+        :class="{ checked: dashboard.todaySigned }"
+        @tap="handleCheckin"
+      >
+        <text class="btn-text">{{ dashboard.todaySigned ? '今天已签到' : '点击签到' }}</text>
+      </view>
+      <text v-if="dashboard.todaySigned" class="checkin-tip-child">已为你记录今日积分，继续保持！</text>
+    </view>
+
+    <!-- 月历卡片 -->
+    <view class="calendar-card-child">
+      <view class="card-header-child">
+        <view class="card-title-wrap-child">
+          <image class="card-icon-child" src="/static/ch/ch_fr_beat.png" mode="aspectFit"></image>
+          <text class="card-title-child">{{ calendarTitle }}</text>
+        </view>
+        <text class="hint-child">绿色=已签到 · 灰色=未签到</text>
+      </view>
+
+      <view class="calendar-grid-child">
+        <view
+          v-for="item in dashboard.monthlyCheckins"
+          :key="item.date"
+          class="calendar-cell-child"
+          :class="{ checked: item.signed }"
+        >
+          <text class="calendar-day-child">{{ formatDay(item.date) }}</text>
+          <text class="calendar-points-child" v-if="item.signed">+{{ item.points }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 积分商城卡片 -->
+    <view class="mall-card-child">
+      <view class="card-header-child">
+        <view class="card-title-wrap-child">
+          <image class="card-icon-child" src="/static/ch/ch_home_sh.png" mode="aspectFit"></image>
+          <text class="card-title-child">积分商城</text>
+        </view>
+        <text class="hint-child">选择商品，使用积分兑换</text>
+      </view>
+
+      <view class="mall-stats-child">
+        <view class="stat-item-child">
+          <text class="stat-label-child">总积分</text>
+          <text class="stat-value-child">{{ dashboard.pointsBalance }}</text>
+        </view>
+        <view class="stat-item-child">
+          <text class="stat-label-child">历史已兑换</text>
+          <text class="stat-value-child">0</text>
+        </view>
+        <view class="stat-item-child">
+          <text class="stat-label-child">可用积分</text>
+          <text class="stat-value-child highlight">{{ dashboard.pointsBalance }}</text>
+        </view>
+      </view>
+
+      <view class="goods-list-child">
+        <view
+          v-for="item in state.rewards"
+          :key="item.id"
+          class="goods-item-child"
+        >
+          <view class="goods-img-child">
+            <image class="goods-img-inner-child" :src="item.cover" mode="aspectFill" />
+          </view>
+          <view class="goods-info-child">
+            <text class="goods-name-child">{{ item.name }}</text>
+            <text class="goods-desc-child">{{ item.desc }}</text>
+            <view class="goods-bottom-child">
+              <view class="price-block-child">
+                <text class="points-child">{{ item.points }} 积分</text>
+                <text class="tag-child" v-if="item.tag">{{ item.tag }}</text>
+              </view>
+              <view class="actions-child">
+                <view
+                  class="redeem-btn-child"
+                  :class="{ disabled: dashboard.pointsBalance < item.points || state.redeeming }"
+                  @tap="() => handleRedeem(item)"
+                >
+                  <text class="redeem-text">{{ dashboard.pointsBalance < item.points ? '积分不足' : '积分兑换' }}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 成人/青少年模式 -->
+  <view v-else class="checkin-page">
     <view class="page-header">
       <view class="header-left">
         <text class="page-title">每日签到</text>
@@ -134,11 +278,14 @@
 </template>
 
 <script setup>
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, computed } from 'vue'
 import { pointsApi } from '@/api'
 import { useUserStore } from '@/store/user'
+import { useDashboardStore } from '@/store/dashboard'
 
 const userStore = useUserStore()
+const dashboardStore = useDashboardStore()
+const userRole = computed(() => dashboardStore.userRole)
 
 const state = reactive({
   loading: false,
@@ -307,6 +454,15 @@ const handleRedeem = async (item) => {
   }
 }
 
+const goBack = () => {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+}
+
 onMounted(() => {
   if (!userStore.isLoggedIn) {
     uni.showToast({ title: '请先登录', icon: 'none' })
@@ -318,6 +474,448 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ========== 儿童模式样式 ========== */
+.child-checkin-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 0;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+}
+
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
+  padding: 10rpx;
+  cursor: pointer;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.nav-placeholder {
+  width: 64rpx;
+}
+
+/* 积分显示卡片 */
+.points-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.mascot-img {
+  width: 100rpx;
+  height: 100rpx;
+  flex-shrink: 0;
+}
+
+.points-info {
+  flex: 1;
+}
+
+.points-bubble {
+  background: linear-gradient(135deg, #FAF6F0 0%, #F2E5D3 100%);
+  border: 2rpx solid #E3C7A4;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  position: relative;
+}
+
+.points-bubble::before {
+  content: '';
+  position: absolute;
+  left: -12rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 10rpx solid transparent;
+  border-bottom: 10rpx solid transparent;
+  border-right: 12rpx solid #E3C7A4;
+}
+
+.bubble-text {
+  font-size: 26rpx;
+  color: #602F27;
+  line-height: 1.5;
+}
+
+/* 签到状态卡片 */
+.status-card {
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 24rpx 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.status-header {
+  margin-bottom: 20rpx;
+}
+
+.status-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.status-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.status-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.status-item {
+  background: #FAF6F0;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+  border: 2rpx solid #E3C7A4;
+}
+
+.status-label {
+  font-size: 24rpx;
+  color: #8E422F;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.status-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #602F27;
+  margin-bottom: 8rpx;
+}
+
+.status-value.big {
+  font-size: 32rpx;
+}
+
+.value-text {
+  font-size: 28rpx;
+}
+
+.value-badge {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.badge-success {
+  background: #22C55E;
+}
+
+.badge-warning {
+  background: #F59E0B;
+}
+
+.status-desc {
+  font-size: 22rpx;
+  color: #A85835;
+}
+
+/* 签到按钮 */
+.checkin-btn-child {
+  background: #F6D387;
+  border-radius: 24rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6rpx 0 #E5BC64;
+  border: 4rpx solid #E3C7A4;
+  margin-bottom: 16rpx;
+  transition: all 0.2s ease;
+}
+
+.checkin-btn-child:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #E5BC64;
+}
+
+.checkin-btn-child.checked {
+  background: #D1FAE5;
+  border-color: #22C55E;
+  box-shadow: 0 6rpx 0 #16A34A;
+}
+
+.checkin-btn-child.checked:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #16A34A;
+}
+
+.btn-text {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.checkin-btn-child.checked .btn-text {
+  color: #059669;
+}
+
+.checkin-tip-child {
+  text-align: center;
+  font-size: 24rpx;
+  color: #059669;
+}
+
+/* 月历卡片 */
+.calendar-card-child {
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 24rpx 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.card-header-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.card-title-wrap-child {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.card-icon-child {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.card-title-child {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.hint-child {
+  font-size: 22rpx;
+  color: #A85835;
+}
+
+.calendar-grid-child {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8rpx;
+}
+
+.calendar-cell-child {
+  aspect-ratio: 1;
+  background: #F3F4F6;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx;
+  border: 2rpx solid #E5E7EB;
+}
+
+.calendar-cell-child.checked {
+  background: #D1FAE5;
+  border-color: #22C55E;
+}
+
+.calendar-day-child {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #374151;
+}
+
+.calendar-cell-child.checked .calendar-day-child {
+  color: #059669;
+}
+
+.calendar-points-child {
+  font-size: 18rpx;
+  color: #059669;
+  font-weight: 500;
+}
+
+/* 积分商城卡片 */
+.mall-card-child {
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin: 0 24rpx 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.mall-stats-child {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.stat-item-child {
+  background: #FAF6F0;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+  border: 2rpx solid #E3C7A4;
+}
+
+.stat-label-child {
+  font-size: 22rpx;
+  color: #8E422F;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.stat-value-child {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.stat-value-child.highlight {
+  color: #F59E0B;
+}
+
+.goods-list-child {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.goods-item-child {
+  display: flex;
+  gap: 16rpx;
+  background: #FAF6F0;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  border: 2rpx solid #E3C7A4;
+}
+
+.goods-img-child {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.goods-img-inner-child {
+  width: 100%;
+  height: 100%;
+}
+
+.goods-info-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.goods-name-child {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #602F27;
+  margin-bottom: 8rpx;
+}
+
+.goods-desc-child {
+  font-size: 24rpx;
+  color: #8E422F;
+  margin-bottom: 12rpx;
+  flex: 1;
+}
+
+.goods-bottom-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-block-child {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.points-child {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #F59E0B;
+}
+
+.tag-child {
+  background: #FEF3C7;
+  color: #D97706;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+}
+
+.redeem-btn-child {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: white;
+  padding: 12rpx 20rpx;
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+  box-shadow: 0 4rpx 12rpx rgba(34, 197, 94, 0.3);
+}
+
+.redeem-btn-child.disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+  box-shadow: none;
+}
+
+.redeem-text {
+  font-size: 24rpx;
+}
+
+/* ========== 成人/青少年模式样式 ========== */
 .checkin-page {
   min-height: 100vh;
   background: #f5f7fb;

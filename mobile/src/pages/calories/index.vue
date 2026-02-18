@@ -1,22 +1,16 @@
 <template>
   <!-- 儿童模式：奶酪仓鼠风格 -->
   <view v-if="userRole === 'child_under_12'" class="child-calories">
-    <!-- 顶部区域 -->
-    <view class="child-cal-header">
-      <view class="header-title-area">
-        <text class="header-emoji">🍎</text>
-        <text class="header-title">今天吃什么</text>
-      </view>
-      <view class="date-badge">
-        <text class="date-text-child">{{ displayDate }}</text>
-      </view>
+    <!-- 顶部导航 -->
+    <view class="nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">热量记录与食谱推荐</text>
+      <view class="nav-placeholder"></view>
     </view>
 
     <!-- 吉祥物卡片 -->
     <view class="mascot-food-card">
-      <view class="mascot-area">
-        <text class="mascot-emoji-food">🐹</text>
-      </view>
+      <image class="mascot-img-food" src="/static/ch/ch_index_welcome.png" mode="aspectFit"></image>
       <view class="food-summary">
         <view class="summary-bubble">
           <text class="bubble-text">{{ foodMessage }}</text>
@@ -54,9 +48,7 @@
           class="food-input-child"
           placeholder="吃了什么呀？"
         />
-        <view class="add-btn-child" @tap="quickAddFood">
-          <text class="add-icon">➕</text>
-        </view>
+        <image class="add-btn-child" src="/static/ch/add.png" mode="aspectFit" @tap="quickAddFood"></image>
       </view>
     </view>
 
@@ -82,7 +74,7 @@
     <!-- 推荐食物 -->
     <view class="recommend-card-child">
       <view class="recommend-header">
-        <text class="recommend-title">🥗 小仓鼠推荐</text>
+        <text class="recommend-title">🥗 推荐</text>
       </view>
       <view class="recommend-list">
         <view v-for="food in childFoodTips" :key="food.name" class="recommend-item">
@@ -489,6 +481,15 @@ const sceneText = (value) => {
     outing: '外出聚餐'
   }
   return map[value] || '通用'
+}
+
+const goBack = () => {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
 }
 
 const submitRecord = async () => {
@@ -946,49 +947,49 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
   padding: 24rpx;
+  padding-top: 0;
   padding-bottom: 120rpx;
 }
 
-.child-cal-header {
+.nav-bar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24rpx;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+  margin: -24rpx -24rpx 24rpx -24rpx;
+  width: calc(100% + 48rpx);
+  box-sizing: border-box;
 }
 
-.header-title-area {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  padding: 10rpx;
+  cursor: pointer;
+  z-index: 100;
+  position: relative;
 }
 
-.header-emoji {
-  font-size: 40rpx;
-}
-
-.header-title {
-  font-size: 40rpx;
+.nav-title {
+  font-size: 36rpx;
   font-weight: bold;
   color: #602F27;
 }
 
-.date-badge {
-  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
-  padding: 10rpx 20rpx;
-  border-radius: 20rpx;
-}
-
-.date-text-child {
-  font-size: 26rpx;
-  color: white;
-  font-weight: 500;
+.nav-placeholder {
+  width: 64rpx;
 }
 
 /* 吉祥物卡片 */
 .mascot-food-card {
   display: flex;
   gap: 20rpx;
-  background: white;
+  background: #FFFEF7;
   border-radius: 32rpx;
   padding: 28rpx;
   margin-bottom: 24rpx;
@@ -996,19 +997,10 @@ onMounted(() => {
   border: 3rpx solid #E3C7A4;
 }
 
-.mascot-area {
+.mascot-img-food {
+  width: 120rpx;
+  height: 120rpx;
   flex-shrink: 0;
-}
-
-.mascot-emoji-food {
-  font-size: 80rpx;
-  display: block;
-  animation: bounce 2s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12rpx); }
 }
 
 .food-summary {
@@ -1073,7 +1065,7 @@ onMounted(() => {
 
 /* 快速记录 */
 .quick-record-child {
-  background: white;
+  background: #FFFEF7;
   border-radius: 28rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;
@@ -1147,20 +1139,12 @@ onMounted(() => {
 .add-btn-child {
   width: 80rpx;
   height: 80rpx;
-  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
-  border-radius: 20rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.add-icon {
-  font-size: 36rpx;
+  cursor: pointer;
 }
 
 /* 今日记录 */
 .today-food-card {
-  background: white;
+  background: #FFFEF7;
   border-radius: 28rpx;
   padding: 24rpx;
   margin-bottom: 24rpx;

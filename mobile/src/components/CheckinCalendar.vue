@@ -2,12 +2,11 @@
   <view v-if="visible" class="modal-overlay" @tap="handleClose">
     <view class="modal-content" @tap.stop>
       <view class="modal-header">
-        <text class="title">📅 打卡记录</text>
+        <view class="title-container">
+          <image class="title-icon" src="/static/ch/ch_index_welcome.png" mode="aspectFit"></image>
+          <text class="title">打卡日历</text>
+        </view>
         <view class="actions">
-          <button class="sync-btn" @tap="handleSync">
-            <text class="icon">🔄</text>
-            <text>同步</text>
-          </button>
           <view class="close-btn" @tap="handleClose">
             <text class="icon">✕</text>
           </view>
@@ -68,8 +67,11 @@
               'status-normal': day.hasCheckin && day.status === '一般'
             }"
           >
-            <text class="day-number">{{ day.day }}</text>
-            <text v-if="day.hasCheckin" class="checkin-mark">{{ day.emoji }}</text>
+            <!-- 仅显示当前月份的日期 -->
+            <template v-if="day.isCurrentMonth">
+              <text class="day-number">{{ day.day }}</text>
+              <text v-if="day.hasCheckin" class="checkin-mark">{{ day.emoji }}</text>
+            </template>
           </view>
         </view>
       </view>
@@ -282,11 +284,13 @@ watch(() => props.visible, (val) => {
   width: 100%;
   max-width: 680rpx;
   max-height: 85vh;
-  background: white;
+  background: linear-gradient(180deg, #FFFEF7 0%, #FFF8E1 100%);
   border-radius: 32rpx;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 8rpx 24rpx rgba(203, 142, 84, 0.3);
 }
 
 .modal-header {
@@ -294,14 +298,28 @@ watch(() => props.visible, (val) => {
   align-items: center;
   justify-content: space-between;
   padding: 32rpx;
-  border-bottom: 2rpx solid #f3f4f6;
+  border-bottom: 2rpx solid #E3C7A4;
+  background: #FFFEF7;
   flex-shrink: 0;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.title-icon {
+  width: 48rpx;
+  height: 48rpx;
+  animation: bounce 2s infinite;
+}
+
 .title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8B4513;
+  text-shadow: 1rpx 1rpx 3rpx rgba(203, 142, 84, 0.3);
 }
 
 .actions {
@@ -310,52 +328,52 @@ watch(() => props.visible, (val) => {
   gap: 16rpx;
 }
 
-.sync-btn {
-  padding: 12rpx 24rpx;
-  background: #3b82f6;
-  color: white;
-  border-radius: 16rpx;
-  font-size: 24rpx;
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
 
 .close-btn {
-  width: 48rpx;
-  height: 48rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background: #FFC0CB;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2rpx solid #FF9AAA;
+  transition: transform 0.2s;
+}
+
+.close-btn:active {
+  transform: scale(0.95);
 }
 
 .close-btn .icon {
   font-size: 32rpx;
-  color: #6b7280;
+  color: white;
+  font-weight: bold;
 }
 
 .stats-section {
   display: flex;
   gap: 16rpx;
   padding: 32rpx;
-  background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+  background: linear-gradient(135deg, #FFF8E7 0%, #F5E6D3 100%);
   flex-shrink: 0;
 }
 
 .stat-card {
   flex: 1;
-  background: white;
+  background: #FFFEF7;
   border-radius: 20rpx;
   padding: 24rpx;
   text-align: center;
-  box-shadow: 0 4rpx 12rpx rgba(150, 159, 255, 0.1);
+  box-shadow: 0 4rpx 12rpx rgba(203, 142, 84, 0.15);
+  border: 1rpx solid #E3C7A4;
 }
 
 .stat-value {
   display: block;
   font-size: 48rpx;
   font-weight: 700;
-  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -363,14 +381,14 @@ watch(() => props.visible, (val) => {
 }
 
 .stat-value.success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #30BF78 0%, #22A366 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .stat-value.warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, #F6D387 0%, #D2691E 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -379,7 +397,7 @@ watch(() => props.visible, (val) => {
 .stat-label {
   display: block;
   font-size: 22rpx;
-  color: #6b7280;
+  color: #8B4513;
 }
 
 .calendar-section {
@@ -396,24 +414,31 @@ watch(() => props.visible, (val) => {
 }
 
 .nav-btn {
-  width: 56rpx;
-  height: 56rpx;
-  background: #f3f4f6;
+  width: 60rpx;
+  height: 60rpx;
+  background: #AED581;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2rpx solid #8BC34A;
+  transition: transform 0.2s;
+}
+
+.nav-btn:active {
+  transform: scale(0.95);
 }
 
 .nav-btn .icon {
   font-size: 32rpx;
-  color: #6b7280;
+  color: #FFFFFF;
+  font-weight: bold;
 }
 
 .month-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #1f2937;
+  color: #8B4513;
 }
 
 .weekdays {
@@ -426,7 +451,7 @@ watch(() => props.visible, (val) => {
 .weekday {
   text-align: center;
   font-size: 24rpx;
-  color: #9ca3af;
+  color: #8B4513;
   padding: 12rpx 0;
 }
 
@@ -452,8 +477,9 @@ watch(() => props.visible, (val) => {
 }
 
 .day-cell.today {
-  background: #e0e7ff;
-  border: 2rpx solid #5147FF;
+  background: #FFF8E7;
+  border: 3rpx solid #FF9AAA;
+  box-shadow: 0 2rpx 8rpx rgba(255, 154, 170, 0.3);
 }
 
 .day-cell.has-checkin {
@@ -463,7 +489,19 @@ watch(() => props.visible, (val) => {
 /* 与H5保持一致的状态配色：好=绿、良好=黄、一般=灰 */
 .day-cell.status-good {
   background: #d1fae5; /* green-100 */
-  border-color: #a7f3d0; /* green-200 */
+  border: 2rpx solid #a7f3d0; /* green-200 */
+  position: relative;
+}
+
+.day-cell.status-good::after {
+  content: '';
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  width: 20rpx;
+  height: 20rpx;
+  background: url('/static/ch/ch_index_star.png') no-repeat center/cover;
+  animation: rotate 3s linear infinite;
 }
 
 .day-cell.status-ok {
@@ -478,7 +516,7 @@ watch(() => props.visible, (val) => {
 
 .day-number {
   font-size: 26rpx;
-  color: #1f2937;
+  color: #602F27;
 }
 
 .checkin-mark {

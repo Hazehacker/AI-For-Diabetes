@@ -142,6 +142,11 @@
         </view>
       </view>
     </view>
+
+    <!-- 浮动添加朋友按钮 -->
+    <view v-if="currentTab === 'friends'" class="fab-add-friend" @tap="goToAddFriend">
+      <text class="fab-plus">+</text>
+    </view>
   </view>
 </template>
 
@@ -225,6 +230,23 @@ const goToChat = (friend) => {
   })
 }
 
+// 跳转到添加朋友页面
+const goToAddFriend = () => {
+  uni.navigateTo({
+    url: '/pages/community/add-friend'
+  })
+}
+
+// 返回上一页
+const goBack = () => {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+}
+
 onMounted(() => {
   // 生成模拟数据
   if (companionStore.posts.length === 0) {
@@ -238,6 +260,7 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
 }
+
 
 /* Tab栏 */
 .tab-bar {
@@ -493,6 +516,30 @@ onMounted(() => {
 .action-text {
   font-size: 24rpx;
   color: #6B7280;
+}
+
+/* 浮动添加朋友按钮 */
+.fab-add-friend {
+  position: fixed;
+  bottom: 120rpx;
+  right: 40rpx;
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #F6D387 0%, #E5BC64 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(246, 211, 135, 0.4);
+  z-index: 999;
+  border: 4rpx solid #FFFEF7;
+}
+
+.fab-plus {
+  font-size: 60rpx;
+  color: #602F27;
+  font-weight: bold;
+  line-height: 1;
 }
 
 /* 好友列表 */

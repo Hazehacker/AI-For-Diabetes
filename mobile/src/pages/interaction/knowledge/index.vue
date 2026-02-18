@@ -1,12 +1,19 @@
 <template>
   <view class="knowledge-page">
+    <!-- 顶部导航 -->
+    <view class="nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">科普小课堂</text>
+      <view class="nav-placeholder"></view>
+    </view>
+    
     <!-- 头部 -->
-    <view class="header">
+    <view class="header" v-if="!isChildMode">
       <view class="header-text">
-        <text class="title">科普小课堂</text>
         <text class="subtitle">用 2-3 分钟，学一点血糖小知识</text>
       </view>
     </view>
+    <view class="header-spacer" v-else></view>
 
     <!-- 主题标签 -->
     <view class="topic-tabs">
@@ -66,6 +73,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { knowledgeApi } from '@/api'
+import { useDashboardStore } from '@/store/dashboard'
+import { storeToRefs } from 'pinia'
+
+const dashboardStore = useDashboardStore()
+const { userRole } = storeToRefs(dashboardStore)
+const isChildMode = computed(() => userRole.value === 'child_under_12')
 
 const state = reactive({
   loading: false,
@@ -141,6 +154,10 @@ const changeTopic = (val) => {
   activeTopic.value = val
 }
 
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+
 const openArticle = (item) => {
   if (!item?.id) return
   uni.navigateTo({
@@ -174,62 +191,102 @@ onMounted(() => {
 <style scoped>
 .knowledge-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #22c55e 0%, #16a34a 26%, #F3F4F6 26%);
-  padding: 20rpx;
-  padding-bottom: 120rpx;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 0;
+  padding-bottom: 40rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+}
+
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  padding: 10rpx;
+  cursor: pointer;
+  z-index: 100;
+  position: relative;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.nav-placeholder {
+  width: 64rpx;
 }
 
 .header {
-  padding: 24rpx 8rpx 12rpx;
+  padding: 24rpx;
 }
 
-.title {
-  display: block;
-  font-size: 44rpx;
-  font-weight: 800;
-  color: #ecfdf5;
+.header-spacer {
+  height: 20rpx;
 }
 
 .subtitle {
   display: block;
-  margin-top: 8rpx;
   font-size: 26rpx;
-  color: rgba(240, 253, 250, 0.9);
+  color: #A85835;
 }
 
 .topic-tabs {
-  margin-top: 8rpx;
+  margin: 0 24rpx;
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
 }
 
 .tab-pill {
-  padding: 8rpx 18rpx;
+  padding: 10rpx 20rpx;
   border-radius: 999rpx;
-  background: rgba(240, 253, 250, 0.2);
+  background: white;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
+}
+
+.tab-pill:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
 }
 
 .tab-pill.active {
-  background: #ecfdf5;
+  background: #F6D387;
+  border-color: #D5A874;
+  box-shadow: 0 4rpx 0 #CB8E54;
 }
 
 .tab-label {
   font-size: 24rpx;
-  color: #ecfdf5;
+  color: #602F27;
+  font-weight: 500;
 }
 
 .tab-pill.active .tab-label {
-  color: #16a34a;
-  font-weight: 600;
+  color: #602F27;
+  font-weight: 700;
 }
 
 .featured-card {
-  margin-top: 18rpx;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 24rpx;
+  margin: 18rpx 24rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 24rpx;
-  box-shadow: 0 10rpx 32rpx rgba(22, 163, 74, 0.22);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
 }
 
 .featured-tag {
@@ -237,8 +294,8 @@ onMounted(() => {
   padding: 4rpx 12rpx;
   border-radius: 999rpx;
   font-size: 22rpx;
-  color: #16a34a;
-  background: rgba(22, 163, 74, 0.12);
+  color: #CB8E54;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
   margin-bottom: 10rpx;
 }
 
@@ -246,14 +303,14 @@ onMounted(() => {
   display: block;
   font-size: 34rpx;
   font-weight: 800;
-  color: #022c22;
+  color: #602F27;
 }
 
 .featured-desc {
   display: block;
   margin-top: 6rpx;
   font-size: 26rpx;
-  color: #4b5563;
+  color: #A85835;
 }
 
 .featured-meta {
@@ -265,27 +322,32 @@ onMounted(() => {
 
 .meta-item {
   font-size: 24rpx;
-  color: #065f46;
-  background: rgba(5, 150, 105, 0.06);
+  color: #CB8E54;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
   padding: 6rpx 12rpx;
   border-radius: 14rpx;
 }
 
 .list-scroll {
+  flex: 1;
   margin-top: 18rpx;
-  max-height: calc(100vh - 320rpx);
-}
-
-.list {
+  padding: 0;
   padding-bottom: 40rpx;
 }
 
+.list {
+  padding: 0 24rpx;
+  padding-bottom: 40rpx;
+}
+
+
 .article-card {
-  background: #ffffff;
+  background: white;
   border-radius: 20rpx;
   padding: 22rpx 20rpx;
   margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.06);
+  border: 2rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 16rpx rgba(96, 47, 39, 0.06);
 }
 
 .card-title-row {
@@ -299,22 +361,22 @@ onMounted(() => {
   flex: 1;
   font-size: 30rpx;
   font-weight: 700;
-  color: #111827;
+  color: #602F27;
 }
 
 .badge-read {
   font-size: 22rpx;
   padding: 4rpx 10rpx;
   border-radius: 999rpx;
-  background: #ecfdf5;
-  color: #16a34a;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  color: #CB8E54;
 }
 
 .article-summary {
   display: block;
   margin-top: 6rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .card-meta {
@@ -329,13 +391,13 @@ onMounted(() => {
   font-size: 22rpx;
   padding: 4rpx 10rpx;
   border-radius: 999rpx;
-  background: #eff6ff;
-  color: #2563eb;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  color: #CB8E54;
 }
 
 .meta-text {
   font-size: 22rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .empty {

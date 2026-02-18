@@ -3,22 +3,17 @@
   <view v-if="userRole === 'child_under_12'" class="child-interaction">
     <!-- 顶部区域 -->
     <view class="child-inter-header">
-      <view class="header-deco">
-        <text class="deco-item">🎮</text>
-        <text class="header-title">游乐园</text>
-        <text class="deco-item">🎪</text>
-      </view>
-      <view class="points-badge">
-        <text class="points-icon">⭐</text>
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack" @error="onImageError"></image>
+      <text class="header-title">游乐园</text>
+      <view class="header-points">
+        <image class="points-pot-icon" src="/static/ch/ch_index_pot.png" mode="aspectFit"></image>
         <text class="points-num">{{ totalPoints }}</text>
       </view>
     </view>
 
     <!-- 吉祥物欢迎 -->
     <view class="mascot-welcome">
-      <view class="mascot-avatar-inter">
-        <text class="mascot-emoji-inter">🐹</text>
-      </view>
+      <image class="mascot-avatar-img" src="/static/ch/ch_index_welcome.png" mode="aspectFit"></image>
       <view class="welcome-bubble">
         <text class="welcome-text">欢迎来到游乐园！选一个好玩的吧~</text>
       </view>
@@ -28,49 +23,52 @@
     <view class="games-grid">
       <view class="game-card breathing-game" @tap="goToBreathing">
         <view class="game-icon-wrap rainbow">
-          <text class="game-icon">🌈</text>
+          <image class="game-icon-img" src="/static/ch/ch_play_cloud.png" mode="aspectFit"></image>
         </view>
         <text class="game-name">吹云朵</text>
         <text class="game-desc">深呼吸放松</text>
-        <view class="game-badge">
-          <text>🔥 {{ sortedSessions.length }}次</text>
-        </view>
       </view>
 
       <view class="game-card pet-game" @tap="goToPet">
         <view class="game-icon-wrap pet">
-          <text class="game-icon">{{ currentPetStage.emoji }}</text>
+          <image class="game-icon-img" src="/static/ch/ch_index_play.png" mode="aspectFit"></image>
         </view>
         <text class="game-name">糖小怪</text>
         <text class="game-desc">我的小伙伴</text>
-        <view class="game-badge pet">
-          <text>💕 {{ pet.streak_days }}天</text>
-        </view>
       </view>
 
-      <view class="game-card mini-game">
+      <view class="game-card mini-game" @tap="goToGames">
         <view class="game-icon-wrap mini">
-          <text class="game-icon">🎯</text>
+          <image class="game-icon-img" src="/static/ch/ch_play_play.png" mode="aspectFit"></image>
         </view>
         <text class="game-name">小游戏</text>
-        <text class="game-desc">即将开放</text>
-        <view class="coming-tag">敬请期待</view>
+        <text class="game-desc">跑酷 / 拼拼乐</text>
       </view>
 
-      <view class="game-card learn-game">
+      <view class="game-card learn-game" @tap="goToKnowledge">
         <view class="game-icon-wrap learn">
-          <text class="game-icon">📚</text>
+          <image class="game-icon-img" src="/static/ch/ch_play_read.png" mode="aspectFit"></image>
         </view>
-        <text class="game-name">小知识</text>
-        <text class="game-desc">即将开放</text>
-        <view class="coming-tag">敬请期待</view>
+        <text class="game-name">科普知识</text>
+        <text class="game-desc">糖尿病小课堂</text>
+      </view>
+
+      <view class="game-card video-game" @tap="goToVideo">
+        <view class="game-icon-wrap video">
+          <image class="game-icon-img" src="/static/ch/ch_play_watch.png" mode="aspectFit"></image>
+        </view>
+        <text class="game-name">视频学习</text>
+        <text class="game-desc">动画学知识</text>
       </view>
     </view>
 
     <!-- 我的奖章 -->
     <view v-if="unlockedBadges.length > 0" class="badges-card-inter">
       <view class="badges-header-inter">
-        <text class="badges-title-inter">🏅 我的奖章</text>
+        <view class="badges-title-wrap">
+          <image class="section-icon" src="/static/ch/ch_home_win.png" mode="aspectFit"></image>
+          <text class="badges-title-inter">我的奖章</text>
+        </view>
         <text class="badges-count">{{ unlockedBadges.length }}枚</text>
       </view>
       <view class="badges-scroll">
@@ -84,11 +82,14 @@
     <!-- 最近记录 -->
     <view v-if="sortedSessions.length > 0" class="recent-card">
       <view class="recent-header">
-        <text class="recent-title">📝 最近玩的</text>
+        <view class="recent-title-wrap">
+          <image class="section-icon" src="/static/ch/ch_que_log.png" mode="aspectFit"></image>
+          <text class="recent-title">最近玩的</text>
+        </view>
       </view>
       <view class="recent-list">
         <view v-for="session in sortedSessions.slice(0, 3)" :key="session.id" class="recent-item">
-          <text class="recent-icon">🌈</text>
+          <image class="recent-icon-img" src="/static/ch/ch_play_cloud.png" mode="aspectFit"></image>
           <text class="recent-name">吹云朵</text>
           <text class="recent-time">{{ formatDate(session.completed_at) }}</text>
           <text class="recent-star">⭐+{{ session.reward_points }}</text>
@@ -106,6 +107,13 @@
 
   <!-- 成人/青少年模式 -->
   <view v-else class="interaction-page">
+    <!-- 顶部导航栏 -->
+    <view class="teen-nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">互动板块</text>
+      <view class="nav-placeholder"></view>
+    </view>
+    
     <!-- 顶部统计 -->
     <view class="stats-header">
       <view class="stat-item">
@@ -290,7 +298,7 @@ const formatDate = (date) => {
 // 跳转到呼吸训练
 const goToBreathing = () => {
   uni.navigateTo({
-    url: '/pages/interaction/breathing-setup'
+    url: '/pages/interaction/breathing/index'
   })
 }
 
@@ -322,6 +330,22 @@ const goToVideo = () => {
   })
 }
 
+// 返回上一页
+const goBack = () => {
+  console.log('点击了返回按钮')
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+}
+
+// 图片加载错误处理
+const onImageError = () => {
+  console.log('返回按钮图片加载失败')
+}
+
 onMounted(() => {
   // 生成模拟数据
   if (interactionStore.sessions.length === 0) {
@@ -340,16 +364,43 @@ onMounted(() => {
 .interaction-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #f093fb 0%, #f5576c 30%, #F3F4F6 30%);
-  padding: 20rpx;
+  padding: 0;
   padding-bottom: 120rpx;
+}
+
+/* 青少年模式导航栏 */
+.teen-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  padding-top: calc(env(safe-area-inset-top) + 24rpx);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.teen-nav-bar .nav-back-icon {
+  width: 80rpx;
+  height: 80rpx;
+  display: block;
+}
+
+.teen-nav-bar .nav-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.teen-nav-bar .nav-placeholder {
+  width: 80rpx;
 }
 
 /* 统计头部 */
 .stats-header {
   display: flex;
   gap: 16rpx;
+  margin: 20rpx;
   margin-bottom: 32rpx;
-  padding: 20rpx 0;
+  padding: 0;
 }
 
 .stat-item {
@@ -685,51 +736,100 @@ onMounted(() => {
 .child-interaction {
   min-height: 100vh;
   background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
-  padding: 24rpx;
+  padding: 0;
   padding-bottom: 120rpx;
+}
+
+.mascot-welcome {
+  margin: 24rpx;
 }
 
 .child-inter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24rpx;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+  margin-bottom: 0;
 }
 
-.header-deco {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.header-deco .deco-item {
-  font-size: 36rpx;
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  z-index: 999;
+  cursor: pointer;
+  padding: 10rpx;
+  position: relative;
 }
 
 .header-title {
-  font-size: 40rpx;
+  font-size: 36rpx;
   font-weight: bold;
   color: #602F27;
+}
+
+.header-points {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #E3C7A4;
+}
+
+.points-pot-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.header-points .points-num {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #CB8E54;
+}
+
+.tab-item.active .tab-text {
+  color: #602F27;
+  font-weight: bold;
+}
+
+.tab-text {
+  font-size: 32rpx;
+  color: #9CA3AF;
+  padding-bottom: 12rpx;
+}
+
+.tab-underline {
+  position: absolute;
+  bottom: -1rpx;
+  left: 0;
+  right: 0;
+  height: 4rpx;
+  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
+  border-radius: 2rpx;
 }
 
 .points-badge {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  justify-content: center;
   background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
-  padding: 12rpx 20rpx;
-  border-radius: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(203, 142, 84, 0.3);
-}
-
-.points-icon {
-  font-size: 28rpx;
+  min-width: 40rpx;
+  height: 32rpx;
+  border-radius: 16rpx;
+  margin-top: 8rpx;
 }
 
 .points-num {
-  font-size: 28rpx;
+  font-size: 24rpx;
   font-weight: bold;
   color: white;
+  padding: 0 8rpx;
 }
 
 /* 吉祥物欢迎 */
@@ -740,18 +840,16 @@ onMounted(() => {
   background: white;
   border-radius: 28rpx;
   padding: 24rpx;
+  margin: 24rpx;
   margin-bottom: 24rpx;
   box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.1);
   border: 3rpx solid #E3C7A4;
 }
 
-.mascot-avatar-inter {
+.mascot-avatar-img {
+  width: 100rpx;
+  height: 100rpx;
   flex-shrink: 0;
-}
-
-.mascot-emoji-inter {
-  font-size: 64rpx;
-  display: block;
   animation: bounce 2s ease-in-out infinite;
 }
 
@@ -791,7 +889,13 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20rpx;
-  margin-bottom: 24rpx;
+  margin: 0 24rpx 24rpx 24rpx;
+}
+
+.video-game {
+  grid-column: 1 / -1;
+  width: calc((100% - 20rpx) / 2);
+  margin: 0 auto;
 }
 
 .game-card {
@@ -816,26 +920,15 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   margin: 0 auto 16rpx;
+  background: #F6D387;
+  box-shadow: 
+    0 6rpx 16rpx rgba(246, 211, 135, 0.4),
+    inset 0 2rpx 4rpx rgba(255, 255, 255, 0.6);
 }
 
-.game-icon-wrap.rainbow {
-  background: linear-gradient(135deg, #E3C7A4 0%, #D5A874 50%, #CB8E54 100%);
-}
-
-.game-icon-wrap.pet {
-  background: linear-gradient(135deg, #D5A874 0%, #CB8E54 100%);
-}
-
-.game-icon-wrap.mini {
-  background: linear-gradient(135deg, #CB8E54 0%, #C07240 100%);
-}
-
-.game-icon-wrap.learn {
-  background: linear-gradient(135deg, #8E422F 0%, #A85835 100%);
-}
-
-.game-icon {
-  font-size: 56rpx;
+.game-icon-img {
+  width: 70rpx;
+  height: 70rpx;
 }
 
 .game-name {
@@ -850,20 +943,26 @@ onMounted(() => {
   display: block;
   font-size: 24rpx;
   color: #A85835;
-  margin-bottom: 12rpx;
 }
 
-.game-badge {
-  display: inline-block;
-  background: linear-gradient(135deg, #F2E5D3 0%, #D5A874 100%);
-  padding: 8rpx 16rpx;
-  border-radius: 16rpx;
-  font-size: 22rpx;
-  color: #602F27;
+/* 区块图标样式 */
+.section-icon {
+  width: 40rpx;
+  height: 40rpx;
 }
 
-.game-badge.pet {
-  background: linear-gradient(135deg, #E3C7A4 0%, #D5A874 100%);
+.badges-title-wrap,
+.recent-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+/* 最近记录图标 */
+.recent-icon-img {
+  width: 40rpx;
+  height: 40rpx;
+  flex-shrink: 0;
 }
 
 .coming-tag {
@@ -875,8 +974,8 @@ onMounted(() => {
   color: #9CA3AF;
 }
 
-.mini-game, .learn-game {
-  opacity: 0.6;
+.game-icon-wrap.video {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
 }
 
 /* 奖章卡片 */
@@ -884,7 +983,7 @@ onMounted(() => {
   background: white;
   border-radius: 28rpx;
   padding: 24rpx;
-  margin-bottom: 24rpx;
+  margin: 0 24rpx 24rpx 24rpx;
   box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
   border: 3rpx solid #E3C7A4;
 }
@@ -941,7 +1040,7 @@ onMounted(() => {
   background: white;
   border-radius: 28rpx;
   padding: 24rpx;
-  margin-bottom: 24rpx;
+  margin: 0 24rpx 24rpx 24rpx;
   box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
   border: 3rpx solid #E3C7A4;
 }

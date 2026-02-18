@@ -1,5 +1,12 @@
 <template>
   <view class="detail-page">
+    <!-- 顶部导航 -->
+    <view class="nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">科普文章</text>
+      <view class="nav-placeholder"></view>
+    </view>
+    
     <scroll-view class="content-scroll" scroll-y>
       <view class="article-header">
         <text class="topic-chip">{{ article.topic_label || '科普知识' }}</text>
@@ -128,6 +135,10 @@ const loadDetail = async () => {
   paragraphs.value = text.split(/\n+/).filter((p) => p.trim().length > 0)
 }
 
+const goBack = () => {
+  uni.navigateBack()
+}
+
 const completeArticle = async () => {
   if (!article.id || article.is_completed || submitting.value) return
   submitting.value = true
@@ -169,14 +180,44 @@ onMounted(() => {
 <style scoped>
 .detail-page {
   min-height: 100vh;
-  background: #f3f4f6;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
   display: flex;
   flex-direction: column;
 }
 
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+}
+
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.nav-placeholder {
+  width: 64rpx;
+}
+
 .content-scroll {
   flex: 1;
-  padding: 24rpx 24rpx 140rpx;
+  padding: 24rpx;
+  padding-bottom: 200rpx;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .article-header {
@@ -187,8 +228,8 @@ onMounted(() => {
   display: inline-flex;
   padding: 4rpx 12rpx;
   border-radius: 999rpx;
-  background: #ecfdf5;
-  color: #16a34a;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  color: #CB8E54;
   font-size: 22rpx;
   margin-bottom: 10rpx;
 }
@@ -197,7 +238,7 @@ onMounted(() => {
   display: block;
   font-size: 40rpx;
   font-weight: 800;
-  color: #111827;
+  color: #602F27;
   line-height: 1.4;
 }
 
@@ -210,22 +251,25 @@ onMounted(() => {
 
 .meta-text {
   font-size: 24rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .key-points {
   margin-bottom: 24rpx;
-  margin-right: 45rpx;
   padding: 20rpx 18rpx;
-  background: #eff6ff;
-  border-radius: 18rpx;
+  background: white;
+  border-radius: 28rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .section-title {
   display: block;
   font-size: 28rpx;
   font-weight: 700;
-  color: #1f2937;
+  color: #602F27;
   margin-bottom: 10rpx;
 }
 
@@ -238,53 +282,57 @@ onMounted(() => {
 
 .point-bullet {
   font-size: 26rpx;
-  color: #3b82f6;
+  color: #CB8E54;
   line-height: 1.6;
 }
 
 .point-text {
   flex: 1;
   font-size: 24rpx;
-  color: #374151;
+  color: #A85835;
   line-height: 1.6;
 }
 
 .article-body {
-  background: #ffffff;
-  border-radius: 18rpx;
-  margin-right: 45rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 22rpx 18rpx;
-  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.05);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .paragraph {
   display: block;
   font-size: 26rpx;
-  color: #111827;
+  color: #602F27;
   line-height: 1.7;
   margin-bottom: 18rpx;
 }
 
 .summary-card {
   margin-top: 22rpx;
-  margin-right: 45rpx;
   padding: 20rpx 18rpx;
-  background: #fef3c7;
-  border-radius: 18rpx;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  border-radius: 28rpx;
+  border: 3rpx solid #E3C7A4;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .summary-title {
   display: block;
   font-size: 26rpx;
   font-weight: 700;
-  color: #92400e;
+  color: #602F27;
   margin-bottom: 8rpx;
 }
 
 .summary-text {
   display: block;
   font-size: 24rpx;
-  color: #92400e;
+  color: #A85835;
   line-height: 1.7;
 }
 
@@ -294,8 +342,9 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   padding: 12rpx 24rpx 32rpx;
-  background: linear-gradient(180deg, rgba(243, 244, 246, 0.9), #f3f4f6);
-  box-shadow: 0 -4rpx 16rpx rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 248, 231, 0.7), rgba(255, 254, 247, 0.85));
+  box-shadow: 0 -4rpx 16rpx rgba(203, 142, 84, 0.1);
+  backdrop-filter: blur(10rpx);
 }
 
 .progress-hint {
@@ -304,30 +353,38 @@ onMounted(() => {
 
 .progress-text {
   font-size: 22rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .progress-text.done {
-  color: #16a34a;
+  color: #CB8E54;
 }
 
 .action-btn {
   width: 100%;
   height: 92rpx;
-  border-radius: 18rpx;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #ffffff;
+  border-radius: 46rpx;
+  background: #F6D387;
+  color: #602F27;
   font-size: 30rpx;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
+}
+
+.action-btn:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
 }
 
 .action-btn.disabled {
-  background: #e5e7eb;
-  color: #9ca3af;
+  background: #E5E7EB;
+  color: #9CA3AF;
+  border-color: #D1D5DB;
+  box-shadow: 0 6rpx 0 #D1D5DB;
 }
 </style>
 

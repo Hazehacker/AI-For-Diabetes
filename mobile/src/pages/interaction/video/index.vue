@@ -1,13 +1,12 @@
 <template>
   <view class="video-page">
-    <!-- 头部 -->
-    <view class="header">
-      <view class="header-text">
-        <text class="title">视频小课堂</text>
-        <text class="subtitle">看一小会视频，学一大点知识</text>
-      </view>
+    <!-- 顶部导航 -->
+    <view class="nav-bar">
+      <image class="nav-back-icon" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="nav-title">视频小课堂</text>
+      <view class="nav-placeholder"></view>
     </view>
-
+    
     <!-- 主题标签 -->
     <view class="topic-tabs">
       <view
@@ -93,12 +92,6 @@
               <view class="card-meta">
                 <text class="meta-chip">{{ item.topic_label || '综合' }}</text>
                 <text class="meta-text" v-if="item.reward_points">+{{ item.reward_points }} 积分</text>
-              </view>
-              <view class="small-progress">
-                <view
-                  class="small-progress-inner"
-                  :style="{ width: (item.progress_percent || 0) + '%' }"
-                />
               </view>
             </view>
           </view>
@@ -191,6 +184,10 @@ const changeTopic = (val) => {
   activeTopic.value = val
 }
 
+const goBack = () => {
+  uni.navigateBack()
+}
+
 const openVideo = (item) => {
   if (!item?.id) return
   uni.navigateTo({
@@ -235,61 +232,92 @@ onMounted(() => {
 <style scoped>
 .video-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 26%, #f3f4f6 26%);
-  padding: 20rpx;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 0;
   padding-bottom: 120rpx;
 }
 
-.header {
-  padding: 24rpx 8rpx 12rpx;
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
 }
 
-.title {
+.nav-back-icon {
+  width: 64rpx;
+  height: 64rpx;
   display: block;
-  font-size: 44rpx;
-  font-weight: 800;
-  color: #e0f2fe;
+}
+
+.nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.nav-placeholder {
+  width: 64rpx;
+}
+
+.header {
+  padding: 24rpx;
 }
 
 .subtitle {
   display: block;
-  margin-top: 8rpx;
   font-size: 26rpx;
-  color: rgba(224, 242, 254, 0.9);
+  color: #A85835;
 }
 
 .topic-tabs {
-  margin-top: 8rpx;
+  margin: 24rpx 24rpx 0 24rpx;
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
 }
 
 .tab-pill {
-  padding: 8rpx 18rpx;
+  padding: 10rpx 20rpx;
   border-radius: 999rpx;
-  background: rgba(224, 242, 254, 0.2);
+  background: white;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
+}
+
+.tab-pill:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
 }
 
 .tab-pill.active {
-  background: #e0f2fe;
+  background: #F6D387;
+  border-color: #D5A874;
+  box-shadow: 0 4rpx 0 #CB8E54;
 }
 
 .tab-label {
   font-size: 24rpx;
-  color: #e0f2fe;
+  color: #602F27;
+  font-weight: 500;
 }
 
 .tab-pill.active .tab-label {
-  color: #0369a1;
-  font-weight: 600;
+  color: #602F27;
+  font-weight: 700;
 }
 
 .summary-card {
-  margin-top: 18rpx;
-  background: rgba(15, 23, 42, 0.75);
-  border-radius: 20rpx;
+  margin: 18rpx 24rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 20rpx 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
 }
 
 .summary-row {
@@ -307,22 +335,23 @@ onMounted(() => {
   display: block;
   font-size: 32rpx;
   font-weight: 700;
-  color: #e0f2fe;
+  color: #CB8E54;
 }
 
 .summary-label {
   display: block;
   margin-top: 4rpx;
   font-size: 22rpx;
-  color: #bae6fd;
+  color: #A85835;
 }
 
 .featured-card {
-  margin-top: 18rpx;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 24rpx;
+  margin: 18rpx 24rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 24rpx;
-  box-shadow: 0 10rpx 32rpx rgba(8, 47, 73, 0.22);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
 }
 
 .featured-tag {
@@ -330,8 +359,8 @@ onMounted(() => {
   padding: 4rpx 12rpx;
   border-radius: 999rpx;
   font-size: 22rpx;
-  color: #0369a1;
-  background: rgba(56, 189, 248, 0.16);
+  color: #CB8E54;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
   margin-bottom: 10rpx;
 }
 
@@ -339,14 +368,14 @@ onMounted(() => {
   display: block;
   font-size: 34rpx;
   font-weight: 800;
-  color: #0f172a;
+  color: #602F27;
 }
 
 .featured-desc {
   display: block;
   margin-top: 6rpx;
   font-size: 26rpx;
-  color: #4b5563;
+  color: #A85835;
 }
 
 .featured-meta {
@@ -358,8 +387,8 @@ onMounted(() => {
 
 .meta-item {
   font-size: 24rpx;
-  color: #0f172a;
-  background: rgba(8, 47, 73, 0.06);
+  color: #CB8E54;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
   padding: 6rpx 12rpx;
   border-radius: 14rpx;
 }
@@ -369,19 +398,20 @@ onMounted(() => {
   width: 100%;
   height: 10rpx;
   border-radius: 999rpx;
-  background: #e5e7eb;
+  background: #E3C7A4;
   overflow: hidden;
 }
 
 .progress-inner {
   height: 100%;
   border-radius: 999rpx;
-  background: linear-gradient(90deg, #38bdf8, #22c55e);
+  background: linear-gradient(90deg, #F6D387, #CB8E54);
 }
 
 .list-scroll {
   margin-top: 18rpx;
   max-height: calc(100vh - 360rpx);
+  padding: 0;
 }
 
 .list {
@@ -389,24 +419,30 @@ onMounted(() => {
 }
 
 .video-card {
-  background: #ffffff;
+  background: white;
   border-radius: 20rpx;
   padding: 18rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.06);
+  margin: 0 24rpx 16rpx 24rpx;
+  border: 2rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 16rpx rgba(96, 47, 39, 0.06);
+  width: calc(100% - 48rpx);
+  box-sizing: border-box;
 }
 
 .card-main {
   display: flex;
   gap: 16rpx;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .thumb {
-  width: 260rpx;
+  width: 200rpx;
   height: 160rpx;
   border-radius: 18rpx;
   overflow: hidden;
   position: relative;
+  flex-shrink: 0;
 }
 
 .thumb-image {
@@ -417,7 +453,7 @@ onMounted(() => {
 .thumb-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.25), rgba(15, 23, 42, 0.5));
+  background: linear-gradient(145deg, rgba(96, 47, 39, 0.25), rgba(96, 47, 39, 0.5));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,7 +461,7 @@ onMounted(() => {
 
 .play-icon {
   font-size: 40rpx;
-  color: #f9fafb;
+  color: white;
 }
 
 .duration-chip {
@@ -434,23 +470,28 @@ onMounted(() => {
   bottom: 8rpx;
   padding: 4rpx 10rpx;
   border-radius: 999rpx;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(96, 47, 39, 0.8);
 }
 
 .duration-text {
   font-size: 22rpx;
-  color: #f9fafb;
+  color: white;
 }
 
 .info {
   flex: 1;
   min-width: 0;
+  min-height: 160rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  width: calc(100% - 216rpx);
 }
 
 .card-title-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
   gap: 12rpx;
 }
 
@@ -458,22 +499,35 @@ onMounted(() => {
   flex: 1;
   font-size: 30rpx;
   font-weight: 700;
-  color: #111827;
+  color: #602F27;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .badge-completed {
   font-size: 22rpx;
   padding: 4rpx 10rpx;
   border-radius: 999rpx;
-  background: #ecfdf5;
-  color: #16a34a;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  color: #CB8E54;
 }
 
 .video-summary {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin-top: 6rpx;
   font-size: 24rpx;
-  color: #6b7280;
+  color: #A85835;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .card-meta {
@@ -488,13 +542,13 @@ onMounted(() => {
   font-size: 22rpx;
   padding: 4rpx 10rpx;
   border-radius: 999rpx;
-  background: #eff6ff;
-  color: #2563eb;
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  color: #CB8E54;
 }
 
 .meta-text {
   font-size: 22rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .small-progress {
@@ -502,14 +556,14 @@ onMounted(() => {
   width: 100%;
   height: 8rpx;
   border-radius: 999rpx;
-  background: #e5e7eb;
+  background: #E3C7A4;
   overflow: hidden;
 }
 
 .small-progress-inner {
   height: 100%;
   border-radius: 999rpx;
-  background: linear-gradient(90deg, #38bdf8, #22c55e);
+  background: linear-gradient(90deg, #F6D387, #CB8E54);
 }
 
 .empty {

@@ -27,7 +27,7 @@ export const useCompanionStore = defineStore('companion', {
     categories: [
       { id: 1, name: '每日打卡', icon: '/static/ch/ch_fr_beat.png', color: '#F6D387' },
       { id: 2, name: '减肥成绩单', icon: '/static/ch/ch_fr_report.png', color: '#F6D387' },
-      { id: 3, name: '减肥求助', icon: '/static/ch/ch_fr_que.png', color: '#F6D387' },
+      { id: 3, name: '减肥求助', icon: '/static/ch/ch_fr_qu.png', color: '#F6D387' },
       { id: 4, name: 'GLP减重', icon: '/static/ch/ch_fr_GLP.png', color: '#F6D387' },
       { id: 5, name: '减肥杂谈', icon: '/static/ch/ch_fr_other.png', color: '#F6D387' }
     ]
@@ -266,6 +266,13 @@ export const useCompanionStore = defineStore('companion', {
       if (friend) {
         friend.unreadCount = 0
       }
+    },
+    
+    /**
+     * 获取聊天消息
+     */
+    getChatMessages(friendId) {
+      return this.chatMessages[friendId] || []
     },
     
     /**

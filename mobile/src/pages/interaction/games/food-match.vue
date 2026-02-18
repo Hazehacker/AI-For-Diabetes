@@ -1,5 +1,12 @@
 <template>
-  <view class="match-page">
+  <view class="match-page" :class="{ 'child-mode-page': isChildMode }">
+    <!-- 儿童模式自定义导航栏 -->
+    <view v-if="isChildMode" class="child-nav-bar">
+      <image class="child-nav-back" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
+      <text class="child-nav-title">食物拼拼乐</text>
+      <view class="child-nav-placeholder"></view>
+    </view>
+    
     <view class="top-bar">
       <view class="pill">
         <text class="pill-label">进度</text>
@@ -94,10 +101,15 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useGamesStore } from '@/store/games'
+import { useDashboardStore } from '@/store/dashboard'
+import { storeToRefs } from 'pinia'
 
 const gamesStore = useGamesStore()
+const dashboardStore = useDashboardStore()
+const { userRole } = storeToRefs(dashboardStore)
+const isChildMode = computed(() => userRole.value === 'child_under_12')
 const instance = getCurrentInstance()
 
 const totalSteps = 10
@@ -286,7 +298,12 @@ async function finish() {
 }
 
 function goBack() {
-  uni.navigateBack()
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.navigateTo({ url: '/pages/interaction/games/index' })
+  }
 }
 
 async function measureBins() {
@@ -334,7 +351,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .match-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f093fb 0%, #f5576c 20%, #F3F4F6 20%);
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
   padding: 20rpx;
   padding-bottom: 120rpx;
 }
@@ -347,44 +364,47 @@ onBeforeUnmount(() => {
 
 .pill {
   flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 18rpx;
+  background: white;
+  border-radius: 20rpx;
   padding: 18rpx 22rpx;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
 }
 
 .pill-label {
   font-size: 24rpx;
-  color: #6B7280;
+  color: #A85835;
 }
 
 .pill-value {
   font-size: 34rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
 }
 
 .board {
   margin-top: 18rpx;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 24rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 26rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
 }
 
 .title {
   display: block;
   font-size: 32rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
 }
 .subtitle {
   display: block;
   margin-top: 6rpx;
   font-size: 24rpx;
-  color: #6B7280;
+  color: #A85835;
 }
 
 .question {
@@ -394,12 +414,13 @@ onBeforeUnmount(() => {
 }
 
 .food-card {
-  background: rgba(245, 87, 108, 0.08);
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
   border-radius: 22rpx;
   padding: 18rpx 22rpx;
   display: flex;
   align-items: center;
   gap: 14rpx;
+  border: 2rpx solid #E3C7A4;
 }
 
 .food-emoji {
@@ -408,17 +429,18 @@ onBeforeUnmount(() => {
 .food-name {
   font-size: 28rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
 }
 
 .area {
   margin-top: 18rpx;
   height: 460rpx;
   width: 100%;
-  background: rgba(17, 24, 39, 0.04);
+  background: linear-gradient(180deg, #FFFBF0 0%, #FFF8E7 100%);
   border-radius: 22rpx;
   position: relative;
   overflow: hidden;
+  border: 2rpx solid #E3C7A4;
 }
 
 .movable {
@@ -430,12 +452,13 @@ onBeforeUnmount(() => {
   width: 110rpx;
   height: 110rpx;
   border-radius: 22rpx;
-  background: #fff;
+  background: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10rpx 22rpx rgba(0, 0, 0, 0.12);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
 }
 
 .drag-emoji {
@@ -444,7 +467,7 @@ onBeforeUnmount(() => {
 .drag-text {
   margin-top: 8rpx;
   font-size: 12rpx;
-  color: #6B7280;
+  color: #A85835;
   font-weight: 700;
 }
 
@@ -459,29 +482,33 @@ onBeforeUnmount(() => {
   border-radius: 20rpx;
   padding: 16rpx 12rpx;
   text-align: center;
+  border: 2rpx solid;
 }
 
 .bin-title {
   display: block;
   font-size: 26rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
 }
 .bin-sub {
   display: block;
   margin-top: 6rpx;
   font-size: 22rpx;
-  color: rgba(17, 24, 39, 0.7);
+  color: #A85835;
 }
 
 .bin.low {
-  background: rgba(16, 185, 129, 0.18);
+  background: #E8F5E9;
+  border-color: #A5D6A7;
 }
 .bin.mid {
-  background: rgba(59, 130, 246, 0.16);
+  background: #E3F2FD;
+  border-color: #90CAF9;
 }
 .bin.high {
-  background: rgba(245, 87, 108, 0.16);
+  background: #FFEBEE;
+  border-color: #EF9A9A;
 }
 
 .feedback {
@@ -491,17 +518,20 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 .feedback.good {
-  background: rgba(16, 185, 129, 0.18);
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  border: 2rpx solid #E3C7A4;
 }
 .feedback.bad {
-  background: rgba(239, 68, 68, 0.18);
+  background: #FFEBEE;
+  border: 2rpx solid #EF9A9A;
 }
 .feedback.info {
-  background: rgba(59, 130, 246, 0.14);
+  background: linear-gradient(135deg, #FFF8E7 0%, #F2E5D3 100%);
+  border: 2rpx solid #E3C7A4;
 }
 .fb-text {
   font-size: 24rpx;
-  color: #111827;
+  color: #602F27;
   font-weight: 800;
 }
 
@@ -515,16 +545,33 @@ onBeforeUnmount(() => {
   flex: 1;
   text-align: center;
   padding: 22rpx 0;
-  border-radius: 18rpx;
-  font-weight: 900;
+  border-radius: 44rpx;
+  font-weight: 800;
+  font-size: 28rpx;
 }
+
 .btn.primary {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: #fff;
+  background: #F6D387;
+  color: #602F27;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
 }
+
+.btn.primary:active {
+  transform: translateY(4rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
+}
+
 .btn.secondary {
-  background: rgba(255, 255, 255, 0.9);
-  color: #111827;
+  background: white;
+  color: #602F27;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
+}
+
+.btn.secondary:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 0 #D5A874;
 }
 
 .overlay {
@@ -542,16 +589,17 @@ onBeforeUnmount(() => {
 
 .result-card {
   width: 100%;
-  background: #fff;
-  border-radius: 26rpx;
+  background: white;
+  border-radius: 28rpx;
   padding: 28rpx;
+  border: 3rpx solid #E3C7A4;
 }
 
 .result-title {
   display: block;
   font-size: 34rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
   margin-bottom: 16rpx;
 }
 
@@ -564,22 +612,22 @@ onBeforeUnmount(() => {
 
 .k {
   font-size: 26rpx;
-  color: #6B7280;
+  color: #A85835;
 }
 .v {
   font-size: 28rpx;
   font-weight: 900;
-  color: #111827;
+  color: #602F27;
 }
 .v.highlight {
-  color: #f5576c;
+  color: #CB8E54;
 }
 
 .result-hint {
   display: block;
   margin-top: 14rpx;
   font-size: 24rpx;
-  color: #374151;
+  color: #A85835;
   line-height: 1.6;
 }
 
@@ -587,6 +635,39 @@ onBeforeUnmount(() => {
   margin-top: 18rpx;
   display: flex;
   gap: 16rpx;
+}
+
+/* 儿童模式导航栏样式 */
+.child-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 24rpx;
+  padding-top: calc(env(safe-area-inset-top) + 16rpx);
+  background: #FFFEF7;
+  border-bottom: 1rpx solid #E3C7A4;
+  box-shadow: 0 2rpx 8rpx rgba(203, 142, 84, 0.1);
+  margin: -20rpx -20rpx 20rpx -20rpx;
+}
+
+.child-nav-back {
+  width: 64rpx;
+  height: 64rpx;
+  display: block;
+  padding: 10rpx;
+  cursor: pointer;
+  z-index: 100;
+  position: relative;
+}
+
+.child-nav-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.child-nav-placeholder {
+  width: 64rpx;
 }
 </style>
 

@@ -17,6 +17,9 @@ export const useChatStore = defineStore('chat', {
     userChoice: null,
     hasAnswered: false,
     lastAnswerDate: null,
+    
+    // 答题历史记录
+    quizHistory: JSON.parse(uni.getStorageSync('quizHistory') || '[]'),
 
     // 题库
     questionBank: [
@@ -165,6 +168,25 @@ export const useChatStore = defineStore('chat', {
       } else {
         this.dailyQuestion.falseCount++
       }
+      
+      // 保存到答题历史
+      const historyRecord = {
+        id: Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        questionId: this.dailyQuestion.id,
+        question: this.dailyQuestion.question,
+        userAnswer: choice,
+        correctAnswer: this.dailyQuestion.correctAnswer,
+        isCorrect: choice === this.dailyQuestion.correctAnswer,
+        explanation: this.dailyQuestion.explanation
+      }
+      this.quizHistory.unshift(historyRecord)
+      uni.setStorageSync('quizHistory', JSON.stringify(this.quizHistory))
+    },
+    
+    // 获取答题历史
+    getQuizHistory() {
+      return this.quizHistory
     },
     
     // 获取答题统计

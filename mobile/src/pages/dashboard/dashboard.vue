@@ -1,142 +1,297 @@
 <template>
   <!-- 儿童模式：奶酪仓鼠风格 -->
   <view v-if="userRole === 'child_under_12'" class="child-dashboard">
-    <!-- 顶部装饰 -->
-    <view class="child-header">
-      <view class="header-decoration">
-        <text class="deco-star">✨</text>
-        <text class="deco-star delay">⭐</text>
+    <!-- 顶部导航栏 -->
+    <view class="child-nav-bar">
+      <view class="child-nav-left">
+        <image class="child-nav-back" src="/static/ch/ch_fr_return.png" mode="aspectFit" @tap="goBack"></image>
       </view>
-      <view class="greeting-section">
-        <text class="greeting-text">{{ greetingText }}</text>
-        <text class="child-name">小勇士</text>
+      <text class="child-nav-title">我的历史数据</text>
+      <view class="child-nav-right">
       </view>
-      <view class="header-badge">
-        <text class="badge-icon">🏆</text>
-        <text class="badge-count">{{ dailyStars }}</text>
-      </view>
-    </view>
-
-    <!-- 主角色卡片 -->
-    <view class="mascot-card" :class="childStatusClass">
-      <view class="mascot-bg">
-        <view class="bg-circle c1"></view>
-        <view class="bg-circle c2"></view>
-        <view class="bg-circle c3"></view>
-      </view>
-      <view class="mascot-content">
-        <view class="mascot-avatar" :class="{ bounce: isHappy, shake: isAlert }">
-          <text class="avatar-emoji">{{ mascotEmoji }}</text>
-        </view>
-        <view class="mascot-speech">
-          <view class="speech-bubble">
-            <text class="speech-text">{{ mascotMessage }}</text>
-          </view>
-        </view>
-      </view>
-      <view class="status-indicator-child">
-        <view class="status-dot" :class="childStatusClass"></view>
-        <text class="status-text-child">{{ childStatusText }}</text>
-      </view>
-    </view>
-
-    <!-- 能量仪表盘 -->
-    <view class="energy-dashboard">
-      <view class="energy-header">
-        <text class="energy-title">🔋 我的能量</text>
-        <text class="energy-time">{{ lastUpdateText }}</text>
-      </view>
-      <view class="energy-meter">
-        <view class="meter-track">
-          <view class="meter-zone low-zone"></view>
-          <view class="meter-zone good-zone"></view>
-          <view class="meter-zone high-zone"></view>
-        </view>
-        <view class="meter-pointer" :style="{ left: energyPointerPosition + '%' }">
-          <view class="pointer-head">
-            <text class="pointer-emoji">{{ pointerEmoji }}</text>
-          </view>
-          <view class="pointer-line"></view>
-        </view>
-        <view class="meter-labels">
-          <text class="meter-label">能量低</text>
-          <text class="meter-label good">刚刚好</text>
-          <text class="meter-label">能量高</text>
-        </view>
-      </view>
-    </view>
-
-    <!-- 今日任务卡片 -->
-    <view class="tasks-card">
-      <view class="tasks-header">
-        <text class="tasks-title">📋 今日任务</text>
-        <text class="tasks-progress">{{ completedTasks }}/{{ totalTasks }}</text>
-      </view>
-      <view class="tasks-list">
-        <view 
-          v-for="task in childTasks" 
-          :key="task.id"
-          class="task-item"
-          :class="{ completed: task.completed }"
-          @tap="toggleTask(task)"
-        >
-          <view class="task-check">
-            <text v-if="task.completed" class="check-icon">✅</text>
-            <view v-else class="check-empty"></view>
-          </view>
-          <text class="task-icon">{{ task.icon }}</text>
-          <text class="task-name">{{ task.name }}</text>
-          <view v-if="task.completed" class="task-star">⭐</view>
-        </view>
-      </view>
-    </view>
-
-    <!-- 奖励进度 -->
-    <view class="reward-card">
-      <view class="reward-header">
-        <text class="reward-title">🎁 今日奖励进度</text>
-      </view>
-      <view class="reward-progress">
-        <view class="progress-track">
-          <view class="progress-fill" :style="{ width: rewardProgress + '%' }"></view>
-        </view>
-        <view class="progress-milestones">
-          <view 
-            v-for="(milestone, index) in milestones" 
-            :key="index"
-            class="milestone"
-            :class="{ reached: dailyStars >= milestone.stars }"
-            :style="{ left: milestone.position + '%' }"
-          >
-            <text class="milestone-icon">{{ milestone.icon }}</text>
-          </view>
-        </view>
-      </view>
-      <text class="reward-hint">再获得 {{ starsToNextReward }} 颗星星就能解锁奖励啦！</text>
-    </view>
-
-    <!-- 提示卡片 -->
-    <view class="tip-card" :class="tipCardClass">
-      <view class="tip-icon-wrap">
-        <text class="tip-icon">{{ tipIcon }}</text>
-      </view>
-      <view class="tip-content">
-        <text class="tip-title">{{ tipTitle }}</text>
-        <text class="tip-text">{{ tipText }}</text>
-      </view>
-      <view v-if="showTipAction" class="tip-action" @tap="handleTipAction">
-        <text class="action-text">{{ tipActionText }}</text>
-      </view>
-    </view>
-
-    <!-- 底部装饰 -->
-    <view class="bottom-decoration">
-      <text class="deco-cheese">🧀</text>
-      <text class="deco-cheese">🧀</text>
-      <text class="deco-cheese">🧀</text>
     </view>
     
-    <view class="bottom-spacer"></view>
+    <!-- 历史数据折线图 -->    
+    <view class="child-history-chart-card">
+      <view class="child-chart-header">
+        <view class="child-chart-title-container">
+          <image class="child-chart-icon" src="/static/ch/ch_home_reg.png" mode="aspectFit"></image>
+          <text class="child-chart-title">我的历史数据</text>
+        </view>
+        <view class="child-chart-period-selector">
+          <text 
+            v-for="(period, index) in chartPeriods" 
+            :key="index"
+            class="child-period-option"
+            :class="{ 'child-period-active': selectedPeriod === period.value }"
+            @tap="selectPeriod(period.value)"
+          >{{ period.label }}</text>
+        </view>
+      </view>
+      <view class="child-chart-container">
+        <view class="child-pie-chart">
+          <view v-if="!pieChartData.hasData" class="no-data-message">
+            <text class="no-data-text">暂无数据</text>
+          </view>
+          <view v-else class="simple-pie-chart">
+            <view class="pie-slice" :style="pieChartStyle"></view>
+            <view class="pie-center">
+              <text class="pie-text">{{ selectedPeriod === 'today' ? '本日' : '本周' }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="child-chart-legend">
+        <view class="child-legend-item">
+          <view class="child-legend-color child-legend-good"></view>
+          <text class="child-legend-text">能量刚好</text>
+        </view>
+        <view class="child-legend-item">
+          <view class="child-legend-color child-legend-low"></view>
+          <text class="child-legend-text">能量低</text>
+        </view>
+        <view class="child-legend-item">
+          <view class="child-legend-color child-legend-high"></view>
+          <text class="child-legend-text">能量高</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 折线图卡片 -->
+    <view class="child-line-chart-card">
+      <view class="child-chart-header">
+        <text class="child-chart-title">📈 血糖趋势</text>
+        <view class="child-chart-period-selector">
+          <text 
+            v-for="(period, index) in chartPeriods" 
+            :key="index"
+            class="child-period-option"
+            :class="{ 'child-period-active': selectedPeriod === period.value }"
+            @tap="selectPeriod(period.value)"
+          >{{ period.label }}</text>
+        </view>
+      </view>
+      <view class="child-chart-container">
+        <view class="child-line-chart">
+          <view class="child-line-chart-svg">
+            <svg viewBox="0 0 320 180" class="line-chart-svg">
+              <!-- 背景 -->
+              <rect width="100%" height="100%" fill="#FFFEF7" rx="8"/>
+              
+              <!-- 网格线 -->
+              <defs>
+                <pattern id="lineGrid" width="40" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#E3C7A4" stroke-width="0.5" opacity="0.2"/>
+                </pattern>
+              </defs>
+              <rect x="40" y="20" width="260" height="120" fill="url(#lineGrid)" />
+              
+              <!-- Y轴 -->
+              <line x1="40" y1="20" x2="40" y2="140" stroke="#8B4513" stroke-width="2"/>
+              <!-- X轴 -->
+              <line x1="40" y1="140" x2="300" y2="140" stroke="#8B4513" stroke-width="2"/>
+              
+              <!-- Y轴刻度 -->
+              <g font-family="Arial" font-size="10" fill="#8B4513">
+                <text x="35" y="25" text-anchor="end">10</text>
+                <text x="35" y="50" text-anchor="end">8</text>
+                <text x="35" y="75" text-anchor="end">6</text>
+                <text x="35" y="100" text-anchor="end">4</text>
+                <text x="35" y="125" text-anchor="end">2</text>
+                <text x="35" y="145" text-anchor="end">0</text>
+              </g>
+              
+              <!-- X轴刻度 -->
+              <g font-family="Arial" font-size="9" fill="#8B4513">
+                <text v-if="selectedPeriod === 'today'" x="70" y="155" text-anchor="middle">6:00</text>
+                <text v-if="selectedPeriod === 'today'" x="110" y="155" text-anchor="middle">9:00</text>
+                <text v-if="selectedPeriod === 'today'" x="150" y="155" text-anchor="middle">12:00</text>
+                <text v-if="selectedPeriod === 'today'" x="190" y="155" text-anchor="middle">15:00</text>
+                <text v-if="selectedPeriod === 'today'" x="230" y="155" text-anchor="middle">18:00</text>
+                <text v-if="selectedPeriod === 'today'" x="270" y="155" text-anchor="middle">21:00</text>
+                
+                <text v-if="selectedPeriod === 'week'" x="70" y="155" text-anchor="middle">周一</text>
+                <text v-if="selectedPeriod === 'week'" x="110" y="155" text-anchor="middle">周二</text>
+                <text v-if="selectedPeriod === 'week'" x="150" y="155" text-anchor="middle">周三</text>
+                <text v-if="selectedPeriod === 'week'" x="190" y="155" text-anchor="middle">周四</text>
+                <text v-if="selectedPeriod === 'week'" x="230" y="155" text-anchor="middle">周五</text>
+                <text v-if="selectedPeriod === 'week'" x="270" y="155" text-anchor="middle">周六</text>
+              </g>
+              
+              <!-- 目标区间 -->
+              <rect x="40" y="65" width="260" height="35" fill="#8CC152" fill-opacity="0.1" stroke="#8CC152" stroke-width="1" stroke-dasharray="3,3"/>
+              <text x="305" y="80" font-family="Arial" font-size="8" fill="#8CC152">目标区间</text>
+              
+              <!-- 折线数据（根据时间段变化） -->
+              <polyline v-if="selectedPeriod === 'today'"
+                points="70,110 110,85 150,95 190,70 230,90 270,75"
+                fill="none" 
+                stroke="#8CC152" 
+                stroke-width="3" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <polyline v-if="selectedPeriod === 'week'"
+                points="70,100 110,80 150,105 190,85 230,95 270,80"
+                fill="none" 
+                stroke="#8CC152" 
+                stroke-width="3" 
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              
+              <!-- 数据点（本日） -->
+              <g v-if="selectedPeriod === 'today'">
+                <circle cx="70" cy="110" r="4" fill="#F5D76E" stroke="#fff" stroke-width="2"/>
+                <circle cx="110" cy="85" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="150" cy="95" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="190" cy="70" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="230" cy="90" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="270" cy="75" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+              </g>
+              
+              <!-- 数据点（本周） -->
+              <g v-if="selectedPeriod === 'week'">
+                <circle cx="70" cy="100" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="110" cy="80" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="150" cy="105" r="4" fill="#F5D76E" stroke="#fff" stroke-width="2"/>
+                <circle cx="190" cy="85" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="230" cy="95" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                <circle cx="270" cy="80" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+              </g>
+              
+              <!-- 单位标签 -->
+              <text x="15" y="85" font-family="Arial" font-size="10" fill="#8B4513" transform="rotate(-90 15 85)">mmol/L</text>
+            </svg>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 雷达图卡片 -->
+    <view class="child-radar-chart-card">
+      <view class="child-chart-header">
+        <text class="child-chart-title">🎯 健康评估</text>
+        <view class="child-chart-period-selector">
+          <text 
+            v-for="(period, index) in chartPeriods" 
+            :key="index"
+            class="child-period-option"
+            :class="{ 'child-period-active': selectedPeriod === period.value }"
+            @tap="selectPeriod(period.value)"
+          >{{ period.label }}</text>
+        </view>
+      </view>
+      <view class="child-chart-container">
+        <view class="child-radar-chart">
+          <view class="child-radar-chart-svg">
+            <svg viewBox="0 0 240 240" class="radar-chart-svg">
+              <!-- 背景 -->
+              <rect width="100%" height="100%" fill="#FFFEF7" rx="8"/>
+              
+              <!-- 雷达图背景网格 -->
+              <g transform="translate(120,120)">
+                <!-- 同心圆和刻度 -->
+                <circle r="20" fill="none" stroke="#E3C7A4" stroke-width="1" opacity="0.4"/>
+                <circle r="40" fill="none" stroke="#E3C7A4" stroke-width="1" opacity="0.4"/>
+                <circle r="60" fill="none" stroke="#E3C7A4" stroke-width="1" opacity="0.4"/>
+                <circle r="80" fill="none" stroke="#E3C7A4" stroke-width="2" opacity="0.6"/>
+                
+                <!-- 刻度数值 -->
+                <g font-family="Arial" font-size="8" fill="#8B4513">
+                  <text x="-5" y="-75" text-anchor="middle">5</text>
+                  <text x="-5" y="-55" text-anchor="middle">4</text>
+                  <text x="-5" y="-35" text-anchor="middle">3</text>
+                  <text x="-5" y="-15" text-anchor="middle">2</text>
+                </g>
+                
+                <!-- 辐射线 -->
+                <line x1="0" y1="-80" x2="0" y2="80" stroke="#8B4513" stroke-width="1.5" opacity="0.6"/>
+                <line x1="-80" y1="0" x2="80" y2="0" stroke="#8B4513" stroke-width="1.5" opacity="0.6"/>
+                <line x1="-56.6" y1="-56.6" x2="56.6" y2="56.6" stroke="#8B4513" stroke-width="1.5" opacity="0.6"/>
+                <line x1="56.6" y1="-56.6" x2="-56.6" y2="56.6" stroke="#8B4513" stroke-width="1.5" opacity="0.6"/>
+                <line x1="-56.6" y1="56.6" x2="56.6" y2="-56.6" stroke="#8B4513" stroke-width="1.5" opacity="0.6"/>
+                
+                <!-- 数据区域（本日） -->
+                <polygon v-if="selectedPeriod === 'today'"
+                  points="0,-60 45,30 -30,50 -50,-20 -10,-70"
+                  fill="#8CC152" 
+                  fill-opacity="0.25" 
+                  stroke="#8CC152" 
+                  stroke-width="3"
+                />
+                
+                <!-- 数据区域（本周） -->
+                <polygon v-if="selectedPeriod === 'week'"
+                  points="0,-65 50,25 -25,55 -55,-25 -15,-75"
+                  fill="#8CC152" 
+                  fill-opacity="0.25" 
+                  stroke="#8CC152" 
+                  stroke-width="3"
+                />
+                
+                <!-- 数据点（本日） -->
+                <g v-if="selectedPeriod === 'today'">
+                  <circle cx="0" cy="-60" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                  <circle cx="45" cy="30" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                  <circle cx="-30" cy="50" r="4" fill="#F5D76E" stroke="#fff" stroke-width="2"/>
+                  <circle cx="-50" cy="-20" r="4" fill="#FF9AAA" stroke="#fff" stroke-width="2"/>
+                  <circle cx="-10" cy="-70" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                </g>
+                
+                <!-- 数据点（本周） -->
+                <g v-if="selectedPeriod === 'week'">
+                  <circle cx="0" cy="-65" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                  <circle cx="50" cy="25" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                  <circle cx="-25" cy="55" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                  <circle cx="-55" cy="-25" r="4" fill="#F5D76E" stroke="#fff" stroke-width="2"/>
+                  <circle cx="-15" cy="-75" r="4" fill="#8CC152" stroke="#fff" stroke-width="2"/>
+                </g>
+                
+                <!-- 标签 -->
+                <g font-family="Arial" font-size="11" font-weight="bold" fill="#8B4513">
+                  <text x="0" y="-95" text-anchor="middle">血糖控制</text>
+                  <text x="70" y="8" text-anchor="middle">运动量</text>
+                  <text x="43" y="75" text-anchor="middle">睡眠质量</text>
+                  <text x="-43" y="75" text-anchor="middle">饮食规律</text>
+                  <text x="-70" y="8" text-anchor="middle">心情状态</text>
+                </g>
+                
+                <!-- 评分显示 -->
+                <g v-if="selectedPeriod === 'today'" font-family="Arial" font-size="9" fill="#602F27">
+                  <text x="8" y="-55" text-anchor="start">4.5</text>
+                  <text x="50" y="35" text-anchor="start">4.2</text>
+                  <text x="-25" y="60" text-anchor="start">3.5</text>
+                  <text x="-60" y="-15" text-anchor="start">2.8</text>
+                  <text x="-5" y="-75" text-anchor="start">4.8</text>
+                </g>
+                
+                <g v-if="selectedPeriod === 'week'" font-family="Arial" font-size="9" fill="#602F27">
+                  <text x="8" y="-60" text-anchor="start">4.8</text>
+                  <text x="55" y="30" text-anchor="start">4.5</text>
+                  <text x="-20" y="65" text-anchor="start">4.1</text>
+                  <text x="-65" y="-20" text-anchor="start">3.2</text>
+                  <text x="-10" y="-80" text-anchor="start">4.9</text>
+                </g>
+              </g>
+            </svg>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 小仓鼠的话 -->
+    <view class="child-hamster-words-card">
+      <view class="child-hamster-avatar-small">
+        <image class="child-hamster-img" src="/static/ch/ch_index_welcome.png" mode="aspectFit"></image>
+      </view>
+      <view class="child-words-bubble">
+        <text class="child-words-text">{{ hamsterWords }}</text>
+        <view class="child-bubble-tail"></view>
+      </view>
+    </view>
+    
+    <view class="child-bottom-spacer"></view>
   </view>
 
   <!-- 成人/青少年模式 -->
@@ -273,7 +428,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useDashboardStore } from '@/store/dashboard'
 import { useGlucoseCurveStore } from '@/store/glucoseCurve'
 import { storeToRefs } from 'pinia'
@@ -291,6 +447,9 @@ const {
   historyData,
   events
 } = storeToRefs(dashboardStore)
+
+// 儿童模式金币数量
+const coinCount = ref(164)
 
 const { 
   statusColor, 
@@ -361,6 +520,57 @@ const greetingText = computed(() => {
 
 // 每日星星数
 const dailyStars = ref(3)
+
+// 成就系统
+const achievements = ref([
+  { id: 1, name: '早起鸟儿', desc: '早上8点前测血糖', icon: '🐦', unlocked: true },
+  { id: 2, name: '健康饮食', desc: '记录3次健康餐食', icon: '🥗', unlocked: true },
+  { id: 3, name: '运动达人', desc: '完成30分钟运动', icon: '🏃', unlocked: false },
+  { id: 4, name: '水分补充', desc: '喝够8杯水', icon: '💧', unlocked: false },
+  { id: 5, name: '按时休息', desc: '晚上10点前睡觉', icon: '😴', unlocked: false }
+])
+
+const unlockedAchievements = computed(() => achievements.value.filter(a => a.unlocked).length)
+const totalAchievements = computed(() => achievements.value.length)
+
+// 健康数据
+const healthData = ref({
+  waterCount: 5,
+  exerciseTime: 30,
+  sleepQuality: '良好'
+})
+
+// 图表相关
+const chartPeriods = [
+  { label: '本日', value: 'today' },
+  { label: '本周', value: 'week' }
+]
+const selectedPeriod = ref('today')
+let childChart = null
+
+// 今日日期
+const todayDate = computed(() => {
+  const today = new Date()
+  return `${today.getMonth() + 1}月${today.getDate()}日`
+})
+
+// 小仓鼠的话
+const hamsterWords = computed(() => {
+  const messages = [
+    '今天你表现得很棒哦！继续加油！',
+    '记得多喝水，小仓鼠也要喝水呢~',
+    '运动让我们更健康，一起动起来吧！',
+    '按时吃饭很重要，营养要均衡哦~',
+    '早睡早起身体好，小仓鼠也要休息呢！'
+  ]
+  const hour = new Date().getHours()
+  if (hour < 9) return '早上好！新的一天开始啦~'
+  if (hour < 12) return messages[1]
+  if (hour < 15) return messages[3]
+  if (hour < 18) return messages[2]
+  if (hour < 21) return messages[0]
+  return messages[4]
+})
 
 // 儿童状态样式类
 const childStatusClass = computed(() => {
@@ -506,6 +716,23 @@ const tipActionText = computed(() => {
 
 const handleTipAction = () => {
   uni.showToast({ title: '已通知家长', icon: 'success' })
+}
+
+// 快捷功能导航
+const goToCalories = () => {
+  uni.switchTab({ url: '/pages/calories/index' })
+}
+
+const goToCheckin = () => {
+  uni.navigateTo({ url: '/pages/profile/daily-checkin' })
+}
+
+const goToVideo = () => {
+  uni.switchTab({ url: '/pages/video/index' })
+}
+
+const goToCommunity = () => {
+  uni.switchTab({ url: '/pages/community/companion' })
 }
 
 // ========== 原有儿童模式代码（保留兼容）==========
@@ -764,18 +991,243 @@ const simulateDataUpdate = () => {
   }
 }
 
+// 选择图表时间范围
+const selectPeriod = (period) => {
+  selectedPeriod.value = period
+  drawChildPieChart()
+}
+
+// 初始化儿童模式饼状图
+const initChildPieChart = () => {
+  // 先初始化模拟数据
+  if (!mockDataCache.value) {
+    mockDataCache.value = generateMoreMockData()
+  }
+  
+  setTimeout(() => {
+    drawChildPieChart()
+  }, 300)
+}
+
+// 饼状图数据
+const pieChartData = ref({
+  goodPercentage: 0,
+  lowPercentage: 0,
+  highPercentage: 0,
+  hasData: false
+})
+
+// 绘制儿童模式饼状图
+const drawChildPieChart = () => {
+  // 强制初始化模拟数据
+  if (!mockDataCache.value) {
+    mockDataCache.value = generateMoreMockData()
+  }
+  
+  // 获取历史数据
+  const historyData = getMockHistoryData(selectedPeriod.value)
+  
+  // 更新是否有数据标志
+  hasData.value = historyData && historyData.length > 0
+  
+  // 如果没有数据，重置饼图数据
+  if (!historyData || historyData.length === 0) {
+    pieChartData.value = {
+      goodPercentage: 0,
+      lowPercentage: 0,
+      highPercentage: 0,
+      hasData: false
+    }
+    return
+  }
+  
+  // 计算饼状图数据
+  const targetMin = 4.4
+  const targetMax = 8.0
+  
+  let goodCount = 0
+  let lowCount = 0
+  let highCount = 0
+  
+  historyData.forEach(item => {
+    if (item.value < targetMin) {
+      lowCount++
+    } else if (item.value > targetMax) {
+      highCount++
+    } else {
+      goodCount++
+    }
+  })
+  
+  const total = historyData.length
+  
+  // 更新响应式数据
+  pieChartData.value = {
+    goodPercentage: (goodCount / total) * 100,
+    lowPercentage: (lowCount / total) * 100,
+    highPercentage: (highCount / total) * 100,
+    hasData: true
+  }
+}
+
+// 计算饼图样式
+const pieChartStyle = computed(() => {
+  if (!pieChartData.value.hasData) {
+    return {
+      background: '#f0f0f0'
+    }
+  }
+  
+  const { goodPercentage, lowPercentage, highPercentage } = pieChartData.value
+  
+  let cumulativePercentage = 0
+  let gradientStops = []
+  
+  if (goodPercentage > 0) {
+    gradientStops.push(`#8CC152 ${cumulativePercentage}% ${cumulativePercentage + goodPercentage}%`)
+    cumulativePercentage += goodPercentage
+  }
+  
+  if (lowPercentage > 0) {
+    gradientStops.push(`#F5D76E ${cumulativePercentage}% ${cumulativePercentage + lowPercentage}%`)
+    cumulativePercentage += lowPercentage
+  }
+  
+  if (highPercentage > 0) {
+    gradientStops.push(`#FF9AAA ${cumulativePercentage}% ${cumulativePercentage + highPercentage}%`)
+    cumulativePercentage += highPercentage
+  }
+  
+  return {
+    background: `conic-gradient(${gradientStops.join(', ')})`
+  }
+})
+
+// 根据选择的时间段获取X轴标签
+const getXLabels = (period, data) => {
+  if (!data || data.length === 0) return []
+  
+  switch (period) {
+    case 'today':
+      // 显示小时
+      return data.map(item => {
+        const date = new Date(item.timestamp)
+        return `${date.getHours()}:00`
+      })
+    case 'week':
+      // 显示星期几
+      const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+      return data.map(item => {
+        const date = new Date(item.timestamp)
+        return days[date.getDay()]
+      })
+    default:
+      return []
+  }
+}
+
+// 返回上一页
+const goBack = () => {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack({ delta: 1 })
+  } else {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+}
+
+// 生成更多模拟数据
+const generateMoreMockData = () => {
+  // 今天的数据 - 每3小时一个点，共8个点
+  const todayData = []
+  const now = new Date()
+  for (let i = 0; i < 8; i++) {
+    const hour = i * 3
+    const timestamp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, 0, 0)
+    // 生成一个4.0-9.0之间的随机值，并加入一些波动
+    let value = 6.5 + Math.sin(i / 8 * Math.PI * 2) * 1.5 + (Math.random() - 0.5) * 1.0
+    // 确保值在合理范围内
+    value = Math.max(3.0, Math.min(12.0, value))
+    todayData.push({ timestamp, value: parseFloat(value.toFixed(1)) })
+  }
+  
+  // 本周的数据 - 每天一个点，共7个点
+  const weekData = []
+  for (let i = 0; i < 7; i++) {
+    const day = new Date()
+    day.setDate(day.getDate() - day.getDay() + i) // 从本周日开始
+    const timestamp = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0)
+    // 生成一个4.0-9.0之间的随机值
+    let value = 6.5 + Math.sin(i / 7 * Math.PI * 2) * 1.5 + (Math.random() - 0.5) * 1.0
+    // 确保值在合理范围内
+    value = Math.max(3.0, Math.min(12.0, value))
+    weekData.push({ timestamp, value: parseFloat(value.toFixed(1)) })
+  }
+  
+  return { todayData, weekData }
+}
+
+// 获取指定时间段的模拟数据
+const getMockHistoryData = (period) => {
+  if (!mockDataCache.value) {
+    return []
+  }
+  
+  const { todayData, weekData } = mockDataCache.value
+  
+  switch (period) {
+    case 'today':
+      return todayData
+    case 'week':
+      return weekData
+    default:
+      return todayData
+  }
+}
+
+// 缓存生成的模拟数据
+const mockDataCache = ref(null)
+
+// 是否有数据显示
+const hasData = ref(false)
+
+// 页面显示时重新初始化图表
+onShow(() => {
+  // 重新生成模拟数据
+  mockDataCache.value = generateMoreMockData()
+  
+  if (userRole.value === 'child_under_12') {
+    // 重新初始化饼状图
+    setTimeout(() => {
+      initChildPieChart()
+    }, 300)
+  }
+})
+
 onMounted(() => {
   // 初始化数据
   simulateDataUpdate()
   
+  // 生成并缓存模拟数据
+  mockDataCache.value = generateMoreMockData()
+  
   // 初始化图表
   setTimeout(() => {
     initChart()
-  }, 500)
+    // 儿童模式下初始化饼状图
+    if (userRole.value === 'child_under_12') {
+      initChildPieChart()
+      console.log('开始初始化儿童模式饼状图')
+    }
+  }, 1000) // 增加延时确保元素已经渲染
   
   // 设置定时刷新（每5秒模拟一次数据更新）
   refreshTimer = setInterval(() => {
     simulateDataUpdate()
+    // 更新儿童模式饼状图
+    if (userRole.value === 'child_under_12') {
+      drawChildPieChart()
+    }
   }, 5000)
   
   // 设置连接检查定时器
@@ -1061,6 +1513,371 @@ onUnmounted(() => {
 .range-label {
   font-size: 24rpx;
   color: #9CA3AF;
+}
+
+/* 儿童模式下的导航栏和历史数据折线图 */
+.child-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* 顶部导航栏 */
+.child-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: #FFFDF2;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 20rpx 30rpx;
+  border-bottom: 1rpx solid #E3C7A4;
+  position: relative;
+  height: 100rpx;
+}
+
+.child-nav-left {
+  display: flex;
+  align-items: center;
+  width: 60rpx;
+}
+
+.child-nav-back {
+  width: 60rpx;
+  height: 60rpx;
+}
+
+.child-nav-title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8B4513;
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 2rpx;
+}
+
+.child-nav-right {
+  width: 60rpx;
+}
+
+.child-history-chart-card {
+  background: #FFFEF7;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin: 20rpx 4rpx 30rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  width: calc(100% - 8rpx);
+  box-sizing: border-box;
+}
+
+.child-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.child-chart-title-container {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.child-chart-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.child-chart-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.child-chart-period-selector {
+  display: flex;
+  gap: 16rpx;
+}
+
+.child-period-option {
+  padding: 12rpx 28rpx;
+  font-size: 26rpx;
+  color: #8B4513;
+  background: #F5E6D3;
+  border-radius: 30rpx;
+  transition: all 0.3s;
+  margin-left: 10rpx;
+  white-space: nowrap;
+}
+
+.child-period-active {
+  background: #8CC152;
+  color: #FFFFFF;
+  font-weight: bold;
+}
+
+.child-chart-container {
+  height: 380rpx;
+  margin-bottom: 15rpx;
+  position: relative;
+  background-color: #FFFEF7;
+  width: 100%;
+  overflow: visible;
+}
+
+.child-chart-area {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.child-no-data {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFEF7;
+}
+
+.child-no-data-text {
+  font-size: 30rpx;
+  color: #8B4513;
+  opacity: 0.6;
+}
+
+.child-pie-chart {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-data-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.no-data-text {
+  font-size: 28rpx;
+  color: #8B4513;
+  opacity: 0.6;
+}
+
+.simple-pie-chart {
+  position: relative;
+  width: 150px;
+  height: 150px;
+}
+
+.pie-slice {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+}
+
+.pie-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  background: #FFFEF7;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #E3C7A4;
+}
+
+.pie-text {
+  font-size: 12px;
+  font-weight: bold;
+  color: #8B4513;
+  text-align: center;
+}
+
+.child-chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 30rpx;
+  margin-top: 40rpx;
+}
+
+.child-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.child-legend-color {
+  width: 30rpx;
+  height: 30rpx;
+  border-radius: 50%;
+}
+
+.child-legend-good {
+  background: #8CC152;
+}
+
+.child-legend-low {
+  background: #F5D76E;
+}
+
+.child-legend-high {
+  background-color: #FF9AAA;
+}
+
+/* 折线图卡片样式 */
+.child-line-chart-card {
+  background: #FFFEF7;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin: 20rpx 4rpx 30rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  width: calc(100% - 8rpx);
+  box-sizing: border-box;
+}
+
+/* 雷达图卡片样式 */
+.child-radar-chart-card {
+  background: #FFFEF7;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin: 20rpx 4rpx 30rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.08);
+  width: calc(100% - 8rpx);
+  box-sizing: border-box;
+}
+
+/* 折线图容器 */
+.child-line-chart {
+  width: 100%;
+  height: 350rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 雷达图容器 */
+.child-radar-chart {
+  width: 100%;
+  height: 350rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG图表样式 */
+.child-line-chart-svg,
+.child-radar-chart-svg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.line-chart-svg,
+.radar-chart-svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 8rpx;
+  background: #FFFEF7;
+}
+
+.child-legend-text {
+  font-size: 28rpx;
+  color: #602F27;
+  font-weight: 500;
+}
+
+/* 小仓鼠的话 */
+.child-hamster-words-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  margin: 30rpx 0;
+  padding: 0 10rpx;
+}
+
+.child-hamster-avatar-small {
+  width: 100rpx;
+  height: 100rpx;
+  flex-shrink: 0;
+  background: #F6CD75;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid #E3C7A4;
+}
+
+.child-hamster-img {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.child-words-bubble {
+  position: relative;
+  background: #FFFEF7;
+  border: 3rpx solid #E3C7A4;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  flex: 1;
+  box-shadow: 0 4rpx 12rpx rgba(96, 47, 39, 0.1);
+}
+
+.child-words-text {
+  font-size: 28rpx;
+  color: #602F27;
+  line-height: 1.5;
+}
+
+.child-bubble-tail {
+  position: absolute;
+  left: -12rpx;
+  top: 30rpx;
+  width: 0;
+  height: 0;
+  border-top: 12rpx solid transparent;
+  border-bottom: 12rpx solid transparent;
+  border-right: 12rpx solid #E3C7A4;
+}
+
+.child-bubble-tail::after {
+  content: '';
+  position: absolute;
+  left: 3rpx;
+  top: -9rpx;
+  width: 0;
+  height: 0;
+  border-top: 9rpx solid transparent;
+  border-bottom: 9rpx solid transparent;
+  border-right: 9rpx solid #FFFEF7;
+}
+
+.child-bottom-spacer {
+  height: 100rpx;
 }
 
 /* 图表区 */
@@ -1903,30 +2720,333 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
+/* 今日成就 */
+.achievement-card {
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.achievement-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.achievement-count {
+  font-size: 24rpx;
+  color: #A85835;
+  background: #F6D387;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx;
+  background: #FAF6F0;
+  border-radius: 16rpx;
+  border: 2rpx solid #E3C7A4;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.achievement-item.unlocked {
+  opacity: 1;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-color: #F59E0B;
+}
+
+.achievement-icon-wrap {
+  position: relative;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.achievement-icon {
+  font-size: 40rpx;
+}
+
+.unlock-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  font-size: 20rpx;
+  animation: sparkle 2s infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #602F27;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.achievement-desc {
+  font-size: 24rpx;
+  color: #8E422F;
+}
+
+/* 健康数据卡片 */
+.health-data-card {
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.health-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.health-date {
+  font-size: 24rpx;
+  color: #A85835;
+}
+
+.health-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.health-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx;
+  background: #FAF6F0;
+  border-radius: 16rpx;
+  border: 2rpx solid #E3C7A4;
+}
+
+.stat-icon-wrap {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon-wrap.good {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+}
+
+.stat-icon-wrap.warning {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+}
+
+.stat-icon {
+  font-size: 32rpx;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #8E422F;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.stat-value {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+/* 小仓鼠的话 */
+.hamster-words-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+  padding: 0 8rpx;
+}
+
+.hamster-avatar-small {
+  width: 80rpx;
+  height: 80rpx;
+  flex-shrink: 0;
+}
+
+.hamster-img {
+  width: 100%;
+  height: 100%;
+}
+
+.words-bubble {
+  position: relative;
+  background: #FFFEF7;
+  border: 3rpx solid #E3C7A4;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  flex: 1;
+  box-shadow: 0 4rpx 12rpx rgba(96, 47, 39, 0.1);
+}
+
+.words-text {
+  font-size: 26rpx;
+  color: #602F27;
+  line-height: 1.5;
+}
+
+.bubble-tail {
+  position: absolute;
+  left: -12rpx;
+  top: 24rpx;
+  width: 0;
+  height: 0;
+  border-top: 12rpx solid transparent;
+  border-bottom: 12rpx solid transparent;
+  border-right: 12rpx solid #E3C7A4;
+}
+
+.bubble-tail::after {
+  content: '';
+  position: absolute;
+  left: 3rpx;
+  top: -9rpx;
+  width: 0;
+  height: 0;
+  border-top: 9rpx solid transparent;
+  border-bottom: 9rpx solid transparent;
+  border-right: 9rpx solid #FFFEF7;
+}
+
+/* 快捷功能 */
+.quick-actions-card {
+  background: #FFFEF7;
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 24rpx rgba(96, 47, 39, 0.1);
+}
+
+.actions-header {
+  margin-bottom: 20rpx;
+}
+
+.actions-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #602F27;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx;
+  background: #FAF6F0;
+  border-radius: 20rpx;
+  border: 2rpx solid #E3C7A4;
+  transition: all 0.3s ease;
+}
+
+.action-item:active {
+  transform: scale(0.95);
+  background: #F6D387;
+}
+
+.action-icon-wrap {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.action-name {
+  font-size: 24rpx;
+  color: #602F27;
+  font-weight: 500;
+  text-align: center;
+}
+
 /* 底部装饰 */
 .bottom-decoration {
+  text-align: center;
+  margin-top: 40rpx;
   display: flex;
   justify-content: center;
-  gap: 40rpx;
-  padding: 20rpx 0;
-  opacity: 0.6;
+  gap: 20rpx;
 }
 
 .deco-cheese {
   font-size: 48rpx;
   animation: float 3s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
 }
 
 .deco-cheese:nth-child(2) {
-  animation-delay: 1s;
+  --delay: 1s;
 }
 
 .deco-cheese:nth-child(3) {
-  animation-delay: 2s;
+  --delay: 2s;
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-16rpx); }
+  50% { transform: translateY(-20rpx); }
 }
 </style>

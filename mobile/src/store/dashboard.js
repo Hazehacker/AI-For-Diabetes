@@ -3,6 +3,19 @@
  */
 import { defineStore } from 'pinia'
 
+// 从本地存储获取用户角色
+const getStoredUserRole = () => {
+  try {
+    const stored = uni.getStorageSync('userRole')
+    if (stored && ['child_under_12', 'teen_above_12', 'guardian'].includes(stored)) {
+      return stored
+    }
+  } catch (e) {
+    console.error('获取用户角色失败:', e)
+  }
+  return 'teen_above_12'
+}
+
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
     // 当前血糖数据
@@ -35,8 +48,8 @@ export const useDashboardStore = defineStore('dashboard', {
     // 警报状态
     alerts: [],
     
-    // 用户角色
-    userRole: 'child_under_12', // child_under_12, teen_above_12, guardian
+    // 用户角色 - 从本地存储获取，默认为青少年模式
+    userRole: getStoredUserRole(), // child_under_12, teen_above_12, guardian
     
     // 数据连接状态
     dataConnection: {
@@ -179,6 +192,12 @@ export const useDashboardStore = defineStore('dashboard', {
     // 设置用户角色
     setUserRole(role) {
       this.userRole = role
+      // 持久化到本地存储
+      try {
+        uni.setStorageSync('userRole', role)
+      } catch (e) {
+        console.error('保存用户角色失败:', e)
+      }
     },
     
     // 添加警报

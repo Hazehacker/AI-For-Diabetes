@@ -177,16 +177,17 @@ const formatDate = (dateStr) => {
 <style scoped>
 .checkin-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+  background: linear-gradient(180deg, #FEF7ED 0%, #FFF8E7 50%, #FFFBF0 100%);
   padding: 40rpx;
 }
 
 .checkin-form {
   background: white;
-  border-radius: 32rpx;
+  border-radius: 28rpx;
   padding: 40rpx;
   margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 40rpx rgba(150, 159, 255, 0.15);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
 }
 
 .form-title {
@@ -203,7 +204,7 @@ const formatDate = (dateStr) => {
 .title-text {
   font-size: 36rpx;
   font-weight: 600;
-  color: #1f2937;
+  color: #602F27;
 }
 
 .form-section {
@@ -236,8 +237,9 @@ const formatDate = (dateStr) => {
 }
 
 .status-active {
-  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
-  border-color: #5147FF;
+  background: #F6D387;
+  border-color: #E3C7A4;
+  box-shadow: 0 4rpx 0 #D5A874;
 }
 
 .status-icon {
@@ -251,7 +253,7 @@ const formatDate = (dateStr) => {
 }
 
 .status-active .status-text {
-  color: white;
+  color: #602F27;
 }
 
 .feeling-input {
@@ -263,6 +265,7 @@ const formatDate = (dateStr) => {
   border-radius: 20rpx;
   font-size: 28rpx;
   line-height: 1.6;
+  box-sizing: border-box;
 }
 
 .char-count {
@@ -276,12 +279,13 @@ const formatDate = (dateStr) => {
 .submit-btn {
   width: 100%;
   height: 88rpx;
-  background: linear-gradient(135deg, #969FFF 0%, #5147FF 100%);
-  color: white;
-  border-radius: 24rpx;
+  background: #F6D387;
+  color: #602F27;
+  border-radius: 44rpx;
   font-size: 32rpx;
-  font-weight: 500;
-  box-shadow: 0 8rpx 30rpx rgba(150, 159, 255, 0.3);
+  font-weight: 700;
+  border: 4rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 0 #D5A874;
 }
 
 .submit-btn:disabled {
@@ -290,9 +294,10 @@ const formatDate = (dateStr) => {
 
 .records-section {
   background: white;
-  border-radius: 32rpx;
+  border-radius: 28rpx;
   padding: 40rpx;
-  box-shadow: 0 8rpx 40rpx rgba(150, 159, 255, 0.15);
+  border: 3rpx solid #E3C7A4;
+  box-shadow: 0 6rpx 20rpx rgba(96, 47, 39, 0.08);
 }
 
 .section-header {
@@ -305,7 +310,7 @@ const formatDate = (dateStr) => {
 .section-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #1f2937;
+  color: #602F27;
 }
 
 .record-count {
@@ -338,9 +343,9 @@ const formatDate = (dateStr) => {
 
 .record-item {
   padding: 32rpx;
-  background: #f9fafb;
+  background: linear-gradient(135deg, #FFF8E7 0%, #FFFBF0 100%);
   border-radius: 20rpx;
-  border: 2rpx solid #e5e7eb;
+  border: 2rpx solid #E3C7A4;
 }
 
 .record-header {
@@ -352,7 +357,7 @@ const formatDate = (dateStr) => {
 
 .record-date {
   font-size: 26rpx;
-  color: #6b7280;
+  color: #A85835;
 }
 
 .record-status {

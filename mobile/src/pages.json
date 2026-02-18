@@ -12,7 +12,8 @@
 			"style": {
 				"navigationBarTitleText": "热量记录与食谱推荐",
 				"navigationBarBackgroundColor": "#fb923c",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -72,7 +73,8 @@
 			"style": {
 				"navigationBarTitleText": "健康计划工坊",
 				"navigationBarBackgroundColor": "#3B82F6",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -95,13 +97,21 @@
 			"style": {
 				"navigationBarTitleText": "互动板块",
 				"navigationBarBackgroundColor": "#f093fb",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
 			"path": "pages/community/chat",
 			"style": {
 				"navigationBarTitleText": "聊天",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/community/add-friend",
+			"style": {
+				"navigationBarTitleText": "添加朋友",
 				"navigationStyle": "custom"
 			}
 		},
@@ -132,7 +142,8 @@
 			"style": {
 				"navigationBarTitleText": "小游戏",
 				"navigationBarBackgroundColor": "#f093fb",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -140,7 +151,8 @@
 			"style": {
 				"navigationBarTitleText": "糖值守护跑酷",
 				"navigationBarBackgroundColor": "#f093fb",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -148,7 +160,8 @@
 			"style": {
 				"navigationBarTitleText": "食物拼拼乐",
 				"navigationBarBackgroundColor": "#f093fb",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -156,7 +169,8 @@
 			"style": {
 				"navigationBarTitleText": "科普知识",
 				"navigationBarBackgroundColor": "#22c55e",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
     {
@@ -164,7 +178,8 @@
       "style": {
         "navigationBarTitleText": "科普文章",
         "navigationBarBackgroundColor": "#22c55e",
-        "navigationBarTextStyle": "white"
+        "navigationBarTextStyle": "white",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -172,7 +187,8 @@
       "style": {
         "navigationBarTitleText": "视频学习",
         "navigationBarBackgroundColor": "#0ea5e9",
-        "navigationBarTextStyle": "white"
+        "navigationBarTextStyle": "white",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -180,7 +196,8 @@
       "style": {
         "navigationBarTitleText": "视频详情",
         "navigationBarBackgroundColor": "#0ea5e9",
-        "navigationBarTextStyle": "white"
+        "navigationBarTextStyle": "white",
+        "navigationStyle": "custom"
       }
     },
 		{
@@ -204,7 +221,8 @@
 			"style": {
 				"navigationBarTitleText": "每日签到",
 				"navigationBarBackgroundColor": "#5147FF",
-				"navigationBarTextStyle": "white"
+				"navigationBarTextStyle": "white",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -213,6 +231,41 @@
 				"navigationBarTitleText": "AI专科对话",
 				"navigationBarBackgroundColor": "#667eea",
 				"navigationBarTextStyle": "white"
+			}
+		},
+		{
+			"path": "pages/chat/report-analysis",
+			"style": {
+				"navigationBarTitleText": "报告解读",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/chat/medicine-box",
+			"style": {
+				"navigationBarTitleText": "药品管理",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/chat/health-diary",
+			"style": {
+				"navigationBarTitleText": "健康日志",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/chat/quiz-history",
+			"style": {
+				"navigationBarTitleText": "知识问答",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/interaction/breathing/index",
+			"style": {
+				"navigationBarTitleText": "呼吸冥想",
+				"navigationStyle": "custom"
 			}
 		}
 	],
