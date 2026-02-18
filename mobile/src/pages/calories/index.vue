@@ -145,7 +145,7 @@
       </view>
     </view>
 
-    <!-- Tab 切换：热量记录 / 食谱推荐 -->
+    <!-- Tab 切换：热量记录 / 食谱推荐 / 数据联动 -->
     <view class="tab-bar">
       <view
         class="tab-item"
@@ -161,65 +161,177 @@
       >
         <text class="tab-title">食谱推荐</text>
       </view>
+      <view
+        class="tab-item"
+        :class="{ active: currentTab === 'analysis' }"
+        @tap="switchTab('analysis')"
+      >
+        <text class="tab-title">数据联动</text>
+      </view>
     </view>
 
     <!-- Tab 内容 -->
     <scroll-view class="tab-content" :scroll-y="true">
       <!-- 热量记录 -->
       <view v-if="currentTab === 'record'" class="record-tab">
-        <!-- 快速添加 -->
-        <view class="quick-add-card">
-          <view class="quick-add-header">
-            <text class="quick-add-title">快速记录一顿饮食</text>
-            <text class="quick-add-hint">支持在校、居家、外出场景</text>
+        <!-- 餐次轴 -->
+        <view class="meal-time-axis">
+          <view
+            v-for="meal in mealTypeOptions"
+            :key="meal.value"
+            class="meal-time-item"
+            :class="{ 
+              active: selectedMealType.value === meal.value,
+              highlight: isCurrentMealTime(meal.value)
+            }"
+            @tap="selectMealType(meal)"
+          >
+            <text class="meal-time-icon">{{ meal.icon }}</text>
+            <text class="meal-time-label">{{ meal.label }}</text>
           </view>
-          <view class="quick-add-row">
-            <picker
-              mode="selector"
-              :range="mealTypeOptions"
-              range-key="label"
-              @change="onMealTypeChange"
-            >
-              <view class="quick-select">
-                <text class="select-label">
-                  {{ selectedMealType.label }}
-                </text>
+        </view>
+
+        <!-- 智能录入区 -->
+        <view class="smart-input-card">
+          <view class="smart-input-header">
+            <text class="smart-input-title">智能录入</text>
+            <text class="smart-input-hint">拍照识别、条码扫描或手动搜索</text>
+          </view>
+          
+          <!-- 大尺寸拍照识别按钮 -->
+          <view class="input-methods">
+            <view class="photo-recognize-btn" @tap="handlePhotoRecognize">
+              <text class="photo-icon">📷</text>
+              <text class="photo-text">拍照识别</text>
+            </view>
+            <view class="input-method-row">
+              <view class="barcode-btn" @tap="handleBarcodeScan">
+                <text class="method-icon">📱</text>
+                <text class="method-text">条码扫描</text>
               </view>
-            </picker>
+              <view class="search-btn" @tap="handleManualSearch">
+                <text class="method-icon">🔍</text>
+                <text class="method-text">手动搜索</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 识别结果确认卡片 -->
+          <view v-if="recognitionResult" class="recognition-result-card">
+            <view class="result-header">
+              <text class="result-title">识别结果</text>
+              <text class="result-close" @tap="clearRecognitionResult">✕</text>
+            </view>
+            <view class="result-foods">
+              <view
+                v-for="(food, idx) in recognitionResult.foods"
+                :key="idx"
+                class="result-food-item"
+                :class="{ selected: food.selected }"
+                @tap="toggleFoodSelection(food)"
+              >
+                <text class="food-check">{{ food.selected ? '✓' : '' }}</text>
+                <text class="food-name">{{ food.name }}</text>
+                <text class="food-weight">{{ food.weight }}g</text>
+              </view>
+            </view>
+            <view class="result-summary">
+              <text class="summary-text">
+                总碳水：{{ recognitionResult.total_carbs || 0 }}g
+              </text>
+            </view>
+          </view>
+
+          <!-- 手动输入表单 -->
+          <view v-if="showManualForm" class="manual-form">
             <input
               v-model="foodName"
-              class="quick-input"
+              class="manual-input"
               type="text"
-              placeholder="吃了什么？例如：鸡腿饭"
-              maxlength="30"
+              placeholder="搜索食物名称..."
+              @input="handleFoodSearch"
             />
-          </view>
-          <view class="quick-add-row">
-            <input
-              v-model="calories"
-              class="quick-input"
-              type="number"
-              placeholder="估算热量（kcal）"
-            />
-            <picker
-              mode="selector"
-              :range="sceneOptions"
-              range-key="label"
-              @change="onSceneChange"
-            >
-              <view class="quick-select scene">
-                <text class="select-label">
-                  {{ currentScene.label }}
+            <view v-if="searchResults.length > 0" class="search-results">
+              <view
+                v-for="item in searchResults"
+                :key="item.id"
+                class="search-result-item"
+                @tap="selectFoodItem(item)"
+              >
+                <text class="result-food-name">{{ item.name }}</text>
+                <text class="result-food-info">
+                  {{ item.carbs }}g碳水 | GI:{{ item.gi_level }}
                 </text>
               </view>
-            </picker>
+            </view>
           </view>
+        </view>
+
+        <!-- 辅助参数 -->
+        <view v-if="selectedFoodItems.length > 0" class="auxiliary-params-card">
+          <view class="params-header">
+            <text class="params-title">补充信息</text>
+          </view>
+          
+          <!-- 分量滑块 -->
+          <view class="param-item">
+            <text class="param-label">分量</text>
+            <view class="portion-slider-wrapper">
+              <slider
+                :value="portionValue"
+                min="0"
+                max="200"
+                step="10"
+                activeColor="#6366f1"
+                @change="onPortionChange"
+              />
+              <view class="portion-labels">
+                <text class="portion-label">半碗</text>
+                <text class="portion-label">一碗</text>
+              </view>
+            </view>
+            <text class="portion-value">{{ portionText }}</text>
+          </view>
+
+          <!-- 进食感受 -->
+          <view class="param-item">
+            <text class="param-label">进食感受</text>
+            <view class="feeling-chips">
+              <view
+                v-for="feeling in feelingOptions"
+                :key="feeling.value"
+                class="feeling-chip"
+                :class="{ active: currentFeeling === feeling.value }"
+                @tap="selectFeeling(feeling.value)"
+              >
+                <text class="feeling-icon">{{ feeling.icon }}</text>
+                <text class="feeling-text">{{ feeling.label }}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 特殊标签 -->
+          <view class="param-item">
+            <text class="param-label">特殊标签</text>
+            <view class="tag-chips">
+              <view
+                v-for="tag in tagOptions"
+                :key="tag.value"
+                class="tag-chip"
+                :class="{ active: selectedTags.includes(tag.value) }"
+                @tap="toggleTag(tag.value)"
+              >
+                {{ tag.label }}
+              </view>
+            </view>
+          </view>
+
+          <!-- 保存按钮 -->
           <button
-            class="save-btn"
-            :disabled="!canSubmit"
-            @tap="submitRecord"
+            class="save-record-btn"
+            @tap="submitRecordWithParams"
           >
-            记一笔
+            保存记录
           </button>
         </view>
 
@@ -267,18 +379,19 @@
 
       <!-- 食谱推荐 -->
       <view v-else class="recipe-tab">
-        <!-- 场景选择 -->
-        <view class="scene-switcher">
-          <text class="scene-label">推荐场景</text>
-          <view class="scene-chips">
+        <!-- 场景滤镜 -->
+        <view class="scene-filter">
+          <text class="filter-label">推荐场景</text>
+          <view class="scene-filter-chips">
             <view
-              v-for="opt in sceneOptions"
+              v-for="opt in sceneFilterOptions"
               :key="opt.value"
-              class="scene-chip"
-              :class="{ active: opt.value === scene }"
-              @tap="changeScene(opt)"
+              class="scene-filter-chip"
+              :class="{ active: currentSceneFilter === opt.value }"
+              @tap="changeSceneFilter(opt.value)"
             >
-              {{ opt.label }}
+              <text class="filter-icon">{{ opt.icon }}</text>
+              <text class="filter-text">{{ opt.label }}</text>
             </view>
           </view>
         </view>
@@ -303,7 +416,14 @@
               v-for="recipe in recipes"
               :key="recipe.id"
               class="recipe-card"
+              @tap="showRecipeDetail(recipe)"
             >
+              <!-- 红绿灯标签 -->
+              <view class="recipe-gi-badge" :class="getGIBadgeClass(recipe.gi_level)">
+                <text class="gi-badge-icon">{{ getGIBadgeIcon(recipe.gi_level) }}</text>
+                <text class="gi-badge-text">{{ getGIBadgeText(recipe.gi_level) }}</text>
+              </view>
+
               <view class="recipe-header">
                 <text class="recipe-meal-tag">
                   {{ mealTypeText(recipe.meal_type) }}
@@ -311,22 +431,86 @@
                 <text class="recipe-title">{{ recipe.name }}</text>
               </view>
               <text class="recipe-desc">{{ recipe.description }}</text>
-              <view class="recipe-meta">
-                <text class="meta-tag">
-                  {{ recipe.total_calories }} kcal
-                </text>
-                <text class="meta-tag">
-                  碳水 {{ recipe.carbs_grams }} g
-                </text>
-                <text class="meta-tag">
-                  适合：{{ sceneText(recipe.scene) }}
-                </text>
+              
+              <!-- 营养信息 -->
+              <view class="recipe-nutrition">
+                <view class="nutrition-item">
+                  <text class="nutrition-label">热量</text>
+                  <text class="nutrition-value">{{ recipe.total_calories }} kcal</text>
+                </view>
+                <view class="nutrition-item">
+                  <text class="nutrition-label">碳水</text>
+                  <text class="nutrition-value">{{ recipe.carbs_grams }}g</text>
+                </view>
+                <view class="nutrition-item">
+                  <text class="nutrition-label">蛋白质</text>
+                  <text class="nutrition-value">{{ recipe.protein_grams || 0 }}g</text>
+                </view>
+                <view class="nutrition-item">
+                  <text class="nutrition-label">脂肪</text>
+                  <text class="nutrition-value">{{ recipe.fat_grams || 0 }}g</text>
+                </view>
               </view>
+
+              <!-- 胰岛素注射建议 -->
+              <view v-if="recipe.insulin_tip" class="insulin-tip">
+                <text class="insulin-icon">💉</text>
+                <text class="insulin-text">{{ recipe.insulin_tip }}</text>
+              </view>
+
+              <!-- 操作按钮 -->
+              <view class="recipe-actions">
+                <view class="action-btn favorite-btn" @tap.stop="toggleFavorite(recipe)">
+                  <text class="action-icon">{{ recipe.is_favorite ? '❤️' : '🤍' }}</text>
+                  <text class="action-text">收藏</text>
+                </view>
+                <view class="action-btn share-btn" @tap.stop="shareToFamily(recipe)">
+                  <text class="action-icon">📤</text>
+                  <text class="action-text">发送给家属</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 数据联动分析 Tab -->
+      <view v-if="currentTab === 'analysis'" class="analysis-tab">
+        <view class="analysis-section">
+          <view class="section-header">
+            <text class="section-title">饮食-血糖关联分析</text>
+          </view>
+          
+          <!-- 双轴折线图 -->
+          <view class="chart-container">
+            <view class="chart-placeholder">
+              <text class="chart-label">碳水摄入量 vs 血糖波动</text>
+              <text class="chart-hint">图表加载中...</text>
+            </view>
+          </view>
+
+          <!-- 归因分析 -->
+          <view class="attribution-analysis">
+            <view class="analysis-header">
+              <text class="analysis-title">异常点归因分析</text>
+            </view>
+            <view v-if="attributionData.length === 0" class="empty-analysis">
+              <text class="empty-text">暂无异常数据</text>
+            </view>
+            <view v-else class="attribution-list">
               <view
-                v-if="recipe.glucose_tip"
-                class="recipe-tip"
+                v-for="item in attributionData"
+                :key="item.id"
+                class="attribution-item"
               >
-                {{ recipe.glucose_tip }}
+                <view class="attribution-time">
+                  <text class="time-text">{{ item.time }}</text>
+                  <text class="glucose-value high">{{ item.glucose }} mmol/L</text>
+                </view>
+                <view class="attribution-reason">
+                  <text class="reason-icon">🔍</text>
+                  <text class="reason-text">{{ item.reason }}</text>
+                </view>
               </view>
             </view>
           </view>
@@ -341,6 +525,7 @@ import { computed, ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCaloriesStore } from '@/store'
 import { useDashboardStore } from '@/store/dashboard'
+import { caloriesApi } from '@/api'
 
 const caloriesStore = useCaloriesStore()
 const dashboardStore = useDashboardStore()
@@ -403,24 +588,65 @@ const quickAddFood = async () => {
   uni.showToast({ title: '记录成功！⭐', icon: 'none' })
 }
 
-// 快速添加表单
+// 餐次选项（带图标）
 const mealTypeOptions = [
-  { value: 'breakfast', label: '早餐' },
-  { value: 'lunch', label: '午餐' },
-  { value: 'dinner', label: '晚餐' },
-  { value: 'snack', label: '加餐/零食' }
+  { value: 'breakfast', label: '早餐', icon: '🌅' },
+  { value: 'lunch', label: '午餐', icon: '☀️' },
+  { value: 'dinner', label: '晚餐', icon: '🌙' },
+  { value: 'snack', label: '加餐', icon: '🍪' }
 ]
 
+// 场景选项
 const sceneOptions = [
   { value: 'school', label: '在校' },
   { value: 'home', label: '居家' },
   { value: 'outing', label: '外出聚餐' }
 ]
 
+// 场景滤镜选项（食谱推荐用）
+const sceneFilterOptions = [
+  { value: 'school', label: '校园餐', icon: '🏫' },
+  { value: 'home', label: '家常菜', icon: '🏠' },
+  { value: 'outing', label: '外出聚餐', icon: '🍽️' },
+  { value: 'festival', label: '节日特供', icon: '🎉' }
+]
+
+// 进食感受选项
+const feelingOptions = [
+  { value: 'full', label: '吃饱', icon: '😋' },
+  { value: 'seven', label: '七分饱', icon: '😊' },
+  { value: 'half', label: '半饱', icon: '😐' }
+]
+
+// 特殊标签选项
+const tagOptions = [
+  { value: 'sugar_free', label: '无糖' },
+  { value: 'honey', label: '含蜂蜜' },
+  { value: 'low_gi', label: '低GI' },
+  { value: 'high_fiber', label: '高纤维' }
+]
+
 const selectedMealType = ref(mealTypeOptions[0])
 const currentScene = ref(sceneOptions[1])
+const currentSceneFilter = ref('home')
 const foodName = ref('')
 const calories = ref('')
+
+// 识别结果
+const recognitionResult = ref(null)
+const showManualForm = ref(false)
+const searchResults = ref([])
+
+// 选中的食物项
+const selectedFoodItems = ref([])
+
+// 辅助参数
+const portionValue = ref(100) // 0-200，对应半碗到一碗
+const currentFeeling = ref('')
+const selectedTags = ref([])
+
+// 归因分析数据
+const attributionData = ref([])
 
 const summary = computed(() => dailySummary.value || {})
 
@@ -434,12 +660,29 @@ const canSubmit = computed(() => {
   return foodName.value && calories.value
 })
 
+// 根据当前时间判断当前餐次
+const isCurrentMealTime = (mealType) => {
+  const hour = new Date().getHours()
+  if (mealType === 'breakfast' && hour >= 6 && hour < 10) return true
+  if (mealType === 'lunch' && hour >= 11 && hour < 14) return true
+  if (mealType === 'dinner' && hour >= 17 && hour < 21) return true
+  if (mealType === 'snack' && (hour < 6 || hour >= 21)) return true
+  return false
+}
+
+// 选择餐次
+const selectMealType = (meal) => {
+  selectedMealType.value = meal
+}
+
 const switchTab = (tab) => {
   caloriesStore.setTab(tab)
   if (tab === 'record') {
     caloriesStore.fetchDailyCalories()
-  } else {
+  } else if (tab === 'recipe') {
     caloriesStore.fetchRecipes()
+  } else if (tab === 'analysis') {
+    fetchLinkageAnalysis()
   }
 }
 
@@ -462,6 +705,87 @@ const changeScene = (opt) => {
   currentScene.value = opt
   caloriesStore.setScene(opt.value)
   caloriesStore.fetchRecipes()
+}
+
+// 改变场景滤镜
+const changeSceneFilter = (sceneValue) => {
+  currentSceneFilter.value = sceneValue
+  caloriesStore.setScene(sceneValue)
+  caloriesStore.fetchRecipes()
+}
+
+// GI标签相关
+const getGIBadgeClass = (giLevel) => {
+  if (giLevel === 'low' || giLevel === 1) return 'gi-low'
+  if (giLevel === 'medium' || giLevel === 2) return 'gi-medium'
+  return 'gi-high'
+}
+
+const getGIBadgeIcon = (giLevel) => {
+  if (giLevel === 'low' || giLevel === 1) return '🟢'
+  if (giLevel === 'medium' || giLevel === 2) return '🟡'
+  return '🔴'
+}
+
+const getGIBadgeText = (giLevel) => {
+  if (giLevel === 'low' || giLevel === 1) return '放心吃'
+  if (giLevel === 'medium' || giLevel === 2) return '适量吃'
+  return '谨慎吃'
+}
+
+// 显示食谱详情
+const showRecipeDetail = async (recipe) => {
+  try {
+    const detail = await caloriesApi.getRecipeDetail(recipe.id)
+    // 可以打开详情弹窗或跳转详情页
+    uni.showModal({
+      title: recipe.name,
+      content: `食材：${detail.data?.ingredients?.join('、') || '暂无'}\n${recipe.insulin_tip || ''}`,
+      showCancel: false
+    })
+  } catch (error) {
+    console.error('获取详情失败:', error)
+  }
+}
+
+// 收藏/取消收藏
+const toggleFavorite = async (recipe) => {
+  try {
+    await caloriesApi.toggleRecipeFavorite(recipe.id, {
+      is_favorite: !recipe.is_favorite
+    })
+    recipe.is_favorite = !recipe.is_favorite
+    uni.showToast({
+      title: recipe.is_favorite ? '已收藏' : '已取消收藏',
+      icon: 'success'
+    })
+  } catch (error) {
+    console.error('收藏操作失败:', error)
+  }
+}
+
+// 发送给家属
+const shareToFamily = async (recipe) => {
+  try {
+    await caloriesApi.shareRecipeToFamily(recipe.id, {})
+    uni.showToast({ title: '已发送给家属', icon: 'success' })
+  } catch (error) {
+    console.error('分享失败:', error)
+    uni.showToast({ title: '分享失败', icon: 'none' })
+  }
+}
+
+// 获取关联分析数据
+const fetchLinkageAnalysis = async () => {
+  try {
+    caloriesStore.initToday()
+    const result = await caloriesApi.getLinkageAnalysis({
+      date: selectedDate.value || new Date().toISOString().split('T')[0]
+    })
+    attributionData.value = result.data?.attributions || []
+  } catch (error) {
+    console.error('获取关联分析失败:', error)
+  }
 }
 
 const mealTypeText = (value) => {
@@ -492,6 +816,200 @@ const goBack = () => {
   }
 }
 
+// 拍照识别
+const handlePhotoRecognize = async () => {
+  try {
+    uni.chooseImage({
+      count: 1,
+      sourceType: ['camera', 'album'],
+      success: async (res) => {
+        const tempFilePath = res.tempFilePaths[0]
+        uni.showLoading({ title: '识别中...' })
+        
+        try {
+          // 将图片转为base64或上传
+          const fileSystemManager = uni.getFileSystemManager()
+          const base64 = await new Promise((resolve, reject) => {
+            fileSystemManager.readFile({
+              filePath: tempFilePath,
+              encoding: 'base64',
+              success: (res) => resolve(res.data),
+              fail: reject
+            })
+          })
+          
+          const result = await caloriesApi.recognizeFoodImage({
+            image: base64,
+            meal_type: selectedMealType.value.value
+          })
+          
+          recognitionResult.value = {
+            foods: (result.data?.foods || []).map(f => ({
+              ...f,
+              selected: true
+            })),
+            total_carbs: result.data?.total_carbs || 0
+          }
+          
+          uni.hideLoading()
+          uni.showToast({ title: '识别成功', icon: 'success' })
+        } catch (error) {
+          uni.hideLoading()
+          console.error('识别失败:', error)
+          uni.showToast({ title: '识别失败，请重试', icon: 'none' })
+        }
+      },
+      fail: (err) => {
+        console.error('选择图片失败:', err)
+      }
+    })
+  } catch (error) {
+    console.error('拍照识别错误:', error)
+  }
+}
+
+// 条码扫描
+const handleBarcodeScan = () => {
+  uni.scanCode({
+    success: async (res) => {
+      try {
+        uni.showLoading({ title: '识别中...' })
+        const result = await caloriesApi.scanBarcode({
+          barcode: res.result
+        })
+        
+        if (result.data) {
+          selectedFoodItems.value = [result.data]
+          uni.hideLoading()
+          uni.showToast({ title: '识别成功', icon: 'success' })
+        }
+      } catch (error) {
+        uni.hideLoading()
+        console.error('条码识别失败:', error)
+        uni.showToast({ title: '识别失败', icon: 'none' })
+      }
+    },
+    fail: (err) => {
+      console.error('扫描失败:', err)
+    }
+  })
+}
+
+// 手动搜索
+const handleManualSearch = () => {
+  showManualForm.value = true
+}
+
+// 食物搜索
+const handleFoodSearch = async (e) => {
+  const keyword = e.detail.value
+  if (!keyword || keyword.length < 1) {
+    searchResults.value = []
+    return
+  }
+  
+  try {
+    const result = await caloriesApi.searchFoods({ keyword })
+    searchResults.value = result.data || []
+  } catch (error) {
+    console.error('搜索失败:', error)
+  }
+}
+
+// 选择食物项
+const selectFoodItem = (item) => {
+  selectedFoodItems.value = [item]
+  foodName.value = item.name
+  showManualForm.value = false
+  searchResults.value = []
+}
+
+// 切换食物选择
+const toggleFoodSelection = (food) => {
+  food.selected = !food.selected
+  updateRecognitionSummary()
+}
+
+// 更新识别结果汇总
+const updateRecognitionSummary = () => {
+  if (!recognitionResult.value) return
+  const selected = recognitionResult.value.foods.filter(f => f.selected)
+  recognitionResult.value.total_carbs = selected.reduce((sum, f) => sum + (f.carbs || 0), 0)
+}
+
+// 清除识别结果
+const clearRecognitionResult = () => {
+  recognitionResult.value = null
+  selectedFoodItems.value = []
+}
+
+// 分量变化
+const onPortionChange = (e) => {
+  portionValue.value = e.detail.value
+}
+
+const portionText = computed(() => {
+  if (portionValue.value < 50) return '半碗'
+  if (portionValue.value < 150) return '大半碗'
+  return '一碗'
+})
+
+// 选择进食感受
+const selectFeeling = (feeling) => {
+  currentFeeling.value = feeling
+}
+
+// 切换标签
+const toggleTag = (tag) => {
+  const index = selectedTags.value.indexOf(tag)
+  if (index > -1) {
+    selectedTags.value.splice(index, 1)
+  } else {
+    selectedTags.value.push(tag)
+  }
+}
+
+// 提交记录（带参数）
+const submitRecordWithParams = async () => {
+  if (selectedFoodItems.value.length === 0 && !foodName.value && (!recognitionResult.value || recognitionResult.value.foods.filter(f => f.selected).length === 0)) {
+    uni.showToast({ title: '请选择或输入食物', icon: 'none' })
+    return
+  }
+  
+  try {
+    caloriesStore.initToday()
+    const foods = recognitionResult.value?.foods.filter(f => f.selected) || selectedFoodItems.value || [{ name: foodName.value }]
+    
+    for (const food of foods) {
+      await caloriesStore.addRecord({
+        meal_type: selectedMealType.value.value,
+        food_name: food.name || foodName.value,
+        calories: food.calories || Number(calories.value) || 0,
+        carbs_grams: food.carbs || 0,
+        weight: food.weight || portionValue.value,
+        feeling: currentFeeling.value,
+        tags: selectedTags.value,
+        scene: currentScene.value.value,
+        source_type: recognitionResult.value ? 'ocr' : (selectedFoodItems.value.length > 0 ? 'barcode' : 'manual')
+      })
+    }
+    
+    // 清空表单
+    clearRecognitionResult()
+    foodName.value = ''
+    calories.value = ''
+    portionValue.value = 100
+    currentFeeling.value = ''
+    selectedTags.value = []
+    showManualForm.value = false
+    
+    uni.showToast({ title: '记录已保存', icon: 'success' })
+  } catch (error) {
+    console.error('保存失败:', error)
+    uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+  }
+}
+
 const submitRecord = async () => {
   if (!canSubmit.value) return
   await caloriesStore.addRecord({
@@ -508,7 +1026,19 @@ const submitRecord = async () => {
 onMounted(() => {
   caloriesStore.initToday()
   caloriesStore.fetchDailyCalories()
-  if (recipes.value.length === 0) {
+  // 根据当前时间自动选择餐次
+  const hour = new Date().getHours()
+  if (hour >= 6 && hour < 10) {
+    selectedMealType.value = mealTypeOptions.find(m => m.value === 'breakfast') || mealTypeOptions[0]
+  } else if (hour >= 11 && hour < 14) {
+    selectedMealType.value = mealTypeOptions.find(m => m.value === 'lunch') || mealTypeOptions[1]
+  } else if (hour >= 17 && hour < 21) {
+    selectedMealType.value = mealTypeOptions.find(m => m.value === 'dinner') || mealTypeOptions[2]
+  } else {
+    selectedMealType.value = mealTypeOptions.find(m => m.value === 'snack') || mealTypeOptions[3]
+  }
+  
+  if (recipes.value.length === 0 && currentTab.value === 'recipe') {
     caloriesStore.fetchRecipes()
   }
 })
@@ -1297,6 +1827,630 @@ onMounted(() => {
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-16rpx); }
+}
+
+/* ========== 新增功能样式 ========== */
+
+/* 餐次轴 */
+.meal-time-axis {
+  display: flex;
+  justify-content: space-around;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 20rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 30rpx rgba(15, 23, 42, 0.05);
+}
+
+.meal-time-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  transition: all 0.3s;
+}
+
+.meal-time-item.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+}
+
+.meal-time-item.highlight {
+  border: 2rpx solid #fbbf24;
+  background: #fef3c7;
+}
+
+.meal-time-icon {
+  font-size: 36rpx;
+}
+
+.meal-time-label {
+  font-size: 24rpx;
+}
+
+.meal-time-item.active .meal-time-label {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* 智能录入区 */
+.smart-input-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 30rpx rgba(15, 23, 42, 0.06);
+}
+
+.smart-input-header {
+  margin-bottom: 20rpx;
+}
+
+.smart-input-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.smart-input-hint {
+  font-size: 24rpx;
+  color: #9ca3af;
+}
+
+.input-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.photo-recognize-btn {
+  width: 100%;
+  height: 160rpx;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 10rpx 30rpx rgba(99, 102, 241, 0.35);
+}
+
+.photo-icon {
+  font-size: 56rpx;
+}
+
+.photo-text {
+  font-size: 28rpx;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.input-method-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.barcode-btn,
+.search-btn {
+  flex: 1;
+  height: 100rpx;
+  background: #f9fafb;
+  border-radius: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  border: 2rpx solid #e5e7eb;
+}
+
+.method-icon {
+  font-size: 36rpx;
+}
+
+.method-text {
+  font-size: 24rpx;
+  color: #4b5563;
+}
+
+/* 识别结果卡片 */
+.recognition-result-card {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f9fafb;
+  border-radius: 16rpx;
+  border: 2rpx solid #e5e7eb;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.result-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.result-close {
+  font-size: 32rpx;
+  color: #9ca3af;
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-foods {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.result-food-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 12rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  border: 2rpx solid #e5e7eb;
+}
+
+.result-food-item.selected {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.food-check {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: #6366f1;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+}
+
+.food-name {
+  flex: 1;
+  font-size: 26rpx;
+  color: #111827;
+}
+
+.food-weight {
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.result-summary {
+  padding-top: 16rpx;
+  border-top: 1rpx solid #e5e7eb;
+}
+
+.summary-text {
+  font-size: 26rpx;
+  color: #111827;
+  font-weight: 500;
+}
+
+/* 手动搜索表单 */
+.manual-form {
+  margin-top: 20rpx;
+}
+
+.manual-input {
+  width: 100%;
+  height: 76rpx;
+  background: #f9fafb;
+  border-radius: 20rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  border: 2rpx solid #e5e7eb;
+}
+
+.search-results {
+  margin-top: 12rpx;
+  max-height: 400rpx;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  padding: 16rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  margin-bottom: 8rpx;
+  border: 1rpx solid #e5e7eb;
+}
+
+.result-food-name {
+  font-size: 26rpx;
+  color: #111827;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.result-food-info {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+/* 辅助参数卡片 */
+.auxiliary-params-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 30rpx rgba(15, 23, 42, 0.06);
+}
+
+.params-header {
+  margin-bottom: 20rpx;
+}
+
+.params-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.param-item {
+  margin-bottom: 28rpx;
+}
+
+.param-label {
+  font-size: 26rpx;
+  color: #4b5563;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.portion-slider-wrapper {
+  margin-bottom: 12rpx;
+}
+
+.portion-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8rpx;
+}
+
+.portion-label {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+.portion-value {
+  font-size: 24rpx;
+  color: #6366f1;
+  font-weight: 500;
+}
+
+.feeling-chips,
+.tag-chips {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.feeling-chip,
+.tag-chip {
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: #f3f4f6;
+  border: 2rpx solid #e5e7eb;
+  font-size: 24rpx;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.feeling-chip.active,
+.tag-chip.active {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.feeling-icon {
+  font-size: 28rpx;
+}
+
+.save-record-btn {
+  width: 100%;
+  height: 84rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 500;
+  margin-top: 20rpx;
+  box-shadow: 0 10rpx 30rpx rgba(79, 70, 229, 0.35);
+}
+
+/* 场景滤镜 */
+.scene-filter {
+  margin-bottom: 20rpx;
+}
+
+.filter-label {
+  font-size: 26rpx;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.scene-filter-chips {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.scene-filter-chip {
+  padding: 12rpx 24rpx;
+  border-radius: 999rpx;
+  background: #f3f4f6;
+  border: 2rpx solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.scene-filter-chip.active {
+  background: linear-gradient(135deg, #34d399, #22c55e);
+  border-color: #22c55e;
+  color: #ffffff;
+}
+
+.filter-icon {
+  font-size: 24rpx;
+}
+
+.filter-text {
+  font-size: 24rpx;
+}
+
+/* 食谱卡片增强 */
+.recipe-gi-badge {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 22rpx;
+}
+
+.recipe-gi-badge.gi-low {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.recipe-gi-badge.gi-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.recipe-gi-badge.gi-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.gi-badge-icon {
+  font-size: 20rpx;
+}
+
+.gi-badge-text {
+  font-weight: 500;
+}
+
+.recipe-card {
+  position: relative;
+  padding: 20rpx;
+  border-radius: 20rpx;
+  background: #f9fafb;
+  margin-bottom: 18rpx;
+}
+
+.recipe-nutrition {
+  display: flex;
+  gap: 16rpx;
+  margin: 16rpx 0;
+  flex-wrap: wrap;
+}
+
+.nutrition-item {
+  flex: 1;
+  min-width: 120rpx;
+  padding: 12rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.nutrition-label {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.nutrition-value {
+  font-size: 24rpx;
+  color: #111827;
+  font-weight: 600;
+}
+
+.insulin-tip {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx;
+  background: #eff6ff;
+  border-radius: 12rpx;
+  margin-top: 12rpx;
+}
+
+.insulin-icon {
+  font-size: 24rpx;
+}
+
+.insulin-text {
+  font-size: 24rpx;
+  color: #1e40af;
+}
+
+.recipe-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12rpx;
+  border-radius: 12rpx;
+  background: #ffffff;
+  border: 1rpx solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6rpx;
+}
+
+.action-icon {
+  font-size: 24rpx;
+}
+
+.action-text {
+  font-size: 22rpx;
+  color: #4b5563;
+}
+
+/* 数据联动分析 */
+.analysis-tab {
+  padding-bottom: 40rpx;
+}
+
+.analysis-section {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  box-shadow: 0 8rpx 30rpx rgba(15, 23, 42, 0.05);
+}
+
+.chart-container {
+  margin: 24rpx 0;
+  height: 400rpx;
+  background: #f9fafb;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.chart-label {
+  font-size: 26rpx;
+  color: #111827;
+  font-weight: 500;
+}
+
+.chart-hint {
+  font-size: 24rpx;
+  color: #9ca3af;
+}
+
+.attribution-analysis {
+  margin-top: 32rpx;
+}
+
+.analysis-header {
+  margin-bottom: 20rpx;
+}
+
+.analysis-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.empty-analysis {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.attribution-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.attribution-item {
+  padding: 16rpx;
+  background: #f9fafb;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #ef4444;
+}
+
+.attribution-time {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.time-text {
+  font-size: 24rpx;
+  color: #6b7280;
+}
+
+.glucose-value {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.glucose-value.high {
+  color: #ef4444;
+}
+
+.attribution-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 8rpx;
+}
+
+.reason-icon {
+  font-size: 24rpx;
+}
+
+.reason-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #4b5563;
+  line-height: 1.5;
 }
 </style>
 

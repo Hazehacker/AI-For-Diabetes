@@ -13,9 +13,252 @@
       <text class="page-subtitle">AI 助力，科学管理</text>
     </view>
 
-    <!-- 主内容区域（所有模式共用，样式根据模式不同） -->
-    <view class="main-content" :class="{ 'child-content': isChildMode }">
-      <!-- 青少年/家属视图 -->
+    <!-- 儿童模式：奶酪仓鼠风格 -->
+    <view v-if="userRole === 'child_under_12'" class="child-plan-view">
+      <!-- 顶部装饰 -->
+      <view class="child-plan-header">
+        <view class="header-deco">
+          <text class="deco-star">✨</text>
+          <text class="deco-star s2">⭐</text>
+        </view>
+        <view class="header-title-area">
+          <text class="header-icon">📋</text>
+          <text class="header-title">我的小任务</text>
+        </view>
+        <view class="level-badge-child">
+          <text class="badge-icon">🏆</text>
+          <text class="badge-text">Lv.{{ gamifiedView.level }}</text>
+        </view>
+      </view>
+
+      <!-- 吉祥物鼓励卡片 -->
+      <view class="mascot-encourage-card">
+        <view class="mascot-left">
+          <text class="mascot-face">🐹</text>
+        </view>
+        <view class="mascot-right">
+          <view class="speech-box">
+            <text class="speech-content">{{ encourageMessage }}</text>
+          </view>
+          <view class="progress-area">
+            <text class="progress-label-child">今日进度</text>
+            <view class="progress-bar-child">
+              <view class="progress-fill-child" :style="{ width: todayCompletionRate + '%' }"></view>
+            </view>
+            <text class="progress-text-child">{{ todayCompletionRate }}%</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 勋章展示 -->
+      <view v-if="gamifiedView.badges.length > 0" class="badges-card-child">
+        <view class="badges-header">
+          <text class="badges-title">🎖️ 我的勋章</text>
+        </view>
+        <view class="badges-grid">
+          <view v-for="badge in gamifiedView.badges" :key="badge.name" class="badge-item-child">
+            <text class="badge-emoji">{{ badge.icon }}</text>
+            <text class="badge-name-child">{{ badge.name }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 今日任务列表 -->
+      <view class="tasks-card-child">
+        <view class="tasks-header-child">
+          <text class="tasks-title-child">🎯 今日小挑战</text>
+          <text class="tasks-count-child">{{ gamifiedView.progress }}/{{ gamifiedView.total }}</text>
+        </view>
+        <view class="tasks-list-child">
+          <view 
+            v-for="task in todayPendingTasks" 
+            :key="task.id"
+            class="task-item-child"
+            @tap="completeChildTask(task)"
+          >
+            <view class="task-emoji-wrap">
+              <text class="task-emoji-child">{{ getTaskEmoji(task.content) }}</text>
+            </view>
+            <view class="task-info-child">
+              <text class="task-name-child">{{ simplifyTaskContent(task.content) }}</text>
+              <text class="task-time-child">{{ formatTime(task.scheduled_time) }}</text>
+            </view>
+            <view class="task-action-child">
+              <text class="action-icon">👆</text>
+              <text class="action-text-child">完成</text>
+            </view>
+          </view>
+          
+          <!-- 已完成任务 -->
+          <view 
+            v-for="task in todayCompletedTasks" 
+            :key="task.id"
+            class="task-item-child done"
+          >
+            <view class="task-emoji-wrap done">
+              <text class="task-emoji-child">✅</text>
+            </view>
+            <view class="task-info-child">
+              <text class="task-name-child done">{{ simplifyTaskContent(task.content) }}</text>
+              <text class="task-time-child">{{ formatTime(task.scheduled_time) }}</text>
+            </view>
+            <view class="task-reward-child">
+              <text class="reward-star">⭐</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 空状态 -->
+        <view v-if="todayTasks.length === 0" class="empty-child">
+          <text class="empty-emoji">🎉</text>
+          <text class="empty-text-child">今天没有任务啦</text>
+          <text class="empty-hint-child">好好休息吧~</text>
+        </view>
+      </view>
+
+      <!-- 底部装饰 -->
+      <view class="child-footer">
+        <text class="footer-cheese">🧀</text>
+        <text class="footer-cheese">🧀</text>
+        <text class="footer-cheese">🧀</text>
+      </view>
+    </view>
+
+    <!-- 家长模式：现代简洁风格 -->
+    <view v-else-if="userRole === 'guardian'" class="guardian-plan-view">
+      <!-- 顶部欢迎区 -->
+      <view class="guardian-plan-header">
+        <view class="guardian-plan-welcome">
+          <text class="guardian-plan-title">健康计划工坊</text>
+          <text class="guardian-plan-subtitle">管理孩子的健康计划</text>
+        </view>
+      </view>
+
+      <!-- 快速统计 -->
+      <view class="guardian-stats-cards">
+        <view class="guardian-stat-card">
+          <text class="guardian-stat-value">{{ activePlans.length }}</text>
+          <text class="guardian-stat-label">进行中</text>
+        </view>
+        <view class="guardian-stat-card">
+          <text class="guardian-stat-value">{{ todayCompletionRate }}%</text>
+          <text class="guardian-stat-label">今日完成</text>
+        </view>
+        <view class="guardian-stat-card guardian-stat-highlight">
+          <text class="guardian-stat-value">{{ pendingPlans.length }}</text>
+          <text class="guardian-stat-label">待审核</text>
+        </view>
+      </view>
+
+      <!-- 今日任务时间轴 -->
+      <view class="guardian-today-section">
+        <view class="guardian-section-header">
+          <text class="guardian-section-title">今日清单</text>
+          <text class="guardian-section-date">{{ todayDate }}</text>
+        </view>
+
+        <view class="guardian-timeline">
+          <!-- 待完成任务 -->
+          <view 
+            v-for="task in todayPendingTasks" 
+            :key="task.id"
+            class="guardian-timeline-item guardian-pending"
+          >
+            <view class="guardian-timeline-dot"></view>
+            <view class="guardian-timeline-content">
+              <view class="guardian-task-header">
+                <text class="guardian-task-time">{{ formatTime(task.scheduled_time) }}</text>
+                <view class="guardian-task-level" :class="'guardian-level-' + task.reminder_level">
+                  {{ getLevelText(task.reminder_level) }}
+                </view>
+              </view>
+              <text class="guardian-task-content">{{ task.content }}</text>
+              <view class="guardian-task-actions">
+                <button class="guardian-btn-complete" @tap="completeTask(task)">完成</button>
+                <button class="guardian-btn-difficult" @tap="markDifficult(task)">太难了</button>
+              </view>
+            </view>
+          </view>
+
+          <!-- 已完成任务 -->
+          <view 
+            v-for="task in todayCompletedTasks" 
+            :key="task.id"
+            class="guardian-timeline-item guardian-completed"
+          >
+            <view class="guardian-timeline-dot guardian-checked"></view>
+            <view class="guardian-timeline-content">
+              <view class="guardian-task-header">
+                <text class="guardian-task-time">{{ formatTime(task.scheduled_time) }}</text>
+                <text class="guardian-completed-tag">✓ 已完成</text>
+              </view>
+              <text class="guardian-task-content">{{ task.content }}</text>
+            </view>
+          </view>
+
+          <!-- 空状态 -->
+          <view v-if="todayTasks.length === 0" class="guardian-empty-state">
+            <text class="guardian-empty-icon">📋</text>
+            <text class="guardian-empty-text">暂无任务</text>
+            <text class="guardian-empty-hint">创建一个健康计划开始吧</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 我的计划列表 -->
+      <view class="guardian-plans-section">
+        <view class="guardian-section-header">
+          <text class="guardian-section-title">我的计划</text>
+          <text v-if="canCreatePlan" class="guardian-create-link" @tap="goToCreate">+ 新建</text>
+        </view>
+
+        <view class="guardian-plan-cards">
+          <!-- 待审核计划 -->
+          <view 
+            v-for="plan in pendingPlans" 
+            :key="plan.id"
+            class="guardian-plan-card guardian-pending"
+            @tap="reviewPlan(plan)"
+          >
+            <view class="guardian-plan-header">
+              <text class="guardian-plan-title">{{ plan.target_goal }}</text>
+              <view class="guardian-plan-badge guardian-pending-badge">待审核</view>
+            </view>
+            <text class="guardian-plan-type">{{ getPlanTypeText(plan.plan_type) }}</text>
+            <text class="guardian-plan-date">创建于 {{ formatDate(plan.created_at) }}</text>
+          </view>
+
+          <!-- 进行中的计划 -->
+          <view 
+            v-for="plan in activePlans" 
+            :key="plan.id"
+            class="guardian-plan-card guardian-active"
+            @tap="viewPlanDetail(plan)"
+          >
+            <view class="guardian-plan-header">
+              <text class="guardian-plan-title">{{ plan.target_goal }}</text>
+              <view class="guardian-plan-badge guardian-active-badge">进行中</view>
+            </view>
+            <text class="guardian-plan-type">{{ getPlanTypeText(plan.plan_type) }}</text>
+            <view class="guardian-plan-progress">
+              <view class="guardian-progress-bar">
+                <view class="guardian-progress-fill" :style="{ width: plan.progress + '%' }"></view>
+              </view>
+              <text class="guardian-progress-text">{{ plan.progress }}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 创建计划按钮 -->
+      <view v-if="canCreatePlan" class="guardian-fab" @tap="goToCreate">
+        <text class="guardian-fab-icon">+</text>
+      </view>
+    </view>
+
+    <!-- 青少年模式 -->
+    <view v-else class="normal-view">
+      <!-- 青少年视图 -->
       
       <!-- 快速统计 -->
       <view class="stats-cards">
@@ -26,10 +269,6 @@
         <view class="stat-card">
           <text class="stat-value">{{ todayCompletionRate }}%</text>
           <text class="stat-label">今日完成</text>
-        </view>
-        <view v-if="userRole === 'guardian'" class="stat-card highlight">
-          <text class="stat-value">{{ pendingPlans.length }}</text>
-          <text class="stat-label">待审核</text>
         </view>
       </view>
 
@@ -1271,5 +1510,381 @@ onMounted(() => {
 
 .child-modal-btn:active {
   opacity: 0.8;
+}
+
+/* ========== 家长模式 - 现代简洁风格 ========== */
+.guardian-plan-view {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #667eea 0%, #764ba2 50%, #F3F4F6 50%);
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 家长模式顶部 */
+.guardian-plan-header {
+  padding: 40rpx 20rpx 30rpx;
+}
+
+.guardian-plan-welcome {
+  display: flex;
+  flex-direction: column;
+}
+
+.guardian-plan-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 8rpx;
+}
+
+.guardian-plan-subtitle {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 统计卡片 */
+.guardian-stats-cards {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.guardian-stat-card {
+  flex: 1;
+  background: white;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-stat-highlight {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.guardian-stat-highlight .guardian-stat-value,
+.guardian-stat-highlight .guardian-stat-label {
+  color: white;
+}
+
+.guardian-stat-value {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #3B82F6;
+  margin-bottom: 8rpx;
+}
+
+.guardian-stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 今日任务区域 */
+.guardian-today-section {
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.guardian-section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.guardian-section-date {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 时间轴 */
+.guardian-timeline {
+  position: relative;
+  padding-left: 40rpx;
+}
+
+.guardian-timeline-item {
+  position: relative;
+  padding-bottom: 32rpx;
+}
+
+.guardian-timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: -32rpx;
+  top: 40rpx;
+  bottom: -32rpx;
+  width: 2rpx;
+  background: #E5E7EB;
+}
+
+.guardian-timeline-dot {
+  position: absolute;
+  left: -40rpx;
+  top: 8rpx;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #3B82F6;
+  border: 4rpx solid white;
+  box-shadow: 0 0 0 2rpx #3B82F6;
+}
+
+.guardian-timeline-dot.guardian-checked {
+  background: #10B981;
+  box-shadow: 0 0 0 2rpx #10B981;
+}
+
+.guardian-timeline-dot.guardian-checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12rpx;
+  font-weight: bold;
+}
+
+.guardian-timeline-content {
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.guardian-timeline-item.guardian-completed .guardian-timeline-content {
+  background: #F0FDF4;
+}
+
+.guardian-task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.guardian-task-time {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.guardian-task-level {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 20rpx;
+  color: white;
+}
+
+.guardian-level-1 {
+  background: #9CA3AF;
+}
+
+.guardian-level-2 {
+  background: #F59E0B;
+}
+
+.guardian-level-3 {
+  background: #EF4444;
+}
+
+.guardian-completed-tag {
+  font-size: 24rpx;
+  color: #10B981;
+  font-weight: 500;
+}
+
+.guardian-task-content {
+  display: block;
+  font-size: 28rpx;
+  color: #374151;
+  margin-bottom: 16rpx;
+}
+
+.guardian-task-actions {
+  display: flex;
+  gap: 12rpx;
+}
+
+.guardian-btn-complete,
+.guardian-btn-difficult {
+  flex: 1;
+  height: 64rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  border: none;
+}
+
+.guardian-btn-complete {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+}
+
+.guardian-btn-difficult {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+/* 计划卡片 */
+.guardian-plans-section {
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-plan-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.guardian-plan-card {
+  padding: 24rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-plan-card.guardian-pending {
+  border-left: 6rpx solid #F59E0B;
+}
+
+.guardian-plan-card.guardian-active {
+  border-left: 6rpx solid #10B981;
+}
+
+.guardian-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.guardian-plan-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.guardian-plan-badge {
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  color: white;
+}
+
+.guardian-pending-badge {
+  background: #F59E0B;
+}
+
+.guardian-active-badge {
+  background: #10B981;
+}
+
+.guardian-plan-type {
+  display: block;
+  font-size: 24rpx;
+  color: #6B7280;
+  margin-bottom: 12rpx;
+}
+
+.guardian-plan-date {
+  display: block;
+  font-size: 22rpx;
+  color: #9CA3AF;
+}
+
+.guardian-plan-progress {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.guardian-progress-bar {
+  flex: 1;
+  height: 8rpx;
+  background: #E5E7EB;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.guardian-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3B82F6 0%, #2563EB 100%);
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+
+.guardian-progress-text {
+  font-size: 24rpx;
+  color: #3B82F6;
+  font-weight: 600;
+}
+
+/* 空状态 */
+.guardian-empty-state {
+  text-align: center;
+  padding: 60rpx 20rpx;
+}
+
+.guardian-empty-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.guardian-empty-text {
+  display: block;
+  font-size: 30rpx;
+  color: #1F2937;
+  margin-bottom: 8rpx;
+}
+
+.guardian-empty-hint {
+  display: block;
+  font-size: 26rpx;
+  color: #6B7280;
+}
+
+/* 创建链接 */
+.guardian-create-link {
+  font-size: 28rpx;
+  color: #3B82F6;
+  font-weight: 500;
+}
+
+/* 浮动按钮 */
+.guardian-fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: 160rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.4);
+  z-index: 100;
+}
+
+.guardian-fab-icon {
+  font-size: 48rpx;
+  color: white;
+  font-weight: 300;
 }
 </style>

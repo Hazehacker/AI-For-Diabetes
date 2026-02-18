@@ -251,6 +251,95 @@ export const caloriesApi = {
       method: 'GET',
       data: params
     })
+  },
+
+  /**
+   * OCR图片识别食物
+   * POST /calories/ocr/recognize
+   * data: { image: base64或file }
+   */
+  recognizeFoodImage(data) {
+    return request({
+      url: '/calories/ocr/recognize',
+      method: 'POST',
+      data,
+      header: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  },
+
+  /**
+   * 条码扫描识别食物
+   * POST /calories/barcode/scan
+   * data: { barcode: string }
+   */
+  scanBarcode(data) {
+    return request({
+      url: '/calories/barcode/scan',
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 搜索食物库
+   * GET /calories/foods/search?keyword=xxx
+   */
+  searchFoods(params) {
+    return request({
+      url: '/calories/foods/search',
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 获取食谱详情
+   * GET /calories/recipes/{id}
+   */
+  getRecipeDetail(id, params) {
+    return request({
+      url: `/calories/recipes/${id}`,
+      method: 'GET',
+      data: params
+    })
+  },
+
+  /**
+   * 收藏/取消收藏食谱
+   * POST /calories/recipes/{id}/favorite
+   */
+  toggleRecipeFavorite(id, data) {
+    return request({
+      url: `/calories/recipes/${id}/favorite`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 发送食谱给家属
+   * POST /calories/recipes/{id}/share
+   */
+  shareRecipeToFamily(id, data) {
+    return request({
+      url: `/calories/recipes/${id}/share`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取饮食-血糖关联分析数据
+   * GET /calories/analysis/linkage?date=YYYY-MM-DD
+   */
+  getLinkageAnalysis(params) {
+    return request({
+      url: '/calories/analysis/linkage',
+      method: 'GET',
+      data: params
+    })
   }
 }
 

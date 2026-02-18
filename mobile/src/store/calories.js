@@ -7,7 +7,7 @@ import { caloriesApi } from '@/api'
 
 export const useCaloriesStore = defineStore('calories', {
   state: () => ({
-    // 当前 Tab：record-热量记录，recipe-食谱推荐
+    // 当前 Tab：record-热量记录，recipe-食谱推荐，analysis-数据联动
     currentTab: 'record',
 
     // 当前选中的日期（字符串：YYYY-MM-DD）
