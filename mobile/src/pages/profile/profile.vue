@@ -96,7 +96,127 @@
     </view>
   </view>
 
-  <!-- 成人/青少年模式 -->
+  <!-- 家长模式：现代简洁风格 -->
+  <view v-else-if="userRole === 'guardian'" class="guardian-profile">
+    <!-- 头部信息 -->
+    <view class="guardian-profile-header">
+      <view class="guardian-profile-avatar-wrapper">
+        <image class="guardian-profile-avatar" src="/static/logo.png" mode="aspectFit"></image>
+      </view>
+      <view class="guardian-profile-info">
+        <text class="guardian-profile-name">{{ userStore.nickname ? userStore.nickname + '家长' : '家长' }}</text>
+        <text class="guardian-profile-role">家长监护账户</text>
+      </view>
+    </view>
+
+    <!-- 统计卡片 -->
+    <view class="guardian-stats-card">
+      <view class="guardian-stat-item">
+        <text class="guardian-stat-number">7</text>
+        <text class="guardian-stat-label">监护天数</text>
+      </view>
+      <view class="guardian-stat-divider"></view>
+      <view class="guardian-stat-item">
+        <text class="guardian-stat-number">23</text>
+        <text class="guardian-stat-label">孩子完成计划</text>
+      </view>
+      <view class="guardian-stat-divider"></view>
+      <view class="guardian-stat-item">
+        <text class="guardian-stat-number">2</text>
+        <text class="guardian-stat-label">待审核计划</text>
+      </view>
+    </view>
+
+    <!-- 健康管理 -->
+    <view class="guardian-function-section">
+      <view class="guardian-section-title-wrapper">
+        <text class="guardian-section-icon">💊</text>
+        <text class="guardian-section-title">孩子健康管理</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToGlucoseReport">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">📈</text>
+        </view>
+        <text class="guardian-function-text">孩子血糖管理报告</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToHealthPlan">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">📋</text>
+        </view>
+        <text class="guardian-function-text">孩子健康计划</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToCreatePlan">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">➕</text>
+        </view>
+        <text class="guardian-function-text">为孩子创建计划</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToDashboard">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">📊</text>
+        </view>
+        <text class="guardian-function-text">孩子健康仪表盘</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 个人资料 -->
+    <view class="guardian-function-section">
+      <view class="guardian-section-title-wrapper">
+        <text class="guardian-section-icon">📝</text>
+        <text class="guardian-section-title">个人资料</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToBasicInfo">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">🏥</text>
+        </view>
+        <text class="guardian-function-text">基础信息</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToDailyCheckin">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">✅</text>
+        </view>
+        <text class="guardian-function-text">每日签到</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 系统设置 -->
+    <view class="guardian-function-section">
+      <view class="guardian-section-title-wrapper">
+        <text class="guardian-section-icon">⚙️</text>
+        <text class="guardian-section-title">系统设置</text>
+      </view>
+
+      <view class="guardian-function-item" @tap="goToRoleSwitcher">
+        <view class="guardian-function-icon-wrapper">
+          <text class="guardian-function-icon">🔄</text>
+        </view>
+        <text class="guardian-function-text">角色切换</text>
+        <text class="guardian-function-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <view class="guardian-logout-section">
+      <button class="guardian-logout-btn" @tap="handleLogout">
+        <text class="guardian-logout-icon">🚪</text>
+        <text>退出登录</text>
+      </button>
+    </view>
+  </view>
+
+  <!-- 青少年模式 -->
   <view v-else class="profile-container">
     <!-- 头部信息 -->
     <view class="profile-header">
@@ -845,5 +965,184 @@ const handleLogout = () => {
   100% {
     transform: translateX(0) scaleX(1);
   }
+}
+
+/* ========== 家长模式 - 现代简洁风格 ========== */
+.guardian-profile {
+  min-height: 100vh;
+  background: #FFFFFF;
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 家长模式头部 */
+.guardian-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  background: white;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 9rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.guardian-profile-avatar-wrapper {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+.guardian-profile-avatar {
+  width: 110rpx;
+  height: 110rpx;
+  border-radius: 50%;
+}
+
+.guardian-profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.guardian-profile-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #1F2937;
+  margin-bottom: 8rpx;
+}
+
+.guardian-profile-role {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 统计卡片 */
+.guardian-stats-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guardian-stat-number {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #3B82F6;
+  margin-bottom: 8rpx;
+}
+
+.guardian-stat-label {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.guardian-stat-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: #E5E7EB;
+  margin: 0 20rpx;
+}
+
+/* 功能区域 */
+.guardian-function-section {
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-section-title-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.guardian-section-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.guardian-section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.guardian-function-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.guardian-function-item:last-child {
+  border-bottom: none;
+}
+
+.guardian-function-icon-wrapper {
+  width: 60rpx;
+  height: 60rpx;
+  background: #EFF6FF;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.guardian-function-icon {
+  font-size: 32rpx;
+}
+
+.guardian-function-text {
+  flex: 1;
+  font-size: 30rpx;
+  color: #1F2937;
+}
+
+.guardian-function-arrow {
+  font-size: 40rpx;
+  color: #D1D5DB;
+}
+
+/* 退出登录 */
+.guardian-logout-section {
+  padding: 0 0 40rpx;
+}
+
+.guardian-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  width: 100%;
+  height: 88rpx;
+  background: white;
+  color: #EF4444;
+  border-radius: 24rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  box-shadow: 0 4rpx 12rpx rgba(239, 68, 68, 0.15);
+}
+
+.guardian-logout-icon {
+  font-size: 32rpx;
 }
 </style>

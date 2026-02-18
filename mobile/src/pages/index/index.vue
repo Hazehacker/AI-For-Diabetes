@@ -227,7 +227,104 @@
     <view class="bottom-spacer"></view>
   </view>
 
-  <!-- 成人/青少年模式 -->
+  <!-- 家长模式：现代简洁风格 -->
+  <view v-else-if="userRole === 'guardian'" class="guardian-home">
+    <!-- 顶部欢迎区 -->
+    <view class="guardian-header">
+      <view class="guardian-welcome">
+        <view class="guardian-avatar-wrapper">
+          <image class="guardian-avatar" src="/static/logo.png" mode="aspectFit"></image>
+        </view>
+        <view class="guardian-welcome-text">
+          <text class="guardian-greeting">{{ greetingText }}</text>
+          <text class="guardian-name">{{ userInfo.nickname ? userInfo.nickname + '家长' : '家长' }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 任务提醒卡片 -->
+    <view class="guardian-notification-card">
+      <view class="notification-icon-wrapper">
+        <text class="notification-icon">📋</text>
+      </view>
+      <view class="notification-content">
+        <text class="notification-title">孩子有 {{ todayTasksCount }} 个任务待处理</text>
+        <text class="notification-desc">查看今日健康计划</text>
+      </view>
+    </view>
+
+    <!-- 仪表盘核心区域 -->
+    <view class="guardian-dashboard-section">
+      <!-- 当前血糖状态 -->
+      <view class="guardian-glucose-card" :class="statusColor">
+        <view class="guardian-status-header">
+          <text class="guardian-status-label">孩子当前血糖</text>
+          <text class="guardian-status-time">{{ currentTime }}</text>
+        </view>
+        <view class="guardian-status-value-area">
+          <text class="guardian-glucose-value">{{ currentGlucose.value }}</text>
+          <text class="guardian-glucose-unit">mmol/L</text>
+        </view>
+        <text class="guardian-status-text">{{ statusText }}</text>
+      </view>
+
+      <!-- 血糖曲线图 -->
+      <view class="guardian-chart-card">
+        <view class="guardian-card-header">
+          <text class="guardian-card-title">孩子今日血糖趋势</text>
+          <text class="guardian-view-more" @tap="goToDashboard">查看详情 →</text>
+        </view>
+        <GlucoseCurveChart canvas-id="guardianGlucoseChart" :compact="true" />
+      </view>
+
+      <!-- 每日统计 -->
+      <view class="guardian-stats-grid">
+        <view class="guardian-stat-item">
+          <text class="guardian-stat-value">{{ stats.avgGlucose }}</text>
+          <text class="guardian-stat-label">孩子平均值</text>
+        </view>
+        <view class="guardian-stat-item">
+          <text class="guardian-stat-value">{{ stats.timeInRange }}%</text>
+          <text class="guardian-stat-label">孩子达标率</text>
+        </view>
+        <view class="guardian-stat-item">
+          <text class="guardian-stat-value">{{ stats.measureCount }}</text>
+          <text class="guardian-stat-label">孩子测量次数</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 健康计划卡片 -->
+    <view class="guardian-projects-section">
+      <view class="guardian-section-header">
+        <text class="guardian-section-title">孩子的健康计划</text>
+        <text class="guardian-see-all" @tap="goToHealthPlan">查看全部 >></text>
+      </view>
+      <view class="guardian-project-card" @tap="goToHealthPlan">
+        <view class="guardian-project-content">
+          <text class="guardian-project-title">孩子血糖管理计划</text>
+          <text class="guardian-project-subtitle">日常监测</text>
+        </view>
+        <view class="guardian-project-progress">
+          <view class="guardian-progress-ring">
+            <text class="guardian-progress-text">57%</text>
+          </view>
+        </view>
+        <view class="guardian-project-members">
+          <view class="guardian-member-avatar"></view>
+          <view class="guardian-member-avatar"></view>
+          <view class="guardian-member-avatar guardian-member-more">+5</view>
+        </view>
+      </view>
+    </view>
+
+    
+
+    <!-- 底部占位 -->
+    <view class="bottom-spacer"></view>
+  </view>
+
+  <!-- 青少年模式 -->
   <view v-else class="home-page">
     <!-- 顶部欢迎区 -->
     <view class="welcome-header">
@@ -555,6 +652,16 @@ const goToCalories = () => {
   })
 }
 
+// 跳转到健康计划
+const goToHealthPlan = () => {
+  uni.navigateTo({
+    url: '/pages/health-plan/index'
+  })
+}
+
+// 家长模式任务数量
+const todayTasksCount = ref(2)
+
 onMounted(() => {
   updateTime()
   setInterval(updateTime, 60000)
@@ -815,6 +922,404 @@ onMounted(() => {
 /* 底部占位 */
 .bottom-spacer {
   height: 40rpx;
+}
+
+/* ========== 家长模式 - 现代简洁风格 ========== */
+.guardian-home {
+  min-height: 100vh;
+  background: #FFFFFF;
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 家长模式顶部 */
+.guardian-header {
+  padding: 40rpx 20rpx 30rpx;
+}
+
+.guardian-welcome {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.guardian-avatar-wrapper {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.guardian-avatar {
+  width: 90rpx;
+  height: 90rpx;
+  border-radius: 50%;
+}
+
+.guardian-welcome-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.guardian-greeting {
+  font-size: 28rpx;
+  color: #6B7280;
+  margin-bottom: 8rpx;
+}
+
+.guardian-name {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+/* 任务提醒卡片 */
+.guardian-notification-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.3);
+}
+
+.notification-icon-wrapper {
+  width: 60rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-icon {
+  font-size: 36rpx;
+}
+
+.notification-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 6rpx;
+}
+
+.notification-desc {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 仪表盘区域 */
+.guardian-dashboard-section {
+  margin-bottom: 32rpx;
+}
+
+/* 血糖状态卡片 */
+.guardian-glucose-card {
+  background: white;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+}
+
+.guardian-glucose-card.status-normal {
+  border-left: 8rpx solid #10B981;
+}
+
+.guardian-glucose-card.status-warning {
+  border-left: 8rpx solid #F59E0B;
+}
+
+.guardian-glucose-card.status-danger {
+  border-left: 8rpx solid #EF4444;
+}
+
+.guardian-status-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.guardian-status-label {
+  font-size: 28rpx;
+  color: #6B7280;
+}
+
+.guardian-status-time {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.guardian-status-value-area {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 16rpx;
+}
+
+.guardian-glucose-value {
+  font-size: 80rpx;
+  font-weight: bold;
+  color: #1F2937;
+  line-height: 1;
+}
+
+.guardian-glucose-unit {
+  font-size: 28rpx;
+  color: #6B7280;
+  margin-left: 12rpx;
+}
+
+.guardian-status-text {
+  font-size: 28rpx;
+  color: #6B7280;
+}
+
+/* 图表卡片 */
+.guardian-chart-card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.guardian-card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.guardian-view-more {
+  font-size: 24rpx;
+  color: #3B82F6;
+}
+
+/* 统计网格 */
+.guardian-stats-grid {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.guardian-stat-item {
+  flex: 1;
+  background: white;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-stat-value {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #3B82F6;
+  margin-bottom: 8rpx;
+}
+
+.guardian-stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+/* 健康计划区域 */
+.guardian-projects-section {
+  margin-bottom: 32rpx;
+}
+
+.guardian-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+  padding: 0 4rpx;
+}
+
+.guardian-section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.guardian-see-all {
+  font-size: 24rpx;
+  color: #3B82F6;
+}
+
+/* 项目卡片 */
+.guardian-project-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.2);
+}
+
+.guardian-project-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.guardian-project-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 8rpx;
+}
+
+.guardian-project-subtitle {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.guardian-project-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guardian-progress-ring {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 6rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+}
+
+.guardian-progress-text {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.guardian-project-members {
+  display: flex;
+  align-items: center;
+  gap: -10rpx;
+}
+
+.guardian-member-avatar {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2rpx solid white;
+  margin-left: -10rpx;
+}
+
+.guardian-member-avatar:first-child {
+  margin-left: 0;
+}
+
+.guardian-member-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  color: white;
+  font-weight: 600;
+}
+
+/* 任务区域 */
+.guardian-tasks-section {
+  margin-bottom: 32rpx;
+}
+
+.guardian-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.guardian-task-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: white;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.guardian-task-icon {
+  width: 60rpx;
+  height: 60rpx;
+  background: #EFF6FF;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+
+.guardian-task-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.guardian-task-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 6rpx;
+}
+
+.guardian-task-meta {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.guardian-task-badge {
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.guardian-task-done {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.guardian-task-progress {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.guardian-task-badge-text {
+  font-size: 22rpx;
 }
 
 /* ========== 儿童模式 - 奶酪仓鼠风格 ========== */

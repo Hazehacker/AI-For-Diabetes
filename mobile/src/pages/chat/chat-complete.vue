@@ -62,7 +62,7 @@
           <text class="shortcut-name">知识问答</text>
         </view>
       </view>
-      
+
       <!-- 快捷入口按钮 - 青少年/家长模式 -->
       <view v-else class="specialist-shortcuts">
         <text class="shortcuts-title">🏥 AI专科对话</text>
